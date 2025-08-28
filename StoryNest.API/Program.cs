@@ -1,5 +1,8 @@
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
+using StoryNest.Application.Interfaces;
+using StoryNest.Application.Services;
+using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,6 +36,13 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Repositories 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+//Services
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

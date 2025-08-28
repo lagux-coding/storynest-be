@@ -1,0 +1,68 @@
+name: CI/CD to VPS
+
+on:
+  push:
+    branches:
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build & Deploy to VPS
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Clean old source code and ensure directory exists
+      - name: Clean old source code and ensure directory exists
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            mkdir -p /var/www/storynest-dev
+            rm -rf /var/www/storynest-dev/*
+            echo "Cleaned old source code on VPS."
+
+      # 3. Copy source code to VPS
+      - name: Copy source code to VPS
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: "."
+          target: "/var/www/storynest-dev"
+
+      # 4. Write in .env file
+      - name: Write .env file on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            ENV_DIR="/var/www/storynest-dev"
+            echo "${{ secrets.ENV }}" > "$ENV_DIR/StoryNest.API/.env"
+            echo "Wrote .env files on VPS."
+
+      # 5. Deploy container on VPS
+      - name: Deploy container on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/storynest-dev/SotryNest.API
+
+            docker stop storynest-api || true
+            docker rm storynest-api || true
+
+            docker build --no-cache -t storynest-api .
+
+            docker run -d --name storynest-api - p 8080:8080 --env-file .env storynest-api

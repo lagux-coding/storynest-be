@@ -10,14 +10,22 @@ namespace StoryNest.Domain.Entities
 {
     public partial class User
     {
-        [Column("id")]
-        [Key]
-        public int Id { get; set; }
-
-        [Column("email")]
+        public Guid Id { get; set; }
+        public string Username { get; set; } = null!;
         public string Email { get; set; } = null!;
-
-        [Column("password_hash")]
         public string PasswordHash { get; set; } = null!;
+
+        // Profile
+        public string? FullName { get; set; }
+        public string? Bio { get; set; }
+        public string? AvatarUrl { get; set; }
+        public string? CoverUrl { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
+
+        // Systems
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public bool IsActive { get; set; } = true;
     }
 }
