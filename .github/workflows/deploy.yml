@@ -63,6 +63,6 @@ jobs:
             docker stop storynest-api || true
             docker rm storynest-api || true
 
-            docker build --no-cache -t storynest-api .
+            docker build --no-cache -t storynest-api -f StoryNest.API/Dockerfile .
 
             docker run -d --name storynest-api - p 8080:8080 --env-file .env storynest-api
