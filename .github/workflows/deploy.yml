@@ -65,4 +65,4 @@ jobs:
 
             docker build --no-cache -t storynest-api -f StoryNest.API/Dockerfile .
 
-            docker run -d --name storynest-api - p 8080:8080 --env-file StoryNest.API/.env storynest-api
+            docker run -d --name storynest-api -p 8080:8080 --env-file StoryNest.API/.env storynest-api
