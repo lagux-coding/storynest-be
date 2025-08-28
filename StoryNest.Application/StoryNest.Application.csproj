@@ -8,13 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\StoryNest.Domain\StoryNest.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Dtos\Response\" />
-    <Folder Include="Dtos\Request\" />
-    <Folder Include="Interfaces\" />
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\StoryNest.Shared\StoryNest.Shared.csproj" />
   </ItemGroup>
 
 </Project>

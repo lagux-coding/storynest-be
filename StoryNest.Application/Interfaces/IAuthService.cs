@@ -1,0 +1,16 @@
+﻿using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace StoryNest.Application.Interfaces
+{
+    public interface IAuthService
+    {
+        Task<bool> RegisterAsync(RegisterUserRequest request);
+        Task<LoginUserResponse> LoginAsync(LoginUserRequest request);
+    }
+}

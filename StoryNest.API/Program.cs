@@ -1,5 +1,8 @@
 using DotNetEnv;
 using Microsoft.EntityFrameworkCore;
+using StoryNest.Application.Interfaces;
+using StoryNest.Application.Services;
+using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,14 +37,19 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Repositories 
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+//Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection();
 
