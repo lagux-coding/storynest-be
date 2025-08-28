@@ -58,7 +58,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            cd /var/www/storynest-dev/SotryNest.API
+            cd /var/www/storynest-dev/StoryNest.API
 
             docker stop storynest-api || true
             docker rm storynest-api || true
