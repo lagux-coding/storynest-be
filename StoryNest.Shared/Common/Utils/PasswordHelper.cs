@@ -11,7 +11,7 @@ namespace StoryNest.Shared.Common.Utils
     {
         private const int SaltSize = 16; // 128 bit
         private const int KeySize = 32; // 256 bit
-        private const int Iterations = 100000; // Number of iterations for PBKDF2
+        private const int Iterations = 310000; // Number of iterations for PBKDF2
 
         public static string HashPassword(string password)
         {
@@ -29,15 +29,15 @@ namespace StoryNest.Shared.Common.Utils
             Buffer.BlockCopy(salt, 0, hashBytes, 0, SaltSize);
             Buffer.BlockCopy(key, 0, hashBytes, SaltSize, KeySize);
 
-            return $"{Iterations}.{Convert.ToBase64String(hashBytes)}";
+            return $"pbkdf2-sha256.{Iterations}.{Convert.ToBase64String(hashBytes)}";
         }
 
         public static bool VerifyPassword(string password, string hashedPassword)
         {
             // Tách ra: iterations + hash
-            var parts = hashedPassword.Split('.', 2);
-            var iterations = int.Parse(parts[0]);
-            var hashBytes = Convert.FromBase64String(parts[1]);
+            var parts = hashedPassword.Split('.', 3);
+            var iterations = int.Parse(parts[1]);
+            var hashBytes = Convert.FromBase64String(parts[2]);
 
             // Lấy salt từ hash
             var salt = new byte[SaltSize];

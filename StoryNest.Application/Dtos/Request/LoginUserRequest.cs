@@ -8,7 +8,7 @@ namespace StoryNest.Application.Dtos.Request
 {
     public class LoginUserRequest
     {
-        public string Username { get; set; } = default!;
+        public string UsernameOrEmail { get; set; } = default!;
         public string Password { get; set; } = default!;
     }
 }

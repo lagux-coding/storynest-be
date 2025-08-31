@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
@@ -11,18 +12,29 @@ namespace StoryNest.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IValidator<RegisterUserRequest> _registerValidator;
+        private readonly IValidator<LoginUserRequest> _loginValidator;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator)
         {
             _authService = authService;
+            _registerValidator = registerValidator;
+            _loginValidator = loginValidator;
         }
 
         [HttpPost("register")]
         public async Task<ActionResult<ApiResponse<object>>> Register([FromBody] RegisterUserRequest request)
         {
-            if (request.Password != request.ConfirmPassword)
+            var validationResult = await _registerValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
             {
-                return ApiResponse<object>.Fail("Password does not match");
+                var errors = validationResult.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
+                    );
+                return ApiResponse<object>.Fail(errors, "Validation errors");
             }
 
             bool check = await _authService.RegisterAsync(request);
@@ -39,6 +51,18 @@ namespace StoryNest.API.Controllers
         [HttpPost("login")]
         public async Task<ActionResult<ApiResponse<object>>> Login([FromBody] LoginUserRequest request)
         {
+            var validationResult = await _loginValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
+                    );
+                return ApiResponse<object>.Fail(errors, "Validation errors");
+            }
+
             var result = await _authService.LoginAsync(request);
             if (result == null)
             {
