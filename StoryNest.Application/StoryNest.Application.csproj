@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentValidation" Version="12.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StoryNest.Domain\StoryNest.Domain.csproj" />
     <ProjectReference Include="..\StoryNest.Shared\StoryNest.Shared.csproj" />
   </ItemGroup>

@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Domain.Entities
 {
-    public partial class User
+    public class User
     {
-        public Guid Id { get; set; }
+        public long Id { get; set; }
         public string Username { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string PasswordHash { get; set; } = null!;
@@ -27,5 +27,7 @@ namespace StoryNest.Domain.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; } = true;
+
+        public ICollection<RefreshTokens> RefreshTokens { get; set; } = new List<RefreshTokens>();
     }
 }

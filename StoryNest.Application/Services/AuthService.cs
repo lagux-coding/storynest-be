@@ -25,7 +25,7 @@ namespace StoryNest.Application.Services
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
         {
-            var user = await _userRepository.GetByUsernameAsync(request.Username);
+            var user = await _userRepository.GetByUsernameOrEmailAsync(request.UsernameOrEmail);
             if (user == null || !PasswordHelper.VerifyPassword(request.Password, user.PasswordHash))
             {
                 return null;
@@ -40,8 +40,8 @@ namespace StoryNest.Application.Services
 
         public async Task<bool> RegisterAsync(RegisterUserRequest request)
         {
-            if (await _userRepository.GetByEmailAsync(request.Email) != null) return false;
-            if (await _userRepository.GetByUsernameAsync(request.Username) != null) return false;
+            if (await _userRepository.GetByUsernameOrEmailAsync(request.Email) != null ||
+                await _userRepository.GetByUsernameOrEmailAsync(request.Username) != null) return false;
 
             var user = new User
             {

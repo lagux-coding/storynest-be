@@ -25,7 +25,7 @@ namespace StoryNest.API.ApiWrapper
         // Helper methods
         public static ApiResponse<T> Success(T data, string message = "success", int statusCode = StatusCodes.Status200OK) => new(data, message, statusCode);
 
-        public static ApiResponse<T> Fail(string message = "fail", int statusCode = StatusCodes.Status400BadRequest) => new(default, message, statusCode);
+        public static ApiResponse<T> Fail(T? data, string message = "fail", int statusCode = StatusCodes.Status400BadRequest) => new(data, message, statusCode);
 
         public static ApiResponse<T> NotFound(string message = "not found") => new(default, message, StatusCodes.Status404NotFound);
 

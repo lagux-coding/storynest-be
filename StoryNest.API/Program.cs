@@ -5,6 +5,10 @@ using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 
+using FluentValidation;
+using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Validator;
+
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -36,6 +40,10 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Fluent Validation
+builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
+builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();

@@ -19,7 +19,8 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.Id)
                    .HasColumnName("id")
-                   .HasDefaultValueSql("gen_random_uuid()");
+                   .ValueGeneratedOnAdd()
+                   .UseIdentityAlwaysColumn();
 
             builder.Property(u => u.Username)
                    .HasColumnName("username")
@@ -53,12 +54,12 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
 
             builder.Property(u => u.CreatedAt)
                    .HasColumnName("created_at")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + interval '7 hour'")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
                    .IsRequired();
 
             builder.Property(u => u.UpdatedAt)
                    .HasColumnName("updated_at")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP AT TIME ZONE 'UTC' + interval '7 hour'")
+                   .HasDefaultValueSql("CURRENT_TIMESTAMP")
                    .IsRequired();
 
             builder.Property(u => u.IsActive)
@@ -67,6 +68,12 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             // Unique constraints
             builder.HasIndex(u => u.Username).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();
+
+            // 1 User have many RefreshTokens
+            builder.HasMany(u => u.RefreshTokens)
+                   .WithOne(rt => rt.User)
+                   .HasForeignKey(rt => rt.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
