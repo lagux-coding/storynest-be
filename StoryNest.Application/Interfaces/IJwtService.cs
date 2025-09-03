@@ -8,7 +8,7 @@ namespace StoryNest.Application.Interfaces
 {
     public interface IJwtService
     {
-        public string GenerateAccessToken(long userId, string username, string email, string type);
+        public string GenerateAccessToken(long userId, string username, string email, string type, out string jwtId);
         public string GenerateRefreshToken();
     }
 }

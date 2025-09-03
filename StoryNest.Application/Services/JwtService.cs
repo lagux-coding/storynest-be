@@ -21,15 +21,17 @@ namespace StoryNest.Application.Services
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(long userId, string username, string email, string type)
+        public string GenerateAccessToken(long userId, string username, string email, string type, out string jwtId)
         {
+            jwtId = Guid.NewGuid().ToString();
+
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.UniqueName, username),
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim("type", type),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+                new Claim(JwtRegisteredClaimNames.Jti, jwtId)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_KEY"]));

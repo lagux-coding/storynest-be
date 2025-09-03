@@ -13,6 +13,7 @@ namespace StoryNest.Infrastructure.Persistence
     {
 
         public DbSet<User> Users { get; set; }
+        public DbSet<RefreshTokens> RefreshTokens { get; set; }
         public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
         {
         }

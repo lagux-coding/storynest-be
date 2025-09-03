@@ -17,15 +17,17 @@ namespace StoryNest.Application.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IUserRepository _userRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IJwtService _jwtService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _jwtService = jwtService;
             _configuration = configuration;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -40,14 +42,29 @@ namespace StoryNest.Application.Services
             }
 
             // Generate token
-            var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Username, user.Email, "user");
-            var refresToken = "This is a refresh token";
+            var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Username, user.Email, "user", out var jwtId);
+            var refresTokenPlain = _jwtService.GenerateRefreshToken();
+            var refreshTokenExpiryDays = _configuration["REFRESH_TOKEN_EXPIREDAYS"];
+            var rt = new RefreshTokens
+            {
+                UserId = user.Id,
+                TokenHash = HashHelper.SHA256(refresTokenPlain),
+                JwtId = jwtId,
+                ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])),
+                CreatedAt = DateTime.UtcNow,
+                DeviceId = request.DeviceId,
+                IpAddress = request.IpAddress,
+                UserAgent = request.UserAgent,
+            };
+
+            await _refreshTokenRepository.AddAsync(rt);
+            await _unitOfWork.SaveAsync();
 
             return new LoginUserResponse
             {
                 Username = user.Username,
                 AccessToken = accessToken,
-                RefreshToken = refresToken,
+                RefreshToken = refresTokenPlain,
             };
         }
 
