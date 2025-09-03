@@ -14,7 +14,6 @@ namespace StoryNest.Application.Interfaces
     {
         public string GenerateAccessToken(long userId, string username, string email, string type, out string jwtId);
         public string GenerateRefreshToken();
-        public Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request);
         ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
     }
 }

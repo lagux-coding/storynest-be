@@ -29,9 +29,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
         }
 
-        public Task UpdateAsync(RefreshTokens token)
+        public async Task UpdateAsync(RefreshTokens token)
         {
-            throw new NotImplementedException();
+            _context.RefreshTokens.Update(token);
+            await Task.CompletedTask;
         }
     }
 }

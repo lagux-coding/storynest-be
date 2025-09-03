@@ -1,8 +1,10 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -34,17 +36,17 @@ namespace StoryNest.API.Controllers
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
                     );
-                return ApiResponse<object>.Fail(errors, "Validation errors");
+                return BadRequest(ApiResponse<object>.Fail(errors, "Validation errors"));
             }
 
             bool check = await _authService.RegisterAsync(request);
             if (!check)
             {
-                return ApiResponse<object>.Fail("Email or Username already exists");
+                return BadRequest(ApiResponse<object>.Fail("Email or Username already exists"));
             }
             else
             {
-                return ApiResponse<object>.Success(new { }, "User registered successfully");
+                return Ok(ApiResponse<object>.Success(new { }, "User registered successfully"));
             }
         }
 
@@ -60,18 +62,29 @@ namespace StoryNest.API.Controllers
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
                     );
-                return ApiResponse<object>.Fail(errors, "Validation errors");
+                return BadRequest(ApiResponse<object>.Fail(errors, "Validation errors"));
             }
 
             var result = await _authService.LoginAsync(request);
             if (result == null)
             {
-                return ApiResponse<object>.Fail("Invalid username or password");
+                return BadRequest(ApiResponse<object>.Fail("Invalid username or password"));
             }
             else
             {
-                return ApiResponse<object>.Success(result, "Login successful");
+                return Ok(ApiResponse<object>.Success(result, "Login successful"));
             }
+        }
+
+        [HttpPost("refresh")]
+        public async Task<ActionResult<ApiResponse<RefreshTokenResponse>>> Refresh([FromBody] RefreshTokenRequest request)
+        {
+            var access = request.AccessToken;
+            var refresh = request.RefreshToken;
+            var result = await _authService.RefreshAsync(request);
+            if (result == null) return Unauthorized(ApiResponse<RefreshTokenResponse>.Fail(result, "Invalid token or token expired"));
+
+            return Ok(ApiResponse<RefreshTokenResponse>.Success(result));
         }
     }
 }

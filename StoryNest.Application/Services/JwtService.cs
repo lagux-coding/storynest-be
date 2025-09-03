@@ -70,64 +70,56 @@ namespace StoryNest.Application.Services
 
         public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {
-            throw new NotImplementedException();
-        }
+            if (string.IsNullOrWhiteSpace(token)) return null;
+            var tokenHandler = new JwtSecurityTokenHandler();
 
-        public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request)
-        {
-            // 1. Get principal from expired token
-            var principal = GetPrincipalFromExpiredToken(request.AccessToken);
-            if (principal == null) return null;
-
-            var userIdStr = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
-            var jwtId = principal.FindFirstValue(JwtRegisteredClaimNames.Jti);
-            if (string.IsNullOrEmpty(userIdStr) || string.IsNullOrEmpty(jwtId)) return null;
-
-            var userId = long.Parse(userIdStr);
-
-            // 2. Get refresh token by Hash
-            var refreshHash = HashHelper.SHA256(request.RefreshToken);
-            var stored = await _refreshTokenRepository.GetByHashAsync(refreshHash);
-            if (stored == null) return null;
-
-            // 3. Validate refresh token
-            if (stored.UserId != userId) return null;
-            if (!stored.IsActive) return null;
-            if (!string.Equals(stored.JwtId, jwtId, StringComparison.Ordinal)) return null;
-
-            // 3.1 (Optional) Check device here!
-
-            // 4. Rotate: release new new rt & revoke old rt
-            var user = await _userRepository.GetByIdAsync(userId);
-            if (user == null) return null;
-
-            var newAccessToken = GenerateAccessToken(user.Id, user.Username, user.Email, "user", out var newJwtId);
-            var newRefreshTokenPlain = GenerateRefreshToken();
-            var newRt = new RefreshTokens
+            JwtSecurityToken? readToken;
+            try
             {
-                UserId = user.Id,
-                TokenHash = HashHelper.SHA256(newRefreshTokenPlain),
-                JwtId = newJwtId,
-                ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])),
-                CreatedAt = DateTime.UtcNow,
-                DeviceId = stored.DeviceId,
-                IpAddress = stored.IpAddress,
-                UserAgent = stored.UserAgent,
+                readToken = tokenHandler.ReadJwtToken(token);
+            }
+            catch
+            {
+                return null; // token malformed
+            }
+
+            if (!string.Equals(readToken.Header.Alg, SecurityAlgorithms.HmacSha256, StringComparison.Ordinal))
+                return null;
+
+            var key = _configuration["JWT_KEY"]
+                      ?? throw new InvalidOperationException("JWT_KEY is missing.");
+            var issuer = _configuration["JWT_ISSUER"];
+            var audience = _configuration["JWT_AUDIENCE"];
+
+            var parameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+
+                ValidateIssuer = !string.IsNullOrEmpty(issuer),
+                ValidIssuer = issuer,
+
+                ValidateAudience = !string.IsNullOrEmpty(audience),
+                ValidAudience = audience,
+
+                ValidateLifetime = false,
+                ClockSkew = TimeSpan.Zero
             };
 
-            // 4.1 Revoke old rt
-            stored.RevokedAt = DateTime.UtcNow;
-            stored.ReplacedByTokenHash = newRt.TokenHash;
-
-            await _refreshTokenRepository.AddAsync(newRt);
-            await _refreshTokenRepository.UpdateAsync(stored);
-            await _unitOfWork.SaveAsync();
-
-            return new RefreshTokenResponse
+            try
             {
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshTokenPlain
-            };
+                var principal = tokenHandler.ValidateToken(token, parameters, out var validatedToken);
+
+                if (validatedToken is not JwtSecurityToken jwt
+                    || !string.Equals(jwt.Header.Alg, SecurityAlgorithms.HmacSha256, StringComparison.Ordinal))
+                    return null;
+
+                return principal;
+            }
+            catch
+            {
+                return null; // signature/iss/aud/key fail
+            }
         }
     }
 }

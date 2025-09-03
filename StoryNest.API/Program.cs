@@ -1,18 +1,18 @@
 using DotNetEnv;
+using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Interfaces;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
-
-using FluentValidation;
-using StoryNest.Application.Dtos.Request;
-using StoryNest.Application.Dtos.Validator;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.AspNetCore.Mvc.Formatters;
-using System.Text;
 using StoryNest.Infrastructure.Persistence.Repositories;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +71,9 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
     };
 });
+
+JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 
 // Add services to the container.
 builder.Services.AddControllers();
