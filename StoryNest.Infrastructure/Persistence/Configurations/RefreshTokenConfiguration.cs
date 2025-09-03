@@ -25,10 +25,14 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .HasColumnName("user_id")
                    .IsRequired();
 
-            builder.Property(rt => rt.Token)
-                   .HasColumnName("token")
+            builder.Property(rt => rt.TokenHash)
+                   .HasColumnName("tokenHash")
                    .IsRequired()
                    .HasMaxLength(512);
+
+            builder.Property(x => x.JwtId)
+                    .IsRequired()
+                    .HasMaxLength(64);
 
             builder.Property(rt => rt.ExpiresAt)
                    .HasColumnName("expires_at")
@@ -42,10 +46,29 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.Property(rt => rt.RevokedAt)
                    .HasColumnName("revoked_at");
 
+            builder.Property(rt => rt.ReplacedByTokenHash)
+                    .HasColumnName("replaced_by_token_hash")
+                    .HasMaxLength(512);
+
+            builder.Property(rt => rt.DeviceId)
+                    .HasColumnName("device_id")
+                    .HasMaxLength(256);
+
+            builder.Property(rt => rt.IpAddress)
+                    .HasColumnName("ip_address")
+                    .HasMaxLength(45);
+
+            builder.Property(rt => rt.UserAgent)
+                    .HasColumnName("user_agent")
+                    .HasMaxLength(512);
+
             builder.HasOne(rt => rt.User)
                    .WithMany(u => u.RefreshTokens)
                    .HasForeignKey(rt => rt.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(rt => rt.TokenHash).IsUnique();
+            builder.HasIndex(rt => rt.UserId);
         }
     }
    
