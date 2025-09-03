@@ -10,6 +10,7 @@ namespace StoryNest.Domain.Interfaces
     public interface IUserRepository
     {
         Task<User?> GetByEmailAsync(string email);
+        Task<User?> GetByIdAsync(long userId);
         Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail);
         Task AddAsync(User user);
     }

@@ -30,6 +30,11 @@ namespace StoryNest.Application.Services
             return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        public async Task<User?> GetByIdAsync(long userId)
+        {
+            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+        }
+
         public async Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _context.Users

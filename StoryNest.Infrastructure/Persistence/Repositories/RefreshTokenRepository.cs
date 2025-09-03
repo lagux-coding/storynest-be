@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using StoryNest.Domain.Entities;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -22,9 +23,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.RefreshTokens.AddAsync(token);
         }
 
-        public Task<RefreshTokens> GetByHashAsync(string tokenHash)
+        public async Task<RefreshTokens?> GetByHashAsync(string tokenHash)
         {
-            throw new NotImplementedException();
+            return await _context.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
         }
 
         public Task UpdateAsync(RefreshTokens token)
