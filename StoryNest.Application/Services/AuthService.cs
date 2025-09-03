@@ -143,5 +143,18 @@ namespace StoryNest.Application.Services
                 RefreshToken = newRefreshTokenPlain
             };
         }
+
+        public async Task<bool> LogoutAsync(string refreshTokenPlain)
+        {
+            var hash = HashHelper.SHA256(refreshTokenPlain);
+            var stored = await _refreshTokenRepository.GetByHashAsync(hash);
+            if (stored == null || !stored.IsActive) return false;
+
+            stored.RevokedAt = DateTime.UtcNow;
+            await _refreshTokenRepository.UpdateAsync(stored);
+            await _unitOfWork.SaveAsync();
+
+            return true;
+        }
     }
 }

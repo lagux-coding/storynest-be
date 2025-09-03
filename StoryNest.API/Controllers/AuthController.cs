@@ -77,14 +77,23 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<ActionResult<ApiResponse<RefreshTokenResponse>>> Refresh([FromBody] RefreshTokenRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> Refresh([FromBody] RefreshTokenRequest request)
         {
             var access = request.AccessToken;
             var refresh = request.RefreshToken;
             var result = await _authService.RefreshAsync(request);
-            if (result == null) return Unauthorized(ApiResponse<RefreshTokenResponse>.Fail(result, "Invalid token or token expired"));
+            if (result == null) return Unauthorized(ApiResponse<object>.Fail(new { }, "Invalid token or token expired"));
 
             return Ok(ApiResponse<RefreshTokenResponse>.Success(result));
+        }
+
+        [HttpPost("logout")]
+        public async Task<ActionResult<ApiResponse<object>>> Logout([FromBody] LogoutRequest request)
+        {
+            var refreshTokenPlain = request.RefreshToken.Trim();
+            bool result = await _authService.LogoutAsync(refreshTokenPlain);
+            if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+            return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
         }
     }
 }
