@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Dtos.Request;
+﻿using Microsoft.Extensions.Configuration;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
@@ -14,27 +15,39 @@ namespace StoryNest.Application.Services
 {
     public class AuthService : IAuthService
     {
+        private readonly IConfiguration _configuration;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IJwtService _jwtService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _jwtService = jwtService;
+            _configuration = configuration;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
         {
-            var user = await _userRepository.GetByUsernameOrEmailAsync(request.UsernameOrEmail);
-            if (user == null || !PasswordHelper.VerifyPassword(request.Password, user.PasswordHash))
+            var userNameOrEmail = request.UsernameOrEmail.Trim();
+            var password = request.Password.Trim();
+
+            var user = await _userRepository.GetByUsernameOrEmailAsync(userNameOrEmail);
+            if (user == null || !PasswordHelper.VerifyPassword(password, user.PasswordHash))
             {
                 return null;
             }
 
+            // Generate token
+            var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Username, user.Email, "user");
+            var refresToken = "This is a refresh token";
+
             return new LoginUserResponse
             {
-                Token = "This is a token",
-                Expiration = DateTime.UtcNow.AddMinutes(15)
+                Username = user.Username,
+                AccessToken = accessToken,
+                RefreshToken = refresToken,
             };
         }
 

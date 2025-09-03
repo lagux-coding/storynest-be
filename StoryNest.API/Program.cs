@@ -8,6 +8,10 @@ using StoryNest.Infrastructure.Persistence;
 using FluentValidation;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +23,17 @@ var builder = WebApplication.CreateBuilder(args);
  */
 // Load .env file
 Env.Load();
+foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVariables())
+{
+    var key = de.Key?.ToString();
+    var value = de.Value?.ToString();
+
+    if (key != null && value != null)
+    {
+        builder.Configuration[key] = value;
+    }
+}
+
 
 // Get the connection string from environment variables
 var host = Environment.GetEnvironmentVariable("DB_HOST");
@@ -34,6 +49,27 @@ var connectionString = $"Host={host};Port={port};Database={database};Username={u
 builder.Services.AddDbContext<MyDbContext>(options => options.UseNpgsql(connectionString));
 // ************************************************
 
+// Jwt
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidIssuer = builder.Configuration["JWT_ISSUER"],
+        ValidAudience = builder.Configuration["JWT_AUDIENCE"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT_KEY"])),
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+    };
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -51,6 +87,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 var app = builder.Build();
 
@@ -61,6 +98,7 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
