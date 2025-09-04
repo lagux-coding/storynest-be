@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using StoryNest.Application.Features.Users;
 
 namespace StoryNest.Application.Services
 {
@@ -22,14 +23,16 @@ namespace StoryNest.Application.Services
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IJwtService _jwtService;
+        private readonly WelcomeEmailSender _welcomeEmailSender;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _jwtService = jwtService;
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
+            _welcomeEmailSender = welcomeEmailSender;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -84,6 +87,14 @@ namespace StoryNest.Application.Services
 
             await _userRepository.AddAsync(user);
             await _unitOfWork.SaveAsync();
+
+            await _welcomeEmailSender.SendAsync(
+                user.Email,
+                user.Username,
+                "https://kusl.io.vn",
+                CancellationToken.None
+            );
+
             return true;
         }
 

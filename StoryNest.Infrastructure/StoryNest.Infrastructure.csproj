@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
+    <Folder Include="Services\Email\Templates\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +22,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+    <PackageReference Include="Resend" Version="0.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Services\Email\Templates\Welcome.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
