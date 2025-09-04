@@ -21,4 +21,12 @@
     <ProjectReference Include="..\StoryNest.Application\StoryNest.Application.csproj" />
     <ProjectReference Include="..\StoryNest.Infrastructure\StoryNest.Infrastructure.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\StoryNest.Infrastructure\Services\Email\Templates\**\*.html"
+			  Link="Email\Templates\%(RecursiveDir)%(Filename)%(Extension)">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>

@@ -4,24 +4,21 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Resend;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
+using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
+using StoryNest.Infrastructure.Services.Email;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-/*
- * ************************
- * Database configuration *
- * ************************
- */
 // Load .env file
 Env.Load();
 foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVariables())
@@ -35,6 +32,16 @@ foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVari
     }
 }
 
+// Resend DI
+builder.Services.AddOptions();
+builder.Services.AddHttpClient<ResendClient>();
+builder.Services.Configure<ResendClientOptions>(options =>
+{
+    options.ApiToken = builder.Configuration["RESEND_API_KEY"]
+                        ?? Environment.GetEnvironmentVariable("RESEND_API_KEY");
+});
+builder.Services.AddTransient<IResend, ResendClient>();
+builder.Services.AddEmail(builder.Configuration);
 
 // Get the connection string from environment variables
 var host = Environment.GetEnvironmentVariable("DB_HOST");
@@ -93,6 +100,8 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
 
 var app = builder.Build();
 
