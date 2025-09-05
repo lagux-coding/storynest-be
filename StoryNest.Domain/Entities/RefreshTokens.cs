@@ -15,9 +15,12 @@ namespace StoryNest.Domain.Entities
         public string JwtId { get; set; } = default!;
         public DateTime ExpiresAt { get; set; }        
         public DateTime CreatedAt { get; set; }
-        public DateTime? RevokedAt { get; set; }
-
         public string? ReplacedByTokenHash { get; set; }
+
+        // Revoke
+        public DateTime? RevokedAt { get; set; }
+        public string? RevokedBy { get; set; }
+        public string? RevokeReason { get; set; }
 
         // Tracking
         public string? DeviceId { get; set; }
