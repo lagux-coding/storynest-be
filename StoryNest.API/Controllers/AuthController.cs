@@ -13,15 +13,17 @@ namespace StoryNest.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly IAuthService _authService;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration)
         {
             _authService = authService;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -72,6 +74,7 @@ namespace StoryNest.API.Controllers
             }
             else
             {
+                SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
                 return Ok(ApiResponse<object>.Success(result, "Login successful"));
             }
         }
@@ -84,6 +87,8 @@ namespace StoryNest.API.Controllers
             var result = await _authService.RefreshAsync(request);
             if (result == null) return Unauthorized(ApiResponse<object>.Fail(new { }, "Invalid token or token expired"));
 
+            SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
+
             return Ok(ApiResponse<RefreshTokenResponse>.Success(result));
         }
 
@@ -93,6 +98,8 @@ namespace StoryNest.API.Controllers
             var refreshTokenPlain = request.RefreshToken.Trim();
             bool result = await _authService.LogoutAsync(refreshTokenPlain);
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+
+            Response.Cookies.Delete("refreshToken");
             return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
         }
 
@@ -103,5 +110,19 @@ namespace StoryNest.API.Controllers
 
             return Ok(ApiResponse<object>.Success(new { revoke = count }));
         }
+
+        private void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,          
+                Secure = true,            
+                SameSite = SameSiteMode.Strict, 
+                Expires = expires         
+            };
+
+            response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+        }
+
     }
 }
