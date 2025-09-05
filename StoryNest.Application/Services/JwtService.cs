@@ -68,6 +68,31 @@ namespace StoryNest.Application.Services
             return Convert.ToBase64String(bytes);
         }
 
+        public async Task<string> GenerateResetPasswordToken(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("type", "reset_password"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_RESET_TOKEN"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT_ISSUER"],
+                    audience: _configuration["JWT_AUDIENCE"],
+                    claims: claims,
+                    notBefore: DateTime.UtcNow,
+                    expires: DateTime.UtcNow.AddMinutes(double.Parse(_configuration["JWT_RESET_EXPIREMINUTES"])),
+                    signingCredentials: creds
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
         public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
         {
             if (string.IsNullOrWhiteSpace(token)) return null;
@@ -121,5 +146,7 @@ namespace StoryNest.Application.Services
                 return null; // signature/iss/aud/key fail
             }
         }
+
+
     }
 }

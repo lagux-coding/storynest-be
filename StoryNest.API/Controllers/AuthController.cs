@@ -1,10 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -15,15 +17,21 @@ namespace StoryNest.API.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
+        private readonly IJwtService _jwtService;
+        private readonly ResetPasswordEmailSender _resetPasswordEmailSender;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender)
         {
             _authService = authService;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
             _configuration = configuration;
+            _userService = userService;
+            _jwtService = jwtService;
+            _resetPasswordEmailSender = resetPasswordEmailSender;
         }
 
         [HttpPost("register")]
@@ -101,6 +109,31 @@ namespace StoryNest.API.Controllers
 
             Response.Cookies.Delete("refreshToken");
             return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordUserRequest request)
+        {
+            var user = await _userService.GetUserByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return NotFound(ApiResponse<object>.NotFound("Email not found"));
+            }
+
+            var token = await _jwtService.GenerateResetPasswordToken(user);
+            var resetLink = $"{_configuration["FRONTEND_URL"]}/reset-password?tk={Uri.EscapeDataString(token)}";
+
+            // Send email
+            try
+            {
+                await _resetPasswordEmailSender.SendAsync(user.Email, user.Username, resetLink, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.Error("Failed to send email: " + ex.Message));
+            }
+
+            return Ok(ApiResponse<object>.Success(new { }, "Password reset email sent"));
         }
 
         [HttpPost("revoke-all")]

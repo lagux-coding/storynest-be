@@ -1,6 +1,7 @@
 using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -14,10 +15,18 @@ using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
+using StoryNest.Infrastructure.Services.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 
 // Load .env file
 Env.Load();
@@ -100,10 +109,16 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
+builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
