@@ -13,5 +13,6 @@ namespace StoryNest.Domain.Interfaces
         Task<RefreshTokens> GetByHashAsync(string tokenHash);
         Task AddAsync(RefreshTokens token);
         Task UpdateAsync(RefreshTokens token);
+        Task<int> RevokeAllAsync(long userId, string? revokedBy = "user", string? reason = "user-wide revoke");
     }
 }

@@ -167,5 +167,8 @@ namespace StoryNest.Application.Services
 
             return true;
         }
+
+        public Task<int> RevokeAllAsync(long userId, string? reason = null, string? revokedBy = null)
+            => _refreshTokenRepository.RevokeAllAsync(userId, revokedBy, reason);
     }
 }

@@ -95,5 +95,13 @@ namespace StoryNest.API.Controllers
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
             return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
         }
+
+        [HttpPost("revoke-all")]
+        public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
+        {
+            var count = await _authService.RevokeAllAsync(userId, request.Reason, request.RevokedBy);
+
+            return Ok(ApiResponse<object>.Success(new { revoke = count }));
+        }
     }
 }
