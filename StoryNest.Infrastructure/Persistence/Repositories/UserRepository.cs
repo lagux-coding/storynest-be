@@ -40,5 +40,11 @@ namespace StoryNest.Application.Services
             return await _context.Users
                     .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email == usernameOrEmail);
         }
+
+        public async Task UpdateAsync(User user)
+        {
+            _context.Users.Update(user);
+            await Task.CompletedTask;
+        }
     }
 }

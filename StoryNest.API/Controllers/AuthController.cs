@@ -149,6 +149,15 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(new { username, email }, "Token is valid"));
         }
 
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordUserRequest request)
+        {
+            var result = await _authService.ResetPasswordAsync(request);
+            if (!result) 
+                return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+            return Ok(ApiResponse<object>.Success(new { }, "Password has been reset successfully"));
+        }
+
         [HttpPost("revoke-all")]
         public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
         {

@@ -170,5 +170,35 @@ namespace StoryNest.Application.Services
 
         public Task<int> RevokeAllAsync(long userId, string? reason = null, string? revokedBy = null)
             => _refreshTokenRepository.RevokeAllAsync(userId, revokedBy, reason);
+
+        public async Task<bool> ResetPasswordAsync(ResetPasswordUserRequest request)
+        {
+            var token = request.Token;
+            var newPassword = request.NewPassword.Trim();
+
+            // Verify token
+            var principall = await _jwtService.VerifyResetPasswordToken(token);
+            if (principall == null)
+                return false;
+
+            // Find user
+            var username = principall.FindFirst("unique_name")?.Value;
+            var email = principall.FindFirst("email")?.Value;
+            var user = await _userRepository.GetByUsernameOrEmailAsync(username ?? email);
+            if (user == null) 
+                return false;
+
+            // Update password
+            user.PasswordHash = PasswordHelper.HashPassword(newPassword);
+            await _userRepository.UpdateAsync(user);
+            await _unitOfWork.SaveAsync();
+
+            // Revoke reset token (implement later)
+
+            // Revoke all rt
+            await RevokeAllAsync(user.Id, "password reset", "system");
+
+            return true;
+        }
     }
 }

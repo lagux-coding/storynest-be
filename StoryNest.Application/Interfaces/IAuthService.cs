@@ -14,6 +14,7 @@ namespace StoryNest.Application.Interfaces
         Task<LoginUserResponse> LoginAsync(LoginUserRequest request);
         Task<bool> LogoutAsync(string refreshTokenPlain);
         public Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request);
+        Task<bool> ResetPasswordAsync(ResetPasswordUserRequest request);
         Task<int> RevokeAllAsync(long userId, string? reason = null, string? revokedBy = null);
     }
 }
