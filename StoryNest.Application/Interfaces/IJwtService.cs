@@ -16,5 +16,6 @@ namespace StoryNest.Application.Interfaces
         public string GenerateRefreshToken();
         public Task<string> GenerateResetPasswordToken(User user);
         ClaimsPrincipal? GetPrincipalFromExpiredToken(string token);
+        Task<ClaimsPrincipal?> VerifyResetPasswordToken(string token);
     }
 }

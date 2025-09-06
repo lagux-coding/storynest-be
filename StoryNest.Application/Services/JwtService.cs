@@ -73,6 +73,7 @@ namespace StoryNest.Application.Services
             var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("type", "reset_password"),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -147,6 +148,45 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<ClaimsPrincipal?> VerifyResetPasswordToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["JWT_RESET_TOKEN"]);
 
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = _configuration["JWT_ISSUER"],
+                ValidAudience = _configuration["JWT_AUDIENCE"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+            };
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+                if (validatedToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
+
+                var typeClaim = principal.FindFirst("type")?.Value;
+                if (typeClaim != "reset_password")
+                {
+                    return null;
+                }
+
+                return principal;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+        }
     }
 }

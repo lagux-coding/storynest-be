@@ -136,6 +136,19 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(new { }, "Password reset email sent"));
         }
 
+        [HttpPost("verify-reset")]
+        public async Task<ActionResult<ApiResponse<object>>> VerifyResetPasswordLink([FromQuery] string token)
+        {
+            var principal = await _jwtService.VerifyResetPasswordToken(token);
+            if (principal == null)
+                return BadRequest(ApiResponse<object>.Fail("Invalid or expired token"));
+
+            var username = principal.FindFirst("unique_name")?.Value;
+            var email = principal.FindFirst("email")?.Value;
+
+            return Ok(ApiResponse<object>.Success(new { username, email }, "Token is valid"));
+        }
+
         [HttpPost("revoke-all")]
         public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
         {
