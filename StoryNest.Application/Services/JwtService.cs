@@ -23,13 +23,15 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IRedisService _redisService;
 
-        public JwtService(IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
+        public JwtService(IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUserRepository userRepository, IUnitOfWork unitOfWork, IRedisService redisService)
         {
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _redisService = redisService;
         }
 
         public string GenerateAccessToken(long userId, string username, string email, string type, out string jwtId)
@@ -168,6 +170,8 @@ namespace StoryNest.Application.Services
             try
             {
                 var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                var checkBlacklist = await _redisService.IsBlacklistedAsync(principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value);
+                if (checkBlacklist) return null;
 
                 if (validatedToken is not JwtSecurityToken jwtToken ||
                     !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))

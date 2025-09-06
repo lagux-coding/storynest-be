@@ -24,8 +24,9 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IJwtService _jwtService;
         private readonly WelcomeEmailSender _welcomeEmailSender;
+        private readonly IRedisService _redisService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -33,6 +34,7 @@ namespace StoryNest.Application.Services
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
             _welcomeEmailSender = welcomeEmailSender;
+            _redisService = redisService;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -193,7 +195,8 @@ namespace StoryNest.Application.Services
             await _userRepository.UpdateAsync(user);
             await _unitOfWork.SaveAsync();
 
-            // Revoke reset token (implement later)
+            // Add to blacklist
+            await _redisService.SetBlacklistAsync(principall.FindFirst(JwtRegisteredClaimNames.Jti)?.Value, TimeSpan.FromMinutes(15));
 
             // Revoke all rt
             await RevokeAllAsync(user.Id, "password reset", "system");
