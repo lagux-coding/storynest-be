@@ -29,6 +29,19 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
         }
 
+        public async Task<int> RevokeAllAsync(long userId, string? revokedBy = "user", string? revokeReson = "user-wide revoke")
+        {
+            var now = DateTime.UtcNow;
+
+            return await _context.RefreshTokens
+                .Where(rt => rt.UserId == userId && rt.RevokedAt == null && rt.ExpiresAt > now)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(rt => rt.RevokedAt, now)
+                    .SetProperty(rt => rt.RevokedBy, revokedBy)
+                    .SetProperty(rt => rt.RevokeReason, revokeReson)
+                );
+        }
+
         public async Task UpdateAsync(RefreshTokens token)
         {
             _context.RefreshTokens.Update(token);

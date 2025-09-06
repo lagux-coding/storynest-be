@@ -12,6 +12,7 @@ namespace StoryNest.Domain.Interfaces
         Task<User?> GetByEmailAsync(string email);
         Task<User?> GetByIdAsync(long userId);
         Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail);
+        Task UpdateAsync(User user);
         Task AddAsync(User user);
     }
 }

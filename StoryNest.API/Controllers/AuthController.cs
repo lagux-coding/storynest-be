@@ -1,10 +1,12 @@
 ﻿using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -13,15 +15,23 @@ namespace StoryNest.API.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly IAuthService _authService;
+        private readonly IUserService _userService;
+        private readonly IJwtService _jwtService;
+        private readonly ResetPasswordEmailSender _resetPasswordEmailSender;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender)
         {
             _authService = authService;
             _registerValidator = registerValidator;
             _loginValidator = loginValidator;
+            _configuration = configuration;
+            _userService = userService;
+            _jwtService = jwtService;
+            _resetPasswordEmailSender = resetPasswordEmailSender;
         }
 
         [HttpPost("register")]
@@ -72,6 +82,7 @@ namespace StoryNest.API.Controllers
             }
             else
             {
+                SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
                 return Ok(ApiResponse<object>.Success(result, "Login successful"));
             }
         }
@@ -84,6 +95,8 @@ namespace StoryNest.API.Controllers
             var result = await _authService.RefreshAsync(request);
             if (result == null) return Unauthorized(ApiResponse<object>.Fail(new { }, "Invalid token or token expired"));
 
+            SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
+
             return Ok(ApiResponse<RefreshTokenResponse>.Success(result));
         }
 
@@ -93,7 +106,78 @@ namespace StoryNest.API.Controllers
             var refreshTokenPlain = request.RefreshToken.Trim();
             bool result = await _authService.LogoutAsync(refreshTokenPlain);
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+
+            Response.Cookies.Delete("refreshToken");
             return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
         }
+
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ForgotPassword([FromBody] ForgotPasswordUserRequest request)
+        {
+            var user = await _userService.GetUserByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return NotFound(ApiResponse<object>.NotFound("Email not found"));
+            }
+
+            var token = await _jwtService.GenerateResetPasswordToken(user);
+            var resetLink = $"{_configuration["FRONTEND_URL"]}/reset-password?tk={Uri.EscapeDataString(token)}";
+
+            // Send email
+            try
+            {
+                await _resetPasswordEmailSender.SendAsync(user.Email, user.Username, resetLink, CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponse<object>.Error("Failed to send email: " + ex.Message));
+            }
+
+            return Ok(ApiResponse<object>.Success(new { }, "Password reset email sent"));
+        }
+
+        [HttpPost("verify-reset")]
+        public async Task<ActionResult<ApiResponse<object>>> VerifyResetPasswordLink([FromQuery] string token)
+        {
+            var principal = await _jwtService.VerifyResetPasswordToken(token);
+            if (principal == null)
+                return BadRequest(ApiResponse<object>.Fail("Invalid or expired token"));
+
+            var username = principal.FindFirst("unique_name")?.Value;
+            var email = principal.FindFirst("email")?.Value;
+
+            return Ok(ApiResponse<object>.Success(new { username, email }, "Token is valid"));
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ResetPassword([FromBody] ResetPasswordUserRequest request)
+        {
+            var result = await _authService.ResetPasswordAsync(request);
+            if (!result) 
+                return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+            return Ok(ApiResponse<object>.Success(new { }, "Password has been reset successfully"));
+        }
+
+        [HttpPost("revoke-all")]
+        public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
+        {
+            var count = await _authService.RevokeAllAsync(userId, request.Reason, request.RevokedBy);
+
+            return Ok(ApiResponse<object>.Success(new { revoke = count }));
+        }
+
+        private void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,          
+                Secure = true,            
+                SameSite = SameSiteMode.Strict, 
+                Expires = expires         
+            };
+
+            response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+        }
+
     }
 }

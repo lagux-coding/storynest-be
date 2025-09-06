@@ -23,13 +23,15 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IRedisService _redisService;
 
-        public JwtService(IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
+        public JwtService(IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUserRepository userRepository, IUnitOfWork unitOfWork, IRedisService redisService)
         {
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _redisService = redisService;
         }
 
         public string GenerateAccessToken(long userId, string username, string email, string type, out string jwtId)
@@ -66,6 +68,32 @@ namespace StoryNest.Application.Services
         {
             var bytes = RandomNumberGenerator.GetBytes(32);
             return Convert.ToBase64String(bytes);
+        }
+
+        public async Task<string> GenerateResetPasswordToken(User user)
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim("type", "reset_password"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT_RESET_TOKEN"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT_ISSUER"],
+                    audience: _configuration["JWT_AUDIENCE"],
+                    claims: claims,
+                    notBefore: DateTime.UtcNow,
+                    expires: DateTime.UtcNow.AddMinutes(double.Parse(_configuration["JWT_RESET_EXPIREMINUTES"])),
+                    signingCredentials: creds
+                );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
         public ClaimsPrincipal? GetPrincipalFromExpiredToken(string token)
@@ -119,6 +147,49 @@ namespace StoryNest.Application.Services
             catch
             {
                 return null; // signature/iss/aud/key fail
+            }
+        }
+
+        public async Task<ClaimsPrincipal?> VerifyResetPasswordToken(string token)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_configuration["JWT_RESET_TOKEN"]);
+
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+
+                ValidIssuer = _configuration["JWT_ISSUER"],
+                ValidAudience = _configuration["JWT_AUDIENCE"],
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+            };
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+                var checkBlacklist = await _redisService.IsBlacklistedAsync(principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value);
+                if (checkBlacklist) return null;
+
+                if (validatedToken is not JwtSecurityToken jwtToken ||
+                    !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return null;
+                }
+
+                var typeClaim = principal.FindFirst("type")?.Value;
+                if (typeClaim != "reset_password")
+                {
+                    return null;
+                }
+
+                return principal;
+            }
+            catch (Exception e)
+            {
+                return null;
             }
         }
     }

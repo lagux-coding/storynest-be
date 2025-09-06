@@ -1,10 +1,13 @@
 using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
+using StackExchange.Redis;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Features.Users;
@@ -14,10 +17,19 @@ using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
+using StoryNest.Infrastructure.Services.Redis;
+using StoryNest.Infrastructure.Services.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+});
 
 // Load .env file
 Env.Load();
@@ -31,6 +43,14 @@ foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVari
         builder.Configuration[key] = value;
     }
 }
+
+// Redis DI
+var redisConnection = builder.Configuration["REDIS_CONNECTION_STRING"];
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var redisConnection = builder.Configuration["REDIS_CONNECTION_STRING"];
+    return ConnectionMultiplexer.Connect(redisConnection);
+});
 
 // Resend DI
 builder.Services.AddOptions();
@@ -100,10 +120,19 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+// Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
+builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<ResetPasswordEmailSender>();
+
+// Others
+builder.Services.AddScoped<IRedisService, RedisService>();
 
 var app = builder.Build();
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 app.UseSwagger();
