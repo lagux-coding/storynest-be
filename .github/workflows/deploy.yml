@@ -60,8 +60,8 @@ jobs:
           script: |
             cd /var/www/storynest-dev
 
-            # docker stop storynest-api || true
-            # docker rm storynest-api || true
+            docker stop storynest-api || true
+            docker rm storynest-api || true
 
             # docker build --no-cache -t storynest-api -f StoryNest.API/Dockerfile .
 
