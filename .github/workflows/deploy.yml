@@ -70,3 +70,7 @@ jobs:
             docker compose build --no-cache storynest-api
 
             docker compose up -d storynest-api
+
+            if [ "${{ secrets.RESTART_REDIS }}" = "true" ]; then
+              docker compose up -d --force-recreate redis
+            fi
