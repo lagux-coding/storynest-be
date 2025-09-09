@@ -34,6 +34,8 @@ services:
       ${REDIS_PASSWORD:+--requirepass $$REDIS_PASSWORD}'
     env_file:
       - ./StoryNest.API/.env
+    port:
+      - 6379:6379
     environment:
       - TZ=Asia/Ho_Chi_Minh
     volumes:
