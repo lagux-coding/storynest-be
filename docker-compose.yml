@@ -1,14 +1,12 @@
-version: "3.9"
-
 services:
   storynest-api:
     build:
       context: .
-      dockerfile: ./StoryNest.Api/Dockerfile
+      dockerfile: ./StoryNest.API/Dockerfile
     container_name: storynest-api
     restart: unless-stopped
     env_file:
-      - ./StoryNest.Api/.env
+      - ./StoryNest.API/.env
     environment:
       - ASPNETCORE_URLS=http://0.0.0.0:8080
       - TZ=Asia/Ho_Chi_Minh
@@ -35,7 +33,7 @@ services:
       --save 60 10000
       ${REDIS_PASSWORD:+--requirepass $$REDIS_PASSWORD}'
     env_file:
-      - .env
+      - ./StoryNest.API/.env
     environment:
       - TZ=Asia/Ho_Chi_Minh
     volumes:
