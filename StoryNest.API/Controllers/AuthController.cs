@@ -185,7 +185,6 @@ namespace StoryNest.API.Controllers
                 SameSite = SameSiteMode.None,
                 MaxAge = expires - DateTime.UtcNow,
                 Path = "/",
-                Domain = ".kusl.io.vn"
             };
 
             response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
