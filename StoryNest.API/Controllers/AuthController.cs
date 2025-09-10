@@ -107,7 +107,13 @@ namespace StoryNest.API.Controllers
             bool result = await _authService.LogoutAsync(refreshTokenPlain);
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
 
-            Response.Cookies.Delete("refreshToken");
+            Response.Cookies.Append("refreshToken", "", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(-1)
+            });
             return Ok(ApiResponse<object>.Success(new { }, "Logout successful"));
         }
 
@@ -155,6 +161,7 @@ namespace StoryNest.API.Controllers
             var result = await _authService.ResetPasswordAsync(request);
             if (!result) 
                 return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
+
             return Ok(ApiResponse<object>.Success(new { }, "Password has been reset successfully"));
         }
 
