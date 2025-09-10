@@ -100,7 +100,7 @@ namespace StoryNest.Application.Services
             return true;
         }
 
-        public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request)
+        public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request, string refreshToken)
         {
             // 1. Get principal from expired token
             var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
@@ -113,7 +113,7 @@ namespace StoryNest.Application.Services
             var userId = long.Parse(userIdStr);
 
             // 2. Get refresh token by Hash
-            var refreshHash = HashHelper.SHA256(request.RefreshToken);
+            var refreshHash = HashHelper.SHA256(refreshToken);
             var stored = await _refreshTokenRepository.GetByHashAsync(refreshHash);
             if (stored == null) return null;
 
@@ -164,6 +164,8 @@ namespace StoryNest.Application.Services
             if (stored == null || !stored.IsActive) return false;
 
             stored.RevokedAt = DateTime.UtcNow;
+            stored.RevokedBy = "user";
+            stored.RevokeReason = "logout";
             await _refreshTokenRepository.UpdateAsync(stored);
             await _unitOfWork.SaveAsync();
 
