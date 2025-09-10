@@ -181,7 +181,7 @@ namespace StoryNest.API.Controllers
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,          
-                Secure = false,            
+                Secure = true,            
                 SameSite = SameSiteMode.None, 
                 Expires = expires         
             };
