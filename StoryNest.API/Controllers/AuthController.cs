@@ -182,8 +182,10 @@ namespace StoryNest.API.Controllers
             {
                 HttpOnly = true,          
                 Secure = true,            
-                SameSite = SameSiteMode.None, 
-                Expires = expires         
+                SameSite = SameSiteMode.None,
+                MaxAge = expires - DateTime.UtcNow,
+                Path = "/",
+                Domain = ".kusl.io.vn"
             };
 
             response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
