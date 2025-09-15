@@ -28,6 +28,29 @@ namespace StoryNest.Domain.Entities
         public DateTime UpdatedAt { get; set; }
         public bool IsActive { get; set; } = true;
 
-        public ICollection<RefreshTokens> RefreshTokens { get; set; } = new List<RefreshTokens>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
+        public ICollection<AITransaction> AITransactions { get; set; } = new List<AITransaction>();
+
+        public ICollection<Like> Likes { get; set; } = new List<Like>();
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+        // Who follow me
+        public ICollection<Follow> Follows { get; set; } = new List<Follow>();
+        // Who I follow
+        public ICollection<Follow> Following { get; set; } = new List<Follow>();
+
+        public ICollection<AIUsageLog> AIUsageLogs { get; set; } = new List<AIUsageLog>();
+        public ICollection<Collection> Collections { get; set; } = new List<Collection>();
+        public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public ICollection<Notification> ActorNotifications { get; set; } = new List<Notification>();
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
+        public ICollection<StoryView> StoryViews { get; set; } = new List<StoryView>();
+        public ICollection<UserReport> ReportsCreated { get; set; } = new List<UserReport>();
+        public ICollection<UserReport> ReportsReceived { get; set; } = new List<UserReport>();
+        public ICollection<YearlyMemory> YearlyMemories { get; set; } = new List<YearlyMemory>();
+
+        // 1 - 1 relations
+        public AICredit AICredit { get; set; } = default!;
     }
 }

@@ -30,7 +30,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:3000")
+            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -59,10 +59,16 @@ foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVari
 }
 
 // Redis DI
+var redisHost = builder.Configuration["Redis:Host"] ?? "localhost";
+var redisPort = builder.Configuration["Redis:Port"] ?? "6379";
+var redisPassword = builder.Configuration["REDIS_PASSWORD"];
 var redisConnection = builder.Configuration["REDIS_CONNECTION_STRING"];
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
-    var redisConnection = builder.Configuration["REDIS_CONNECTION_STRING"];
+    if (redisHost != "localhost" || redisPassword != null)
+    {
+        redisConnection = redisConnection = $"{redisHost}:{redisPort},password={redisPassword},abortConnect=false";
+    }
     return ConnectionMultiplexer.Connect(redisConnection);
 });
 

@@ -1,0 +1,55 @@
+services:
+  storynest-api:
+    build:
+      context: .
+      dockerfile: ./StoryNest.API/Dockerfile
+    container_name: storynest-api
+    restart: unless-stopped
+    env_file:
+      - ./StoryNest.API/.env
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - TZ=Asia/Ho_Chi_Minh
+      - Redis__Host=redis
+      - Redis__Port=6379
+      - Redis__Password=${REDIS_PASSWORD:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - storynest
+
+  redis:
+    image: redis:8.2-alpine
+    container_name: storynest-redis
+    restart: unless-stopped
+    command: >
+      sh -c 'redis-server
+      --appendonly yes
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      ${REDIS_PASSWORD:+--requirepass $$REDIS_PASSWORD}'
+    env_file:
+      - ./StoryNest.API/.env
+    ports:
+      - 6379:6379
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli ${REDIS_PASSWORD:+-a $$REDIS_PASSWORD} PING | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - storynest
+
+volumes:
+  redis-data:
+
+networks:
+  storynest:

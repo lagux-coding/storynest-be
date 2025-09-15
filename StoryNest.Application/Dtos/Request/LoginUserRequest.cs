@@ -10,7 +10,8 @@ namespace StoryNest.Application.Dtos.Request
     {
         public string UsernameOrEmail { get; set; } = default!;
         public string Password { get; set; } = default!;
-        
+        public bool Remember { get; set; } = false;
+
         // Optional
         public string? DeviceId { get; set; }
         public string? IpAddress { get; set; }

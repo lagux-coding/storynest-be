@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Domain.Entities
 {
-    public class RefreshTokens
+    public class RefreshToken
     {
         public Guid Id { get; set; }
         public long UserId { get; set; }

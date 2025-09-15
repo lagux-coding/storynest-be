@@ -63,6 +63,14 @@ jobs:
             docker stop storynest-api || true
             docker rm storynest-api || true
 
-            docker build --no-cache -t storynest-api -f StoryNest.API/Dockerfile .
+            # docker build --no-cache -t storynest-api -f StoryNest.API/Dockerfile .
 
-            docker run -d --name storynest-api -p 5000:8080 --env-file StoryNest.API/.env storynest-api
+            # docker run -d --name storynest-api -p 8080:8080 --env-file StoryNest.API/.env storynest-api
+
+            docker compose build --no-cache storynest-api
+
+            docker compose up -d storynest-api
+
+            if [ "${{ secrets.RESTART_REDIS }}" = "true" ]; then
+              docker compose up -d --force-recreate redis
+            fi
