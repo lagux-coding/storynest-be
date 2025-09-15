@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StoryNest.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using StoryNest.Infrastructure.Persistence;
 namespace StoryNest.Infrastructure.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250915161757_V3_DatabaseUpdate")]
+    partial class V3_DatabaseUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,7 +162,7 @@ namespace StoryNest.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AIUsageLogs", (string)null);
+                    b.ToTable("ai_usage_logs", (string)null);
                 });
 
             modelBuilder.Entity("StoryNest.Domain.Entities.Admin", b =>

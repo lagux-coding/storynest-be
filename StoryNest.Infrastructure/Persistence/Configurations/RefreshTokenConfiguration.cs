@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Infrastructure.Persistence.Configurations
 {
-    public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshTokens>
+    public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
-        public void Configure(EntityTypeBuilder<RefreshTokens> builder)
+        public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.ToTable("RefreshTokens");
 

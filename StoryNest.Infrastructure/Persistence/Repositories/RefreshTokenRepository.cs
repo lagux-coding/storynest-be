@@ -18,12 +18,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
-        public async Task AddAsync(RefreshTokens token)
+        public async Task AddAsync(RefreshToken token)
         {
             await _context.RefreshTokens.AddAsync(token);
         }
 
-        public async Task<RefreshTokens?> GetByHashAsync(string tokenHash)
+        public async Task<RefreshToken?> GetByHashAsync(string tokenHash)
         {
             return await _context.RefreshTokens
                 .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
@@ -42,7 +42,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 );
         }
 
-        public async Task UpdateAsync(RefreshTokens token)
+        public async Task UpdateAsync(RefreshToken token)
         {
             _context.RefreshTokens.Update(token);
             await Task.CompletedTask;

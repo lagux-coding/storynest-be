@@ -10,9 +10,9 @@ namespace StoryNest.Domain.Interfaces
 {
     public interface IRefreshTokenRepository
     {
-        Task<RefreshTokens> GetByHashAsync(string tokenHash);
-        Task AddAsync(RefreshTokens token);
-        Task UpdateAsync(RefreshTokens token);
+        Task<RefreshToken> GetByHashAsync(string tokenHash);
+        Task AddAsync(RefreshToken token);
+        Task UpdateAsync(RefreshToken token);
         Task<int> RevokeAllAsync(long userId, string? revokedBy = "user", string? reason = "user-wide revoke");
     }
 }
