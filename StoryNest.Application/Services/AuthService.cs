@@ -52,7 +52,7 @@ namespace StoryNest.Application.Services
             var accessToken = _jwtService.GenerateAccessToken(user.Id, user.Username, user.Email, "user", out var jwtId);
             var refresTokenPlain = _jwtService.GenerateRefreshToken();
             var refreshTokenExpiryDays = _configuration["REFRESH_TOKEN_EXPIREDAYS"];
-            var rt = new RefreshTokens
+            var rt = new RefreshToken
             {
                 UserId = user.Id,
                 TokenHash = HashHelper.SHA256(refresTokenPlain),
@@ -130,7 +130,7 @@ namespace StoryNest.Application.Services
 
             var newAccessToken = _jwtService.GenerateAccessToken(user.Id, user.Username, user.Email, "user", out var newJwtId);
             var newRefreshTokenPlain = _jwtService.GenerateRefreshToken();
-            var newRt = new RefreshTokens
+            var newRt = new RefreshToken
             {
                 UserId = user.Id,
                 TokenHash = HashHelper.SHA256(newRefreshTokenPlain),

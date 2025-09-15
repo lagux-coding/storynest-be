@@ -69,10 +69,88 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.HasIndex(u => u.Username).IsUnique();
             builder.HasIndex(u => u.Email).IsUnique();
 
-            // 1 User have many RefreshTokens
+            // Refreshtoken (1 - n)
             builder.HasMany(u => u.RefreshTokens)
                    .WithOne(rt => rt.User)
                    .HasForeignKey(rt => rt.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Subscription (1 - n)
+            builder.HasMany(u => u.Subscriptions)
+                   .WithOne(s => s.User)
+                   .HasForeignKey(s => s.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // AITransactions (1-n)
+            builder.HasMany(u => u.AITransactions)
+                   .WithOne(at => at.User)
+                   .HasForeignKey(at => at.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Likes (1-n)
+            builder.HasMany(u => u.Likes)
+                   .WithOne(l => l.User)
+                   .HasForeignKey(l => l.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Comments (1-n)
+            builder.HasMany(u => u.Comments)
+                   .WithOne(c => c.User)
+                   .HasForeignKey(c => c.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Follows - Who follow me
+            builder.HasMany(u => u.Follows)
+                   .WithOne(f => f.User) // User được follow
+                   .HasForeignKey(f => f.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Follows - Who I follow
+            builder.HasMany(u => u.Following)
+                   .WithOne(f => f.Follower) // User là follower
+                   .HasForeignKey(f => f.FollowerId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // AIUsageLogs (1-n)
+            builder.HasMany(u => u.AIUsageLogs)
+                   .WithOne(log => log.User)
+                   .HasForeignKey(log => log.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Collections (1-n)
+            builder.HasMany(u => u.Collections)
+                   .WithOne(c => c.User)
+                   .HasForeignKey(c => c.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Notifications - received
+            builder.HasMany(u => u.Notifications)
+                   .WithOne(n => n.User) // user nhận
+                   .HasForeignKey(n => n.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Notifications - acted by this user
+            builder.HasMany(u => u.ActorNotifications)
+                   .WithOne(n => n.Actor) // user gây ra
+                   .HasForeignKey(n => n.ActorId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // Payments (1-n)
+            builder.HasMany(u => u.Payments)
+                   .WithOne(p => p.User)
+                   .HasForeignKey(p => p.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // StoryViews (1-n)
+            builder.HasMany(u => u.StoryViews)
+                   .WithOne(sv => sv.User)
+                   .HasForeignKey(sv => sv.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            // 1-1 AICredit
+            builder.HasOne(u => u.AICredit)
+                   .WithOne(ac => ac.User)
+                   .HasForeignKey<AICredit>(ac => ac.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
         }
     }
