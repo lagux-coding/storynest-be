@@ -16,6 +16,8 @@ namespace StoryNest.Domain.Entities
         public string? Color { get; set; }
         public string? IconUrl { get; set; }
 
+        public bool IsUserGenerated { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }

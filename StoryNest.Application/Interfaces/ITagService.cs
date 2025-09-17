@@ -1,17 +1,15 @@
-﻿using StoryNest.Domain.Interfaces;
+﻿using StoryNest.Domain.Entities;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace StoryNest.Application.Interfaces
 {
-    public interface IUnitOfWork
+    public interface ITagService
     {
-        IUserRepository UserRepository { get; }
-
-        Task<int> SaveAsync();
+        public Task<Tag> GetTagAsync(string tagName);
+        public Task CreateTagAsync(Tag tag);
     }
 }

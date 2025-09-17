@@ -136,12 +136,18 @@ builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidat
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IStoryRepository, StoryRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IStoryTagService, StoryTagService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();

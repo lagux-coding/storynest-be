@@ -53,6 +53,10 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.Property(t => t.DeletedAt)
                    .HasColumnName("deleted_at");
 
+            builder.Property(t => t.IsUserGenerated)
+                   .HasColumnName("is_user_generated")
+                   .HasDefaultValue(false);
+
             // Relation: 1 Tag -> nhiều StoryTags (n-n Story)
             builder.HasMany(t => t.StoryTags)
                    .WithOne(st => st.Tag)

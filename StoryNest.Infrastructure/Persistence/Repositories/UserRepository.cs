@@ -43,8 +43,9 @@ namespace StoryNest.Application.Services
 
         public async Task UpdateAsync(User user)
         {
-            _context.Users.Update(user);
-            await Task.CompletedTask;
+            _context.ChangeTracker.Clear();
+            var tracker = _context.Attach(user);
+            tracker.State = EntityState.Modified;
         }
     }
 }
