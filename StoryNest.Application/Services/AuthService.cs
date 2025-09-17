@@ -100,10 +100,10 @@ namespace StoryNest.Application.Services
             return true;
         }
 
-        public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request, string refreshToken)
+        public async Task<RefreshTokenResponse?> RefreshAsync(string access, string refreshToken)
         {
             // 1. Get principal from expired token
-            var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
+            var principal = _jwtService.GetPrincipalFromExpiredToken(access);
             if (principal == null) return null;
 
             var userIdStr = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
