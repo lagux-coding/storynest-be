@@ -103,7 +103,7 @@ namespace StoryNest.API.Controllers
                             ? null
                             : accessHeader.Replace("Bearer ", "");
 
-            var result = await _authService.RefreshAsync(request, refresh);
+            var result = await _authService.RefreshAsync(access, refresh);
             if (result == null) return Unauthorized(ApiResponse<object>.Fail(new { }, "Invalid token or token expired"));
 
             SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
