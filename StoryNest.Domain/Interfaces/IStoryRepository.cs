@@ -10,5 +10,6 @@ namespace StoryNest.Domain.Interfaces
     public interface IStoryRepository
     {
         public Task AddAsync(Story story);
+        Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
     }
 }

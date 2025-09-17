@@ -1,4 +1,5 @@
 ﻿using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
@@ -74,6 +75,37 @@ namespace StoryNest.Application.Services
 
                 return await _unitOfWork.SaveAsync();
                 
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<PaginatedResponse<StoryPreviewResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor)
+        {
+            try
+            {
+                var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
+
+                var hasMore = stories.Count > limit;
+                var items = stories.Take(limit).Select(s => new StoryPreviewResponse
+                {
+                    Id = s.Id,
+                    Title = s.Title,
+                    Summary = s.Summary,
+                    CoverImageUrl = s.CoverImageUrl,
+                    CreatedAt = s.CreatedAt,
+                });
+
+                var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
+
+                return new PaginatedResponse<StoryPreviewResponse>
+                {
+                    Items = items,
+                    NextCursor = nextCursor,
+                    HasMore = hasMore,
+                };
             }
             catch (Exception ex)
             {

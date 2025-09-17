@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -15,6 +16,13 @@ namespace StoryNest.API.Controllers
         public StoryController(IStoryService storyService)
         {
             _storyService = storyService;
+        }
+
+        [HttpGet("get-stories")]
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryPreviewResponse>>>> GetPreviewStories([FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
+        {
+            var result = await _storyService.GetStoriesPreviewAsync(limit, cursor);
+            return Ok(ApiResponse<PaginatedResponse<StoryPreviewResponse>>.Success(result));
         }
 
         [HttpPost("create")]
