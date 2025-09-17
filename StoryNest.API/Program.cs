@@ -1,4 +1,4 @@
-using DotNetEnv;
+﻿using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Connections;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Resend;
 using StackExchange.Redis;
 using StoryNest.Application.Dtos.Request;
@@ -18,7 +19,6 @@ using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Redis;
-using StoryNest.Infrastructure.Services.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -126,7 +126,35 @@ JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "StoryNest API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập token theo dạng: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // Fluent Validation
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();

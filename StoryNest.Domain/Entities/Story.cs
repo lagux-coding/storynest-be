@@ -24,6 +24,9 @@ namespace StoryNest.Domain.Entities
         public DateTime? LastUpdatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
 
+        public long UserId { get; set; }
+        public User User { get; set; } = default!;
+
         // Relations
         public ICollection<Media> Media { get; set; } = new List<Media>();
         public ICollection<CollectionStory> CollectionStories { get; set; } = new List<CollectionStory>();

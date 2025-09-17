@@ -10,7 +10,7 @@ namespace StoryNest.Application.Interfaces
 {
     public interface IStoryService
     {
-        public Task<int> CreateStoryAsync(CreateStoryRequest request);
+        public Task<int> CreateStoryAsync(CreateStoryRequest request, long userId);
         public Task<PaginatedResponse<StoryPreviewResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
     }
 }

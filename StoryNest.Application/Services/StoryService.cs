@@ -28,7 +28,7 @@ namespace StoryNest.Application.Services
             _storyTagService = storyTagService;
         }
 
-        public async Task<int> CreateStoryAsync(CreateStoryRequest request)
+        public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
         {
             try
             {
@@ -37,10 +37,11 @@ namespace StoryNest.Application.Services
                     Title = request.Title,
                     Slug = SlugGenerationHelper.GenerateSlug(request.Title),
                     Content = request.Content,
-                    Summary = request.Summary,
+                    Summary = SummaryHelper.Generate(request.Content),
                     CoverImageUrl = request.CoverImageUrl,
                     PrivacyStatus = request.PrivacyStatus,
                     StoryStatus = request.StoryStatus,
+                    UserId = userId,
                 };
                 await _storyRepository.AddAsync(story);
                 await _unitOfWork.SaveAsync();
