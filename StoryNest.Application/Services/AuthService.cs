@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using StoryNest.Application.Features.Users;
+using StoryNest.Application.Constants;
 
 namespace StoryNest.Application.Services
 {
@@ -84,7 +85,9 @@ namespace StoryNest.Application.Services
             {
                 Username = request.Username,
                 Email = request.Email,
-                PasswordHash = PasswordHelper.HashPassword(request.Password)
+                FullName = request.FullName,
+                PasswordHash = PasswordHelper.HashPassword(request.Password),
+                AvatarUrl = GetRandomAvatar()
             };
 
             await _userRepository.AddAsync(user);
@@ -204,6 +207,13 @@ namespace StoryNest.Application.Services
             await RevokeAllAsync(user.Id, "password reset", "system");
 
             return true;
+        }
+
+        private string GetRandomAvatar()
+        {
+            var rnd = new Random();
+            int index = rnd.Next(DefaultAvatars.Avatars.Count);
+            return DefaultAvatars.Avatars[index];
         }
     }
 }
