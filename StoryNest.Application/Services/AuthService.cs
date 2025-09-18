@@ -96,7 +96,7 @@ namespace StoryNest.Application.Services
             await _welcomeEmailSender.SendAsync(
                 user.Email,
                 user.Username,
-                "https://kusl.io.vn",
+                "https://storynest.io.vn",
                 CancellationToken.None
             );
 
