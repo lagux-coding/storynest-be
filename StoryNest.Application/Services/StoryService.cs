@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Dtos.Request;
+﻿using AutoMapper;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
@@ -9,6 +10,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 
 namespace StoryNest.Application.Services
@@ -19,30 +22,28 @@ namespace StoryNest.Application.Services
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
             _tagService = tagService;
             _storyTagService = storyTagService;
+            _mapper = mapper;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
         {
             try
             {
-                var story = new Story
-                {
-                    Title = request.Title,
-                    Slug = SlugGenerationHelper.GenerateSlug(request.Title),
-                    Content = request.Content,
-                    Summary = SummaryHelper.Generate(request.Content),
-                    CoverImageUrl = request.CoverImageUrl,
-                    PrivacyStatus = request.PrivacyStatus,
-                    StoryStatus = request.StoryStatus,
-                    UserId = userId,
-                };
+
+                var story = _mapper.Map<Story>(request);
+
+                story.Slug = SlugGenerationHelper.GenerateSlug(request.Title);
+                story.Summary = SummaryHelper.Generate(request.Content);
+                story.UserId = userId;
+
                 await _storyRepository.AddAsync(story);
                 await _unitOfWork.SaveAsync();
 
@@ -83,30 +84,43 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<PaginatedResponse<StoryPreviewResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor)
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor)
         {
             try
             {
                 var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
 
                 var hasMore = stories.Count > limit;
-                var items = stories.Take(limit).Select(s => new StoryPreviewResponse
+                var items = stories.Take(limit).Select(s => new StoryResponse
                 {
                     Id = s.Id,
                     Title = s.Title,
-                    Summary = s.Summary,
+                    Content = s.Content,
                     CoverImageUrl = s.CoverImageUrl,
                     CreatedAt = s.CreatedAt,
                 });
 
                 var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
 
-                return new PaginatedResponse<StoryPreviewResponse>
+                return new PaginatedResponse<StoryResponse>
                 {
                     Items = items,
                     NextCursor = nextCursor,
                     HasMore = hasMore,
                 };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId)
+        {
+            try
+            {
+                //var story =
+                return 0;
             }
             catch (Exception ex)
             {

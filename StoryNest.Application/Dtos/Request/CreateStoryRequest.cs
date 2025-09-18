@@ -11,7 +11,6 @@ namespace StoryNest.Application.Dtos.Request
     {
         public string Title { get; set; } = null!;
         public string Content { get; set; } = null!;
-        public string? Summary { get; set; }
         public string? CoverImageUrl { get; set; }
         public List<string> Tags { get; set; } = new();
         public PrivacyStatus PrivacyStatus { get; set; } = PrivacyStatus.Public;

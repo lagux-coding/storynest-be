@@ -13,6 +13,7 @@ using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
+using StoryNest.Application.Mappings;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
@@ -184,6 +185,8 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
+builder.Services.AddAutoMapper(typeof(StoryProfile));
+
 
 var app = builder.Build();
 app.UseForwardedHeaders();

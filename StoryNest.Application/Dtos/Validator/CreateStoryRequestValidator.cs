@@ -20,10 +20,6 @@ namespace StoryNest.Application.Dtos.Validator
                 .NotEmpty().WithMessage("Content is required")
                 .MaximumLength(20000).WithMessage("Content too long (max 20k chars)");
 
-            RuleFor(x => x.Summary)
-                .MaximumLength(300).WithMessage("Summary too long (max 300 chars)")
-                .When(x => !string.IsNullOrEmpty(x.Summary));
-
             RuleFor(x => x.CoverImageUrl)
                 .Must(BeAValidUrl).When(x => !string.IsNullOrEmpty(x.CoverImageUrl))
                 .WithMessage("CoverImageUrl must be a valid URL");

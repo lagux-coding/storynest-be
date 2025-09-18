@@ -22,10 +22,10 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpGet("get-stories")]
-        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryPreviewResponse>>>> GetPreviewStories([FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetPreviewStories([FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
         {
             var result = await _storyService.GetStoriesPreviewAsync(limit, cursor);
-            return Ok(ApiResponse<PaginatedResponse<StoryPreviewResponse>>.Success(result));
+            return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
         [Authorize]
