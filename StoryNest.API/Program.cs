@@ -186,6 +186,7 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
+builder.Services.AddAutoMapper(typeof(UserProfile));
 
 
 var app = builder.Build();

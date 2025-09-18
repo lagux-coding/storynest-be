@@ -91,14 +91,25 @@ namespace StoryNest.Application.Services
                 var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
 
                 var hasMore = stories.Count > limit;
-                var items = stories.Take(limit).Select(s => new StoryResponse
-                {
-                    Id = s.Id,
-                    Title = s.Title,
-                    Content = s.Content,
-                    CoverImageUrl = s.CoverImageUrl,
-                    CreatedAt = s.CreatedAt,
-                });
+                var items = _mapper.Map<List<StoryResponse>>(stories.Take(limit).ToList());
+                //var items = stories.Take(limit).Select(s => new StoryResponse
+                //{
+                //    Id = s.Id,
+                //    Title = s.Title,
+                //    Content = s.Content,
+                //    CoverImageUrl = s.CoverImageUrl,
+                //    CreatedAt = s.CreatedAt,
+                //    LikeCount = s.LikeCount,
+                //    CommentCount = s.CommentCount,
+                //    User = new UserBasicResponse
+                //    {
+                //        Id = s.User.Id,
+                //        Username = s.User.Username,
+                //        AvatarUrl = s.User.AvatarUrl,
+                //    },
+                //    Media = _mapper.Map<List<MediaResponse>>(s.Media.ToList()),
+                //    Tags = _mapper.Map<List<TagResponse>>(s.StoryTags.Select(st => st.Tag).ToList())
+                //});
 
                 var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
 

@@ -35,6 +35,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return await query
                     .OrderByDescending(s => s.CreatedAt)
                     .Take(limit + 1)
+                    .Include(s => s.User)
+                    .Include(m => m.Media)
+                    .Include(st => st.StoryTags)
+                        .ThenInclude(t => t.Tag)
+                    .Include(l => l.Likes)
+                    .Include(c => c.Comments)
                     .ToListAsync();
         }
     }
