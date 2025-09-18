@@ -31,7 +31,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn")
+            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
