@@ -33,6 +33,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             }
 
             return await query
+                    .Where(s => s.PrivacyStatus == Domain.Enums.PrivacyStatus.Public && s.StoryStatus == Domain.Enums.StoryStatus.Published)
                     .OrderByDescending(s => s.CreatedAt)
                     .Take(limit + 1)
                     .Include(s => s.User)
@@ -40,8 +41,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                     .Include(st => st.StoryTags)
                         .ThenInclude(t => t.Tag)
                     .Include(l => l.Likes)
-                    .Include(c => c.Comments)
-                    .Where(s => s.PrivacyStatus == Domain.Enums.PrivacyStatus.Public && s.StoryStatus == Domain.Enums.StoryStatus.Published)
+                    .Include(c => c.Comments)                 
                     .ToListAsync();
         }
     }
