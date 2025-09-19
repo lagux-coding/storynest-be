@@ -139,6 +139,27 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<int> RemoveStoryAsync(int storyId, long userId)
+        {
+            try
+            {
+                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, null);
+                if (story == null)
+                    throw new Exception("Story not found");
+
+                var isOwner = story.UserId == userId;
+                if (!isOwner)
+                    throw new Exception("You do not have permission to delete this story");
+
+                _storyRepository.RemoveStory(story);
+                return await _unitOfWork.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId)
         {
             try

@@ -23,19 +23,6 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Stories.AddAsync(story);
         }
 
-        public async Task<bool> CheckIfTileChanged(int storyId, string title)
-        {
-            var currentTitle = await _context.Stories
-                .Where(s => s.Id == storyId)
-                .Select(s => s.Title)
-                .FirstOrDefaultAsync();
-
-            if (currentTitle == null)
-                throw new Exception("Story not found");
-
-            return !string.Equals(currentTitle, title, StringComparison.Ordinal);
-        }
-
         public async Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor)
         {
             var query = _context.Stories.AsQueryable();
@@ -80,6 +67,11 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             }
 
             return null;
+        }
+
+        public void RemoveStory(Story story)
+        {
+            _context.Stories.Remove(story);
         }
     }
 }

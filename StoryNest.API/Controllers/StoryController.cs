@@ -86,5 +86,19 @@ namespace StoryNest.API.Controllers
                 ? Ok(ApiResponse<object>.Success(result, "Story updated successfully"))
                 : BadRequest(ApiResponse<object>.Fail("Failed to update story"));
         }
+
+        [Authorize]
+        [HttpDelete("delete/{storyId}")]
+        public async Task<ActionResult<ApiResponse<object>>> DeleteStory(int storyId)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+
+            var result = await _storyService.RemoveStoryAsync(storyId, userId.Value);
+            return result > 0
+                ? Ok(ApiResponse<object>.Success(result, "Story deleted successfully"))
+                : BadRequest(ApiResponse<object>.Fail("Failed to delete story"));
+        }
     }
 }
