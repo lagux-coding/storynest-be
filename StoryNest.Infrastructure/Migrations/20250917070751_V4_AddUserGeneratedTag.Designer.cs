@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StoryNest.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using StoryNest.Infrastructure.Persistence;
 namespace StoryNest.Infrastructure.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250917070751_V4_AddUserGeneratedTag")]
+    partial class V4_AddUserGeneratedTag
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -965,9 +968,6 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("title");
 
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
                     b.Property<int>("ViewCount")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
@@ -975,8 +975,6 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnName("view_count");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Stories", (string)null);
                 });
@@ -1544,17 +1542,6 @@ namespace StoryNest.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("StoryNest.Domain.Entities.Story", b =>
-                {
-                    b.HasOne("StoryNest.Domain.Entities.User", "User")
-                        .WithMany("Stories")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("StoryNest.Domain.Entities.StoryTag", b =>
                 {
                     b.HasOne("StoryNest.Domain.Entities.Story", "Story")
@@ -1728,8 +1715,6 @@ namespace StoryNest.Infrastructure.Migrations
                     b.Navigation("ReportsCreated");
 
                     b.Navigation("ReportsReceived");
-
-                    b.Navigation("Stories");
 
                     b.Navigation("StoryViews");
 

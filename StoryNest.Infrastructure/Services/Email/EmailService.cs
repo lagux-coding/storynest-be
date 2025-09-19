@@ -11,7 +11,7 @@ namespace StoryNest.Infrastructure.Services.Email
     public sealed class EmailSettings
     {
         public string FromName { get; set; } = "StoryNest";
-        public string FromEmail { get; set; } = "noreply@support.kusl.io.vn";
+        public string FromEmail { get; set; } = "support@storynest.io.vn";
     }
 
     public class EmailService : IEmailService

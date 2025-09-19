@@ -32,6 +32,8 @@ namespace StoryNest.Domain.Entities
         public ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
         public ICollection<AITransaction> AITransactions { get; set; } = new List<AITransaction>();
 
+        public ICollection<Story> Stories { get; set; } = new List<Story>();
+
         public ICollection<Like> Likes { get; set; } = new List<Like>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 

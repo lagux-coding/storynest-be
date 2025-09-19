@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using StoryNest.Application.Features.Users;
+using StoryNest.Application.Constants;
 
 namespace StoryNest.Application.Services
 {
@@ -84,7 +85,9 @@ namespace StoryNest.Application.Services
             {
                 Username = request.Username,
                 Email = request.Email,
-                PasswordHash = PasswordHelper.HashPassword(request.Password)
+                FullName = request.FullName,
+                PasswordHash = PasswordHelper.HashPassword(request.Password),
+                AvatarUrl = GetRandomAvatar()
             };
 
             await _userRepository.AddAsync(user);
@@ -93,17 +96,17 @@ namespace StoryNest.Application.Services
             await _welcomeEmailSender.SendAsync(
                 user.Email,
                 user.Username,
-                "https://kusl.io.vn",
+                "https://storynest.io.vn",
                 CancellationToken.None
             );
 
             return true;
         }
 
-        public async Task<RefreshTokenResponse?> RefreshAsync(RefreshTokenRequest request, string refreshToken)
+        public async Task<RefreshTokenResponse?> RefreshAsync(string access, string refreshToken)
         {
             // 1. Get principal from expired token
-            var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
+            var principal = _jwtService.GetPrincipalFromExpiredToken(access);
             if (principal == null) return null;
 
             var userIdStr = principal.FindFirstValue(JwtRegisteredClaimNames.Sub);
@@ -204,6 +207,13 @@ namespace StoryNest.Application.Services
             await RevokeAllAsync(user.Id, "password reset", "system");
 
             return true;
+        }
+
+        private string GetRandomAvatar()
+        {
+            var rnd = new Random();
+            int index = rnd.Next(DefaultAvatars.Avatars.Count);
+            return DefaultAvatars.Avatars[index];
         }
     }
 }

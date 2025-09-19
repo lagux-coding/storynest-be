@@ -75,6 +75,11 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .HasForeignKey(rt => rt.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
 
+            builder.HasMany(u => u.Stories)
+                   .WithOne(s => s.User)
+                   .HasForeignKey(s => s.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             // Subscription (1 - n)
             builder.HasMany(u => u.Subscriptions)
                    .WithOne(s => s.User)

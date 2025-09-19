@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
@@ -88,7 +89,7 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpPost("refresh")]
-        public async Task<ActionResult<ApiResponse<object>>> Refresh([FromBody] RefreshTokenRequest request)
+        public async Task<ActionResult<ApiResponse<object>>> Refresh()
         {
 
             if (!Request.Cookies.TryGetValue("refreshToken", out var refresh))
@@ -96,8 +97,13 @@ namespace StoryNest.API.Controllers
                 return Unauthorized(ApiResponse<object>.Fail(new { }, "No refresh token found"));
             }
 
-            var access = request.AccessToken;
-            var result = await _authService.RefreshAsync(request, refresh);
+            //var access = request.AccessToken;
+            var accessHeader = Request.Headers["Authorization"].ToString();
+            var access = string.IsNullOrEmpty(accessHeader)
+                            ? null
+                            : accessHeader.Replace("Bearer ", "");
+
+            var result = await _authService.RefreshAsync(access, refresh);
             if (result == null) return Unauthorized(ApiResponse<object>.Fail(new { }, "Invalid token or token expired"));
 
             SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
@@ -105,6 +111,7 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<RefreshTokenResponse>.Success(result));
         }
 
+        [Authorize]
         [HttpGet("logout")]
         public async Task<ActionResult<ApiResponse<object>>> Logout()
         {
@@ -168,6 +175,7 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(new { }, "Password has been reset successfully"));
         }
 
+        [Authorize]
         [HttpPost("revoke-all")]
         public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
         {
@@ -185,7 +193,7 @@ namespace StoryNest.API.Controllers
                 SameSite = SameSiteMode.None,
                 MaxAge = expires - DateTime.UtcNow,
                 Path = "/",
-                Domain = ".kusl.io.vn"
+                Domain = ".storynest.io.vn"
             };
 
             response.Cookies.Append("refreshToken", refreshToken, cookieOptions);

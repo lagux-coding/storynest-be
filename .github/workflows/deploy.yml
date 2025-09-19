@@ -67,9 +67,7 @@ jobs:
 
             # docker run -d --name storynest-api -p 8080:8080 --env-file StoryNest.API/.env storynest-api
 
-            docker compose build --no-cache storynest-api
-
-            docker compose up -d storynest-api
+            docker compose up -d --build --force-recreate storynest-api
 
             if [ "${{ secrets.RESTART_REDIS }}" = "true" ]; then
               docker compose up -d --force-recreate redis

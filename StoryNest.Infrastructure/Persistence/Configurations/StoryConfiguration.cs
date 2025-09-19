@@ -77,6 +77,11 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
 
             // --- Relations ---
 
+            builder.HasOne(s => s.User)
+                   .WithMany(u => u.Stories)
+                   .HasForeignKey(s => s.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             // 1 Story -> nhiều Media
             builder.HasMany(s => s.Media)
                    .WithOne(m => m.Story)

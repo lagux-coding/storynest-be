@@ -1,4 +1,4 @@
-using DotNetEnv;
+﻿using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Connections;
@@ -6,19 +6,20 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Resend;
 using StackExchange.Redis;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
+using StoryNest.Application.Mappings;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Redis;
-using StoryNest.Infrastructure.Services.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -30,7 +31,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn")
+            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -126,7 +127,35 @@ JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "StoryNest API", Version = "v1" });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Nhập token theo dạng: Bearer {token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 // Fluent Validation
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
@@ -136,12 +165,18 @@ builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidat
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+builder.Services.AddScoped<IStoryRepository, StoryRepository>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IStoryService, StoryService>();
+builder.Services.AddScoped<ITagService, TagService>();
+builder.Services.AddScoped<IStoryTagService, StoryTagService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -150,6 +185,9 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
+builder.Services.AddAutoMapper(typeof(StoryProfile));
+builder.Services.AddAutoMapper(typeof(UserProfile));
+
 
 var app = builder.Build();
 app.UseForwardedHeaders();
