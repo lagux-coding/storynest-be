@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
@@ -14,11 +15,13 @@ namespace StoryNest.API.Controllers
     {
         private readonly IStoryService _storyService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IValidator<CreateStoryRequest> _createStoryValidator;
 
-        public StoryController(IStoryService storyService, ICurrentUserService currentUserService)
+        public StoryController(IStoryService storyService, ICurrentUserService currentUserService, IValidator<CreateStoryRequest> createStoryValidator)
         {
             _storyService = storyService;
             _currentUserService = currentUserService;
+            _createStoryValidator = createStoryValidator;
         }
 
         [HttpGet("get-stories")]
@@ -41,6 +44,7 @@ namespace StoryNest.API.Controllers
         [HttpPost("create")]
         public async Task<ActionResult<ApiResponse<object>>> CreateStory([FromBody] CreateStoryRequest request)
         {
+
             var userId = _currentUserService.UserId;
             if (userId == null)
                 return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
@@ -55,6 +59,32 @@ namespace StoryNest.API.Controllers
             return storyId > 0
                 ? Ok(ApiResponse<object>.Success(storyId))
                 : BadRequest(ApiResponse<object>.Fail("Failed to create story"));
+        }
+
+        [Authorize]
+        [HttpPut("update/{storyId}")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateStory([FromBody] CreateStoryRequest request, int storyId)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+
+            var validationResult = await _createStoryValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
+                    );
+                return BadRequest(ApiResponse<object>.Fail(errors, "Validation errors"));
+            }
+
+            var result = await _storyService.UpdateStoryAsync(request, userId.Value, storyId);
+            return result > 0
+                ? Ok(ApiResponse<object>.Success(result, "Story updated successfully"))
+                : BadRequest(ApiResponse<object>.Fail("Failed to update story"));
         }
     }
 }

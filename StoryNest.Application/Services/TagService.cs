@@ -37,5 +37,10 @@ namespace StoryNest.Application.Services
                 throw new Exception(tagName + " not found");
             }
         }
+
+        public async Task<int> GetTagIdByNameAsync(string tagName)
+        {
+            return await _tagRepository.GetIdByNameAsync(tagName);
+        }
     }
 }

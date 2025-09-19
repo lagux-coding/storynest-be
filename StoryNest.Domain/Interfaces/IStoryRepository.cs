@@ -12,5 +12,6 @@ namespace StoryNest.Domain.Interfaces
         public Task AddAsync(Story story);
         Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
         Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
+        Task<bool> CheckIfTileChanged(int storyId, string title);
     }
 }

@@ -11,5 +11,6 @@ namespace StoryNest.Application.Interfaces
     {
         public Task<Tag> GetTagAsync(string tagName);
         public Task CreateTagAsync(Tag tag);
+        public Task<int> GetTagIdByNameAsync(string tagName);
     }
 }

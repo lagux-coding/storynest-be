@@ -27,5 +27,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         {
             return await _context.Tags.FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
         }
+
+        public async Task<int> GetIdByNameAsync(string name)
+        {
+            return await _context.Tags
+                .Where(t => t.Name.ToLower() == name.ToLower())
+                .Select(t => t.Id)
+                .FirstOrDefaultAsync();
+        }
     }
 }

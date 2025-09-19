@@ -143,8 +143,72 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                //var story =
-                return 0;
+                // Check if story exists
+                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, null);
+                if (story == null)
+                    throw new Exception("Story not found");
+
+                // Check user owns the story
+                var isOwner = story.UserId == userId;
+                if (!isOwner)
+                    throw new Exception("You do not have permission to update this story");
+               
+                story.Title = request.Title;
+                story.Slug = SlugGenerationHelper.GenerateSlug(request.Title);
+                story.Content = request.Content;
+                story.Summary = SummaryHelper.Generate(request.Content);
+                story.CoverImageUrl = request.CoverImageUrl;
+                story.PrivacyStatus = request.PrivacyStatus;
+                story.StoryStatus = request.StoryStatus;
+                story.LastUpdatedAt = DateTime.UtcNow;
+
+                // Handle Tags
+                // Get existing tags
+                var existingTags = story.StoryTags.Select(st => st.Tag.Name).ToList();
+                var newTags = request.Tags.Distinct().ToList();
+                var tagsToAdd = newTags.Except(existingTags, StringComparer.OrdinalIgnoreCase).ToList();
+                var tagsToRemove = existingTags.Except(newTags, StringComparer.OrdinalIgnoreCase).ToList();
+
+                // Add new tags
+                foreach (var tagName in tagsToAdd)
+                {
+                    var slug = SlugGenerationHelper.GenerateSlug(tagName);
+                    var tag = await _tagService.GetTagAsync(tagName);
+
+                    if (tag == null)
+                    {
+                        tag = new Tag
+                        {
+                            Name = tagName,
+                            Slug = slug,
+                            IsUserGenerated = true
+                        };
+                        await _tagService.CreateTagAsync(tag);
+                        await _unitOfWork.SaveAsync();
+                    }
+
+                    var storyTag = new StoryTag
+                    {
+                        StoryId = story.Id,
+                        TagId = tag.Id
+                    };
+
+                    var exists = story.StoryTags
+                                .Any(st => st.StoryId == storyTag.StoryId && st.TagId == storyTag.TagId);
+                    if (!exists)
+                    {
+                        await _storyTagService.AddStoryTagAsync(storyTag);
+                    }                                    
+                }
+
+                // Remove old tags
+                foreach (var tagName in tagsToRemove)
+                {
+                    var tagId = await _tagService.GetTagIdByNameAsync(tagName);
+                    await _storyTagService.RemoveStoryTagAsync(story.Id, tagId);
+                }
+
+                return await _unitOfWork.SaveAsync();
             }
             catch (Exception ex)
             {

@@ -17,6 +17,7 @@ namespace StoryNest.Application.Dtos.Response
         public string Slug { get; set; } = string.Empty;
         public string CoverImageUrl { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public DateTime? LastUpdatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
         public int LikeCount { get; set; }
         public int CommentCount { get; set; }

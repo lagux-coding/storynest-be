@@ -11,5 +11,6 @@ namespace StoryNest.Domain.Interfaces
     {
         public Task<Tag?> GetByNameAsync(string name);
         public Task AddAsync(Tag tag);
+        public Task<int> GetIdByNameAsync(string name);
     }
 }

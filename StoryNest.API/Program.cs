@@ -160,6 +160,7 @@ builder.Services.AddSwaggerGen(c =>
 // Fluent Validation
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
+builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
