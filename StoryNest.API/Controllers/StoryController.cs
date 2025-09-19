@@ -28,6 +28,15 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
+        [HttpGet("get-by-id-or-slug")]
+        public async Task<ActionResult<ApiResponse<object>>> GetStoryByIdOrSlug(int? id, string? slug)
+        {
+            var result = await _storyService.GetStoryByIdOrSlugAsync(id, slug);
+            if (result == null)
+                return NotFound(ApiResponse<object>.Fail("Story not found"));
+            return Ok(ApiResponse<object>.Success(result));
+        }
+
         [Authorize]
         [HttpPost("create")]
         public async Task<ActionResult<ApiResponse<object>>> CreateStory([FromBody] CreateStoryRequest request)

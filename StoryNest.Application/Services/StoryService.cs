@@ -126,6 +126,19 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
+        {
+            try
+            {
+                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, slug);
+                return story == null ? null : _mapper.Map<StoryResponse>(story);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId)
         {
             try

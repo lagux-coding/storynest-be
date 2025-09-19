@@ -13,5 +13,6 @@ namespace StoryNest.Application.Interfaces
         public Task<int> CreateStoryAsync(CreateStoryRequest request, long userId);
         public Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId);
         public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
+        public Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
     }
 }

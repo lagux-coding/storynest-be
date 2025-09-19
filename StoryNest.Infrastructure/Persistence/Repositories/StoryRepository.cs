@@ -41,8 +41,32 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                     .Include(st => st.StoryTags)
                         .ThenInclude(t => t.Tag)
                     .Include(l => l.Likes)
-                    .Include(c => c.Comments)                 
+                    .Include(c => c.Comments)
                     .ToListAsync();
+        }
+
+        public async Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
+        {
+            var query = _context.Stories.AsQueryable();
+            query = query
+                .Include(s => s.User)
+                .Include(m => m.Media)
+                .Include(st => st.StoryTags)
+                    .ThenInclude(t => t.Tag)
+                .Include(l => l.Likes)
+                .Include(c => c.Comments);
+
+            if (storyId.HasValue)
+            {
+                return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value);
+            }
+            else if (!string.IsNullOrEmpty(slug))
+            {
+                string normalizedSlug = slug.ToLower();
+                return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug);
+            }
+
+            return null;
         }
     }
 }
