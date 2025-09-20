@@ -10,5 +10,7 @@ namespace StoryNest.Application.Interfaces
     public interface IUserService
     {
         Task<User> GetUserByEmailAsync(string email);
+        Task<User> GetUserByIdAsync(long userId);
+        Task UpdateUserAsync(User user);
     }
 }

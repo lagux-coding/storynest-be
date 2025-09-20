@@ -11,5 +11,6 @@ namespace StoryNest.Application.Interfaces
     public interface IUploadService
     {
         public Task<UploadMediaResponse> UploadMedia(UploadMediaRequest request, long userId);
+        public Task<bool> ConfirmUpload(ConfirmUploadRequest request, long userId);
     }
 }

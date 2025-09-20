@@ -24,5 +24,17 @@ namespace StoryNest.Application.Services
             if (user == null) return null;
             return user;
         }
+
+        public Task<User?> GetUserByIdAsync(long userId)
+        {
+            var user = _userRepository.GetByIdAsync(userId);
+            if (user == null) return null;
+            return user;
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            await _userRepository.UpdateAsync(user);
+        }
     }
 }

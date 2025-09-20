@@ -75,5 +75,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         {
             _context.Stories.Remove(story);
         }
+
+        public void UpdateStory(Story story)
+        {
+            _context.Stories.Update(story);
+        }
     }
 }

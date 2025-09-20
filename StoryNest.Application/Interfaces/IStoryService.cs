@@ -1,5 +1,6 @@
 ﻿using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
+using StoryNest.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,10 @@ namespace StoryNest.Application.Interfaces
     {
         public Task<int> CreateStoryAsync(CreateStoryRequest request, long userId);
         public Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId);
+        public Task<int> UpdateWithEntityAsync(Story story);
         public Task<int> RemoveStoryAsync(int storyId, long userId);
         public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
         public Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
+        public Task<Story> GetStoryByIdAsync(int storyId);
     }
 }

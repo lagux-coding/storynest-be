@@ -126,6 +126,19 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public Task<Story> GetStoryByIdAsync(int storyId)
+        {
+            try
+            {
+                var story = _storyRepository.GetStoryByIdOrSlugAsync(storyId, null);
+                return story;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+
         public async Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
         {
             try
@@ -235,6 +248,12 @@ namespace StoryNest.Application.Services
             {
                 throw new Exception(ex.Message);
             }
+        }
+
+        public Task<int> UpdateWithEntityAsync(Story story)
+        {
+            _storyRepository.UpdateStory(story);
+            return _unitOfWork.SaveAsync();
         }
     }
 }

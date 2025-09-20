@@ -1,7 +1,11 @@
-﻿using HtmlAgilityPack;
+﻿using AutoMapper;
+using HtmlAgilityPack;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -15,11 +19,83 @@ namespace StoryNest.Application.Services
     {
         private readonly IS3Service _s3Service;
         private readonly IStoryService _storyService;
+        private readonly IMediaService _mediaService;
+        private readonly IUserService _userService;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UploadService(IS3Service s3Service, IStoryService storyService)
+        public UploadService(IS3Service s3Service, IStoryService storyService, IUserService userService, IUnitOfWork unitOfWork, IMediaService mediaService, IMapper mapper)
         {
             _s3Service = s3Service;
             _storyService = storyService;
+            _userService = userService;
+            _unitOfWork = unitOfWork;
+            _mediaService = mediaService;
+            _mapper = mapper;
+        }
+
+        public async Task<bool> ConfirmUpload(ConfirmUploadRequest request, long userId)
+        {
+            try
+            {
+                // Check resource type
+                switch (request.ResourceType)
+                {
+                    case "avatar":
+                    case "cover-user":
+                        var user = await _userService.GetUserByIdAsync(userId);
+                        if (user == null)
+                            return false;
+
+                        if (request.ResourceType == "avatar")
+                            user.AvatarUrl = request.FileKeys[0].ToLower().Trim();
+                        else 
+                            user.CoverUrl = request.FileKeys[0].ToLower().Trim();
+
+                        await _userService.UpdateUserAsync(user);
+                        await _unitOfWork.SaveAsync();
+                        return true;
+
+                    case "story":
+                    case "cover-story":
+                        var story = await _storyService.GetStoryByIdAsync(request.ResourceId.Value);
+
+                        if (story == null)
+                            return false;
+
+                        if (story.User.Id != userId)
+                            return false;
+
+                        if (request.ResourceType == "story")
+                        {
+                            var check = await CreateMediaStory(request.ResourceId.Value, request.FileKeys);
+                            return check;
+                        }
+                        else
+                        {
+                            story.CoverImageUrl = request.FileKeys[0].ToLower().Trim();
+                            await _storyService.UpdateWithEntityAsync(story);
+                            return true;
+                        }       
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to confirm upload: {ex.Message}");
+            }
+        }
+
+        private async Task<bool> CreateMediaStory(int storyId, List<string> url)
+        {
+            // Remove existing media
+            await _mediaService.DeleteMediaByStoryIdAsync(storyId);
+
+            var media = await _mediaService.CreateMediaAsync(storyId, url);
+            if (media < 0)
+                return false;
+
+            return true;
         }
 
         public async Task<UploadMediaResponse> UploadMedia(UploadMediaRequest request, long userId)

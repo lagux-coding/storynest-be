@@ -13,5 +13,6 @@ namespace StoryNest.Domain.Interfaces
         public Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
         public Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
         public void RemoveStory(Story story); 
+        public void UpdateStory(Story story);
     }
 }

@@ -47,5 +47,19 @@ namespace StoryNest.API.Controllers
 
             return Ok(ApiResponse<object>.Success(response, "Upload image successfully"));
         }
+
+        [Authorize]
+        [HttpPost("confirm-upload")]
+        public async Task<ActionResult<ApiResponse<object>>> ConfirmUpload([FromBody] ConfirmUploadRequest request)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+
+            var result = await _uploadService.ConfirmUpload(request, userId.Value);
+            if (!result)
+                return BadRequest(ApiResponse<object>.Fail("Confirm upload failed"));
+            return Ok(ApiResponse<object>.Success(null, "Confirm upload successfully"));
+        }
     }
 }

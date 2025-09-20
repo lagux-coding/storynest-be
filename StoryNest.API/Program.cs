@@ -171,6 +171,7 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IStoryRepository, StoryRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -180,6 +181,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IStoryTagService, StoryTagService>();
+builder.Services.AddScoped<IMediaService, MediaService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();

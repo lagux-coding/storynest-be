@@ -45,5 +45,16 @@ namespace StoryNest.Application.Dtos.Validator
                     .LessThanOrEqualTo(MaxFileSize).WithMessage($"File size must not exceed {MaxFileSize / 1024 / 1024} MB.");
             }
         }
+
+        private class ConfirmUploadRequestValidator : AbstractValidator<ConfirmUploadRequest>
+        {
+            public ConfirmUploadRequestValidator()
+            {
+                RuleFor(x => x.ResourceType)
+                    .NotEmpty().WithMessage("ResourceType is required.")
+                    .Must(type => _allowedResourceTypes.Contains(type.ToLower()))
+                    .WithMessage($"ResourceType must be one of: {string.Join(", ", _allowedResourceTypes)}");
+            }
+        }
     }
 }
