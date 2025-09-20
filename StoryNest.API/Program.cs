@@ -162,7 +162,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
 builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
-builder.Services.AddScoped<IValidator<UploadImageRequest>, UploadImageRequestValidator>();
+builder.Services.AddScoped<IValidator<UploadMediaRequest>, UploadImageRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -188,7 +188,8 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
-builder.Services.AddScoped<S3Service>();
+builder.Services.AddScoped<IS3Service, S3Service>();
+builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Application.Dtos.Validator
 {
-    public class UploadImageRequestValidator : AbstractValidator<UploadImageRequest>
+    public class UploadImageRequestValidator : AbstractValidator<UploadMediaRequest>
     {
         private static readonly string[] _allowedResourceTypes = { "avatar", "cover-story", "cover-user", "story", "comment" };
         private static readonly string[] _allowedContentTypes = { "image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/webp", "image/bmp", "image/svg+xml", "image/avif" };
@@ -20,9 +20,6 @@ namespace StoryNest.Application.Dtos.Validator
                 .NotEmpty().WithMessage("ResourceType is required.")
                 .Must(type => _allowedResourceTypes.Contains(type.ToLower()))
                 .WithMessage($"ResourceType must be one of: {string.Join(", ", _allowedResourceTypes)}");
-
-            RuleFor(x => x.ResourceId)
-                .GreaterThan(0).WithMessage("ResourceId must be a positive integer.");
 
             RuleForEach(x => x.Files)
                 .SetValidator(new FileMetadataValidator());

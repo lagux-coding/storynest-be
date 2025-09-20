@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Application.Dtos.Request
 {
-    public class UploadImageRequest
+    public class UploadMediaRequest
     {
         public string ResourceType { get; set; } = default!;
         public int? ResourceId { get; set; }
