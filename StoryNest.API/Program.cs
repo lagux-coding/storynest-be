@@ -20,6 +20,7 @@ using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Redis;
+using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -161,6 +162,7 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
 builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
+builder.Services.AddScoped<IValidator<UploadImageRequest>, UploadImageRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -186,6 +188,7 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
+builder.Services.AddScoped<S3Service>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
