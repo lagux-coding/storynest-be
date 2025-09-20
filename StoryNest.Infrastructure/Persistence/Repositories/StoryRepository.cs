@@ -33,7 +33,9 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             }
 
             return await query
-                    .Where(s => s.PrivacyStatus == Domain.Enums.PrivacyStatus.Public && s.StoryStatus == Domain.Enums.StoryStatus.Published)
+                    .Where(s => s.PrivacyStatus == Domain.Enums.PrivacyStatus.Public && 
+                            s.StoryStatus == Domain.Enums.StoryStatus.Published &&
+                            s.User.IsActive == true)
                     .OrderByDescending(s => s.CreatedAt)
                     .Take(limit + 1)
                     .Include(s => s.User)
@@ -58,12 +60,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
             if (storyId.HasValue)
             {
-                return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value);
+                return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value && s.User.IsActive == true);
             }
             else if (!string.IsNullOrEmpty(slug))
             {
                 string normalizedSlug = slug.ToLower();
-                return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug);
+                return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug && s.User.IsActive == true);
             }
 
             return null;

@@ -38,7 +38,7 @@ namespace StoryNest.Application.Services
         public async Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _context.Users
-                    .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email == usernameOrEmail);
+                    .FirstOrDefaultAsync(u => (u.Username == usernameOrEmail || u.Email == usernameOrEmail) && u.IsActive == true);
         }
 
         public async Task UpdateAsync(User user)
