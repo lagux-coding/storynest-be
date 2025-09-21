@@ -18,8 +18,8 @@ namespace StoryNest.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [HttpPost("toggle")]
-        public async Task<ActionResult<ApiResponse<object>>> ToggleLike([FromQuery] int storyId)
+        [HttpPost("like")]
+        public async Task<ActionResult<ApiResponse<object>>> Like([FromQuery] int storyId)
         {
             var userId = _currentUserService.UserId;
             if (userId == null)
@@ -38,6 +38,28 @@ namespace StoryNest.API.Controllers
             }
 
             return Ok(ApiResponse<object>.Success(like, "Story liked"));
+        }
+
+        [HttpPost("unlike")]
+        public async Task<ActionResult<ApiResponse<object>>> Unlike([FromQuery] int storyId)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Message = "User not authenticated.",
+                    Status = StatusCodes.Status401Unauthorized,
+                });
+            }
+
+            var unLike = await _likeService.UnlikeStoryAsync(storyId, userId.Value);
+            if (unLike <= 0)
+            {
+                return BadRequest(ApiResponse<object>.Fail(null, "Failed to unlike the story"));
+            }
+
+            return Ok(ApiResponse<object>.Success(unLike, "Story unliked"));
         }
     }
 }

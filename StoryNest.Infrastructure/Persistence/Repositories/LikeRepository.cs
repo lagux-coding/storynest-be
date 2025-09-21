@@ -53,6 +53,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 like.RevokedAt = DateTime.UtcNow;
                 _context.Likes.Update(like);
             }
+            else
+            {
+                throw new Exception("Like not found");
+            }
         }
     }
 }

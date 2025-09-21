@@ -95,9 +95,20 @@ namespace StoryNest.Application.Services
         public async Task<int> UnlikeStoryAsync(int storyId, long userId)
         {
             try
-            {
-                _likeRepository.RemoveLikeAsync(storyId, userId);
-                return await _unitOfWork.SaveAsync();
+            {              
+                var story = await _storyService.GetStoryByIdAsync(storyId);
+                if (story == null)
+                {
+                    return 0; // Story not found
+                }
+
+                if (story.LikeCount > 0)
+                {
+                    story.LikeCount -= 1;
+                }
+
+                await _likeRepository.RemoveLikeAsync(storyId, userId);
+                return await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
             }
             catch (Exception ex)
             {
