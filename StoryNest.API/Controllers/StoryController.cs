@@ -57,7 +57,7 @@ namespace StoryNest.API.Controllers
             var storyId = await _storyService.CreateStoryAsync(request, userId.Value);
 
             return storyId > 0
-                ? Ok(ApiResponse<object>.Success(storyId))
+                ? Ok(ApiResponse<object>.Success(new { StoryId = storyId }))
                 : BadRequest(ApiResponse<object>.Fail("Failed to create story"));
         }
 

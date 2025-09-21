@@ -75,7 +75,9 @@ namespace StoryNest.Application.Services
                     await _storyTagService.AddStoryTagAsync(storyTag);
                 }
 
-                return await _unitOfWork.SaveAsync();
+                await _unitOfWork.SaveAsync();
+
+                return story.Id;
                 
             }
             catch (Exception ex)
