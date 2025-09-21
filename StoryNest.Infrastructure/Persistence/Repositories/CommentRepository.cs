@@ -40,8 +40,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int offset)
         {
             return await _context.Comments              
-                .Where(c => c.StoryId == storyId 
-                        && c.DeletedAt == null 
+                .Where(c => c.StoryId == storyId  
                         && c.ParentCommentId == parentId)
                 .OrderByDescending(c => c.CreatedAt)
                 .Skip(offset)

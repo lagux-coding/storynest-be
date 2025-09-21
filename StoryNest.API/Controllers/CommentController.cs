@@ -22,7 +22,7 @@ namespace StoryNest.API.Controllers
         }
 
         [Authorize]
-        [HttpPost("comment/{storyId}")]
+        [HttpPost("{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Comment(int storyId, [FromBody] CreateCommentRequest request)
         {
             var userId = _currentUserService.UserId;
@@ -40,6 +40,44 @@ namespace StoryNest.API.Controllers
                 return BadRequest(ApiResponse<object>.Fail(null, "Failed to comment the story"));
 
             return Ok(ApiResponse<object>.Success(result, "Story commented"));
+        }
+
+        [Authorize]
+        [HttpPost("update/{storyId}")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateComment(int storyId, int commentId, [FromBody] CreateCommentRequest request)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Message = "User not authenticated.",
+                    Status = StatusCodes.Status401Unauthorized,
+                });
+            }
+            var result = await _commentService.UpdateCommentAsync(request, commentId, userId.Value);
+            if (!result)
+                return BadRequest(ApiResponse<object>.Fail(null, "Failed to update the comment"));
+            return Ok(ApiResponse<object>.Success(result, "Comment updated"));
+        }
+
+        [Authorize]
+        [HttpPost("delete/{commentId}")]
+        public async Task<ActionResult<ApiResponse<object>>> DeleteComment(int commentId)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+            {
+                return Unauthorized(new ApiResponse<object>
+                {
+                    Message = "User not authenticated.",
+                    Status = StatusCodes.Status401Unauthorized,
+                });
+            }
+            var result = await _commentService.DeleteCommentAsync(commentId, userId.Value);
+            if (!result)
+                return BadRequest(ApiResponse<object>.Fail(null, "Failed to delete the comment"));
+            return Ok(ApiResponse<object>.Success(result, "Comment deleted"));
         }
 
         [HttpGet("all-comment/{storyId}")]

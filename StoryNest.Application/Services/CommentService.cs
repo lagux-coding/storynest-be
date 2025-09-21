@@ -116,6 +116,11 @@ namespace StoryNest.Application.Services
                         comment.RepliesCount = count;
                         comment.HasReplies = count > 0;
                     }
+
+                    if (comment.CommentStatus == CommentStatus.Deleted)
+                    {
+                        comment.Content = "[deleted]";
+                    }
                 }
 
                 return response;
@@ -139,6 +144,15 @@ namespace StoryNest.Application.Services
 
                 await _commentRepository.UpdateAsync(comment);
                 await _unitOfWork.SaveAsync();
+
+                var story = await _storyService.GetStoryByIdAsync(comment.StoryId);
+                if (story == null)
+                    throw new ArgumentException("Invalid story id");
+                var commentCount = await _commentRepository.CountComments(story.Id);
+
+                story.CommentCount = commentCount;
+                await _storyService.UpdateWithEntityAsync(story);
+
                 return true;
             }
             catch (Exception ex)
