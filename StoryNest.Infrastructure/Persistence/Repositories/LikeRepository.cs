@@ -31,10 +31,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<List<User>> GetAllUserLikeAsync(int storyId)
         {
-            var users = _context.Likes
+            var users = await _context.Likes
                 .Where(l => l.StoryId == storyId && l.RevokedAt == null)
                 .Select(l => l.User)
-                .ToList();
+                .ToListAsync();
 
             return users;
         }
@@ -47,10 +47,10 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<User?> GetUserLikeAsync(int storyId, long userId)
         {
-            var user = _context.Likes
+            var user = await _context.Likes
                 .Where(l => l.StoryId == storyId && l.UserId == userId && l.RevokedAt == null)
                 .Select(l => l.User)
-                .FirstOrDefault();
+                .FirstOrDefaultAsync();
 
             return user;
         }

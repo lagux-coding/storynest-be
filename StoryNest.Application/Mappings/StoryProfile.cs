@@ -23,6 +23,7 @@ namespace StoryNest.Application.Mappings
             CreateMap<Media, MediaResponse>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
             CreateMap<Tag, TagResponse>();
+            CreateMap<Comment, CommentResponse>();
         }
     }
 }

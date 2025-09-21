@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Response;
@@ -19,6 +20,7 @@ namespace StoryNest.API.Controllers
             _currentUserService = currentUserService;
         }
 
+        [Authorize]
         [HttpPost("like/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Like(int storyId)
         {
@@ -41,6 +43,7 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(like, "Story liked"));
         }
 
+        [Authorize]
         [HttpPost("unlike/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Unlike(int storyId)
         {
