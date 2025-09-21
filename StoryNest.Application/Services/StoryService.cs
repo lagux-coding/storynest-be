@@ -21,16 +21,18 @@ namespace StoryNest.Application.Services
         private readonly IStoryRepository _storyRepository;
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
+        private readonly IMediaService _mediaService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
             _tagService = tagService;
             _storyTagService = storyTagService;
             _mapper = mapper;
+            _mediaService = mediaService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -76,6 +78,12 @@ namespace StoryNest.Application.Services
                 }
 
                 await _unitOfWork.SaveAsync();
+
+                // Add media urls
+                if (request.MediaUrls != null && request.MediaUrls.Count > 0)
+                {
+                    await _mediaService.CreateMediaAsync(story.Id, request.MediaUrls);
+                }
 
                 return story.Id;
                 

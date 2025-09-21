@@ -23,12 +23,6 @@ namespace StoryNest.Application.Dtos.Validator
 
             RuleForEach(x => x.Files)
                 .SetValidator(new FileMetadataValidator());
-
-            When(x => x.ResourceType != null && !x.ResourceType.Equals("avatar", StringComparison.OrdinalIgnoreCase), () =>
-            {
-                RuleFor(x => x.ResourceId)
-                    .NotNull().WithMessage("ResourceId is required for non-avatar uploads.");
-            });
         }
 
         private class FileMetadataValidator : AbstractValidator<FileMetadata>

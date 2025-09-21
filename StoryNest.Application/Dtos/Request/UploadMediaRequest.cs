@@ -9,7 +9,6 @@ namespace StoryNest.Application.Dtos.Request
     public class UploadMediaRequest
     {
         public string ResourceType { get; set; } = default!;
-        public int? ResourceId { get; set; }
         public List<FileMetadata> Files { get; set; } = new();
     }
 }

@@ -102,15 +102,6 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                // Check owner
-                if (request.ResourceType is "story" or "cover-story")
-                {
-                    var story = await _storyService.GetStoryByIdOrSlugAsync(request.ResourceId, null);
-                    if (story == null)
-                        throw new Exception("Story not found.");
-                    if (story.User.Id != userId)
-                        throw new UnauthorizedAccessException("You are not the owner of this story.");
-                }
 
                 var uploads = new List<PresignUrlResponse>();
                 var cdnDomain = Environment.GetEnvironmentVariable("CDN_DOMAIN");
@@ -135,9 +126,9 @@ namespace StoryNest.Application.Services
                     {
                         "avatar" => $"avatars/{userId}/{guid}.{extension}",
                         "cover-user" => $"user-uploads/{userId}/{guid}.{extension}",
-                        "cover-story" => $"story-assets/cover/cover_{request.ResourceId}_{guid}.{extension}",
-                        "story" => $"story-assets/content/story_{request.ResourceId}_{guid}.{extension}",
-                        "comment" => $"comments/{request.ResourceId}/{userId}/{guid}.{extension}",
+                        "cover-story" => $"story-assets/cover/cover_{guid}.{extension}",
+                        "story" => $"story-assets/content/story_{guid}.{extension}",
+                        "comment" => $"comments/{userId}/{guid}.{extension}",
                         _ => $"others/{userId}/{guid}.{extension}"
                     };
 

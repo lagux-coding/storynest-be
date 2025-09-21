@@ -15,5 +15,8 @@ namespace StoryNest.Application.Dtos.Request
         public List<string> Tags { get; set; } = new();
         public PrivacyStatus PrivacyStatus { get; set; } = PrivacyStatus.Public;
         public StoryStatus StoryStatus { get; set; } = StoryStatus.Draft;
+
+        public List<string> MediaUrls { get; set; } = new();
+
     }
 }
