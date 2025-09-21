@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -18,8 +19,8 @@ namespace StoryNest.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [HttpPost("like")]
-        public async Task<ActionResult<ApiResponse<object>>> Like([FromQuery] int storyId)
+        [HttpPost("like/{storyId}")]
+        public async Task<ActionResult<ApiResponse<object>>> Like(int storyId)
         {
             var userId = _currentUserService.UserId;
             if (userId == null)
@@ -40,8 +41,8 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(like, "Story liked"));
         }
 
-        [HttpPost("unlike")]
-        public async Task<ActionResult<ApiResponse<object>>> Unlike([FromQuery] int storyId)
+        [HttpPost("unlike/{storyId}")]
+        public async Task<ActionResult<ApiResponse<object>>> Unlike(int storyId)
         {
             var userId = _currentUserService.UserId;
             if (userId == null)
@@ -60,6 +61,17 @@ namespace StoryNest.API.Controllers
             }
 
             return Ok(ApiResponse<object>.Success(unLike, "Story unliked"));
+        }
+
+        [HttpGet("all-likes/{storyId}")]
+        public async Task<ActionResult<List<UserBasicResponse>>> GetAllUserLike(int storyId)
+        {
+            var users = await _likeService.GetAllUserLikesAsync(storyId);
+            if (users == null || users.Count == 0)
+            {
+                return NotFound(ApiResponse<object>.Fail(null, "No likes found for the story"));
+            }
+            return Ok(ApiResponse<List<UserBasicResponse>>.Success(users, "Users retrieved successfully"));
         }
     }
 }

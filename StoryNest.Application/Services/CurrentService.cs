@@ -39,6 +39,8 @@ namespace StoryNest.Application.Services
             get
             {
                 var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim))
+                    return null;
 
                 return long.TryParse(userIdClaim, out var id) ? id : null;
             }

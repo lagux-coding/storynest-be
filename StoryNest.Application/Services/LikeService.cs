@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
@@ -61,53 +62,66 @@ namespace StoryNest.Application.Services
             try
             {
                 // Check if the user has already liked the story
-                var existingLike = await _likeRepository.GetUserLikeAsync(storyId, userId);
-                if (existingLike != null)
+                var like = await _likeRepository.GetLikeAsync(storyId, userId);
+                if (like == null)
                 {
-                    // User has already liked the story, no action needed
-                    return 0; // Indicate that no new like was added
+                    like = new Like
+                    {
+                        StoryId = storyId,
+                        UserId = userId,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _likeRepository.AddLikeAsync(like);
                 }
-
-                var like = new Like
+                else if (like.RevokedAt != null)
                 {
-                    StoryId = storyId,
-                    UserId = userId,
-                    CreatedAt = DateTime.UtcNow
-                };
+                    like.RevokedAt = null;
+                    await _likeRepository.UpdateAsync(like);
+                }
+                else
+                {
+                    return 0; // User has already liked the story
+                }
+                await _unitOfWork.SaveAsync();
 
-                // Add count to story's like count
+                var likeCount = await _likeRepository.CountLikeAsync(storyId);
                 var story = await _storyService.GetStoryByIdAsync(storyId);
                 if (story == null)
                 {
                     return 0; // Story not found
                 }
-                story.LikeCount += 1;
-
-                await _likeRepository.AddLikeAsync(like);
+                story.LikeCount = likeCount;
+               
                 return await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw new Exception(ex.InnerException?.Message);
             }
         }
 
         public async Task<int> UnlikeStoryAsync(int storyId, long userId)
         {
             try
-            {              
+            {
+                var like = await _likeRepository.GetLikeAsync(storyId, userId);
+                if (like == null || like.RevokedAt != null)
+                {
+                    return 0;
+                }
+
+                like.RevokedAt = DateTime.UtcNow;
+                await _likeRepository.UpdateAsync(like);
+                await _unitOfWork.SaveAsync();
+
+                var likeCount = await _likeRepository.CountLikeAsync(storyId);
                 var story = await _storyService.GetStoryByIdAsync(storyId);
                 if (story == null)
                 {
                     return 0; // Story not found
                 }
 
-                if (story.LikeCount > 0)
-                {
-                    story.LikeCount -= 1;
-                }
-
-                await _likeRepository.RemoveLikeAsync(storyId, userId);
+                story.LikeCount = likeCount;
                 return await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
             }
             catch (Exception ex)

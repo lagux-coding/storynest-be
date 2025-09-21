@@ -23,6 +23,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Likes.AddAsync(like);
         }
 
+        public async Task<int> CountLikeAsync(int storyId)
+        {
+            return await _context.Likes
+                .CountAsync(l => l.StoryId == storyId && l.RevokedAt == null);
+        }
+
         public async Task<List<User>> GetAllUserLikeAsync(int storyId)
         {
             var users = _context.Likes
@@ -31,6 +37,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .ToList();
 
             return users;
+        }
+
+        public async Task<Like?> GetLikeAsync(int? storyId, long? userId)
+        {
+            return await _context.Likes
+                .FirstOrDefaultAsync(l => l.StoryId == storyId || l.UserId == userId);
         }
 
         public async Task<User?> GetUserLikeAsync(int storyId, long userId)
@@ -57,6 +69,11 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             {
                 throw new Exception("Like not found");
             }
+        }
+
+        public async Task UpdateAsync(Like like)
+        {
+            _context.Likes.Update(like);
         }
     }
 }

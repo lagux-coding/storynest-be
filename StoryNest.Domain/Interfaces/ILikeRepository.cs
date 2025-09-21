@@ -11,7 +11,10 @@ namespace StoryNest.Domain.Interfaces
     {
         Task<User?> GetUserLikeAsync(int storyId, long userId);
         Task<List<User>> GetAllUserLikeAsync(int storyId);
+        Task<Like?> GetLikeAsync(int? storyId, long? userId);
+        Task<int> CountLikeAsync(int storyId);
         Task AddLikeAsync(Like like);
+        Task UpdateAsync(Like like);
         Task RemoveLikeAsync(int storyId, long userId);
     }
 }
