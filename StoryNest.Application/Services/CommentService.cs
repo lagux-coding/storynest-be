@@ -16,14 +16,16 @@ namespace StoryNest.Application.Services
     public class CommentService : ICommentService
     {
         private readonly ICommentRepository _commentRepository;
+        private readonly IStoryService _storyService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public CommentService(ICommentRepository commentRepository, IUnitOfWork unitOfWork, IMapper mapper)
+        public CommentService(ICommentRepository commentRepository, IUnitOfWork unitOfWork, IMapper mapper, IStoryService storyService)
         {
             _commentRepository = commentRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _storyService = storyService;
         }
 
         public async Task<CommentResponse> AddCommentAsync(CreateCommentRequest request, int storyId, long userId)
@@ -35,21 +37,29 @@ namespace StoryNest.Application.Services
                     StoryId = storyId,
                     UserId = userId,
                     Content = request.Content,
-                    ParentCommentId = request.ParentCommentId.HasValue && request.ParentCommentId.Value > 0
+                    ParentCommentId = request.ParentCommentId.Value > 0
                                             ? request.ParentCommentId
                                             : null,
                     CommentStatus = CommentStatus.Active
                 };
 
-                if (request.ParentCommentId.HasValue)
+                if (request.ParentCommentId.Value > 0)
                 {
                     var parent = await _commentRepository.GetByIdAsync(request.ParentCommentId.Value);
                     if (parent == null || parent.StoryId != storyId)
                         throw new ArgumentException("Invalid parent comment id");
-                }
+                }                             
 
                 await _commentRepository.AddAsync(comment);
                 await _unitOfWork.SaveAsync();
+
+                var story = await _storyService.GetStoryByIdAsync(storyId);
+                if (story == null)
+                    throw new ArgumentException("Invalid story id");
+                var commentCount = await _commentRepository.CountComments(storyId);
+
+                story.CommentCount = commentCount;
+                await _storyService.UpdateWithEntityAsync(story);
 
                 var newComment = await _commentRepository.GetByIdAsync(comment.Id);
                 var response = _mapper.Map<CommentResponse>(newComment);
@@ -60,7 +70,7 @@ namespace StoryNest.Application.Services
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.InnerException?.Message);
+                throw new Exception(ex.Message);
             }
         }
 

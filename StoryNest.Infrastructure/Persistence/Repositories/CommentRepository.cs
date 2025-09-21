@@ -23,6 +23,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Comments.AddAsync(comment);
         }
 
+        public async Task<int> CountComments(int storyId)
+        {
+            return await _context.Comments
+                .Where(c => c.StoryId == storyId && c.DeletedAt == null)
+                .CountAsync();
+        }
+
         public async Task<Comment?> GetByIdAsync(int commentId)
         {
             return await _context.Comments
