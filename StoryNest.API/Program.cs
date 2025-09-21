@@ -19,6 +19,7 @@ using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
+using StoryNest.Infrastructure.Services.Google;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
@@ -186,10 +187,12 @@ builder.Services.AddScoped<IStoryTagService, StoryTagService>();
 builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IGoogleService, GoogleService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
 builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<WelcomeEmailGoogleSender>();
 builder.Services.AddScoped<ResetPasswordEmailSender>();
 
 // Others

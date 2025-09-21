@@ -18,9 +18,9 @@ namespace StoryNest.Application.Services
             _userRepository = userRepository;
         }
 
-        public Task<User?> GetUserByEmailAsync(string email)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
-            var user = _userRepository.GetByEmailAsync(email);
+            var user = await _userRepository.GetByEmailAsync(email);
             if (user == null) return null;
             return user;
         }
