@@ -16,6 +16,8 @@ namespace StoryNest.Application.Dtos.Request
         public PrivacyStatus PrivacyStatus { get; set; } = PrivacyStatus.Public;
         public StoryStatus StoryStatus { get; set; } = StoryStatus.Draft;
 
+        public bool IsAnonymous { get; set; } = false;
+
         public List<string> MediaUrls { get; set; } = new();
 
     }

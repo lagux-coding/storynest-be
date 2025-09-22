@@ -6,6 +6,7 @@ using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
+using StoryNest.Shared.Common.Utils;
 
 namespace StoryNest.API.Controllers
 {
@@ -13,15 +14,17 @@ namespace StoryNest.API.Controllers
     [ApiController]
     public class StoryController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly IStoryService _storyService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IValidator<CreateStoryRequest> _createStoryValidator;
 
-        public StoryController(IStoryService storyService, ICurrentUserService currentUserService, IValidator<CreateStoryRequest> createStoryValidator)
+        public StoryController(IStoryService storyService, ICurrentUserService currentUserService, IValidator<CreateStoryRequest> createStoryValidator, IConfiguration configuration)
         {
             _storyService = storyService;
             _currentUserService = currentUserService;
             _createStoryValidator = createStoryValidator;
+            _configuration = configuration;
         }
 
         [HttpGet("get-stories")]
@@ -55,10 +58,19 @@ namespace StoryNest.API.Controllers
             }
 
             var storyId = await _storyService.CreateStoryAsync(request, userId.Value);
+            if (storyId < 0)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Failed to create story"));
+            }
+            else if (storyId > 0 && request.IsAnonymous)
+            {
+                var username = UsernameGenerateHelperHelper.GenerateAnonymousName(storyId);
+                var avatarUrl = "system-assets/anonymous-avatar.webp";
 
-            return storyId > 0
-                ? Ok(ApiResponse<object>.Success(new { StoryId = storyId }))
-                : BadRequest(ApiResponse<object>.Fail("Failed to create story"));
+                return Ok(ApiResponse<object>.Success(new { StoryId = storyId, Username = username, AvatarUrl = avatarUrl }));
+            }
+
+            return Ok(ApiResponse<object>.Success(new { StoryId = storyId }));
         }
 
         [Authorize]
@@ -82,9 +94,20 @@ namespace StoryNest.API.Controllers
             }
 
             var result = await _storyService.UpdateStoryAsync(request, userId.Value, storyId);
-            return result > 0
-                ? Ok(ApiResponse<object>.Success(result, "Story updated successfully"))
-                : BadRequest(ApiResponse<object>.Fail("Failed to update story"));
+
+            if (storyId < 0)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Failed to update story"));
+            }
+            else if (storyId > 0 && request.IsAnonymous)
+            {
+                var username = UsernameGenerateHelperHelper.GenerateAnonymousName(storyId);
+                var avatarUrl = "system-assets/anonymous-avatar.webp";
+
+                return Ok(ApiResponse<object>.Success(new { StoryId = storyId, Username = username, AvatarUrl = avatarUrl }));
+            }
+
+            return Ok(ApiResponse<object>.Success(new { StoryId = storyId }));
         }
 
         [Authorize]

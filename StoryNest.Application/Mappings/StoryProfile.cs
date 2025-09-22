@@ -2,6 +2,7 @@
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
+using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,22 @@ namespace StoryNest.Application.Mappings
                 .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.CoverImageUrl) ? null : $"https://cdn.storynest.io.vn/{src.CoverImageUrl}"))
                 .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
                 .ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
-                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.StoryTags.Select(st => st.Tag)));
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.StoryTags.Select(st => st.Tag)))
+                .ForMember(dest => dest.User, opt => opt.MapFrom((src, dest, _, context) =>
+                {
+                    if (src.IsAnonymous)
+                    {
+                        var username = UsernameGenerateHelperHelper.GenerateAnonymousName(13);
+                        var FullName = "Anonymous";
+                        return new UserBasicResponse
+                        {
+                            Id = 0,
+                            Username = username,
+                            AvatarUrl = $"https://cdn.storynest.io.vn/system-assets/anonymous-avatar.webp",
+                        };
+                    }
+                    return context.Mapper.Map<UserBasicResponse>(src.User);
+                }));
             CreateMap<Media, MediaResponse>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
             CreateMap<Tag, TagResponse>();

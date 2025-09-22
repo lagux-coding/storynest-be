@@ -65,6 +65,10 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .HasColumnName("comment_count")
                    .HasDefaultValue(0);
 
+            builder.Property(s => s.IsAnonymous)
+                   .HasColumnName("is_anonymous")
+                   .HasDefaultValue(false);
+
             builder.Property(s => s.CreatedAt)
                    .HasColumnName("created_at")
                    .HasDefaultValueSql("CURRENT_TIMESTAMP");

@@ -46,6 +46,20 @@ namespace StoryNest.Application.Services
                 story.Summary = SummaryHelper.Generate(request.Content);
                 story.UserId = userId;
 
+                if (request.StoryStatus == StoryStatus.Published)
+                {
+                    story.PublishedAt = DateTime.UtcNow;
+                }
+
+                if (request.IsAnonymous)
+                {
+                    story.IsAnonymous = true;
+                }
+                else
+                {
+                    story.IsAnonymous = false;
+                }
+
                 await _storyRepository.AddAsync(story);
                 await _unitOfWork.SaveAsync();
 
@@ -205,6 +219,20 @@ namespace StoryNest.Application.Services
                 story.PrivacyStatus = request.PrivacyStatus;
                 story.StoryStatus = request.StoryStatus;
                 story.LastUpdatedAt = DateTime.UtcNow;
+
+                if (request.StoryStatus == StoryStatus.Published && story.PublishedAt == null)
+                {
+                    story.PublishedAt = DateTime.UtcNow;
+                }
+
+                if (request.IsAnonymous)
+                {
+                    story.IsAnonymous = true;
+                }
+                else
+                {
+                    story.IsAnonymous = false;
+                }
 
                 // Handle Tags
                 // Get existing tags
