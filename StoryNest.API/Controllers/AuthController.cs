@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace StoryNest.API.Controllers
 {
@@ -227,8 +229,17 @@ namespace StoryNest.API.Controllers
             // set cookie refresh
             SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
 
+            var queryParams = new Dictionary<string, string?>
+            {
+                ["token"] = result.AccessToken,
+                ["avatar"] = "avatars/avatar-8.webp"
+            };
+
+            var redirectUrl = QueryHelpers.AddQueryString($"{feUrl}/google-callback", queryParams);
+            Console.WriteLine(redirectUrl);
+
             // redirect về FE
-            return Redirect($"{feUrl}/google-callback?token={result.AccessToken}");
+            return Redirect(redirectUrl);
         }
 
         private void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expires)
