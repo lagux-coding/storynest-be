@@ -9,6 +9,7 @@ namespace StoryNest.Application.Dtos.Response
     public class LoginUserResponse
     {
         public string? Username { get; set; }
+        public string? AvatarUrl { get; set; }
         public string? AccessToken { get; set; }
         public string? RefreshToken { get; set; }
     }

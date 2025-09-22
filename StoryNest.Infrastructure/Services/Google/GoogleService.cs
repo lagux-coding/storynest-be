@@ -93,6 +93,7 @@ namespace StoryNest.Infrastructure.Services.Google
                 return new LoginUserResponse
                 {
                     Username = user.Username,
+                    AvatarUrl = user.AvatarUrl,
                     AccessToken = accessToken,
                     RefreshToken = refresTokenPlain,
                 };

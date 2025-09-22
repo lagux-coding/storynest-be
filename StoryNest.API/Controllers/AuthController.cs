@@ -232,11 +232,10 @@ namespace StoryNest.API.Controllers
             var queryParams = new Dictionary<string, string?>
             {
                 ["token"] = result.AccessToken,
-                ["avatar"] = "avatars/avatar-8.webp"
+                ["avatar"] = result.AvatarUrl
             };
 
             var redirectUrl = QueryHelpers.AddQueryString($"{feUrl}/google-callback", queryParams);
-            Console.WriteLine(redirectUrl);
 
             // redirect về FE
             return Redirect(redirectUrl);
