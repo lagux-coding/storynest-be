@@ -202,6 +202,7 @@ namespace StoryNest.API.Controllers
         [HttpGet("google-callback")]
         public async Task<IActionResult> GoogleCallback([FromQuery] string code)
         {
+            var feUrl = _configuration["FRONTEND_URL"];
             using var client = new HttpClient();
             var tokenResponse = await client.PostAsync("https://oauth2.googleapis.com/token",
                 new FormUrlEncodedContent(new Dictionary<string, string>
@@ -221,13 +222,13 @@ namespace StoryNest.API.Controllers
 
             var result = await _googleService.GoogleLoginAsync(googleToken);
             if (result == null)
-                return Redirect("https://dev.storynest.io.vn");
+                return Redirect(feUrl);
 
             // set cookie refresh
             SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
 
             // redirect về FE
-            return Redirect($"https://dev.storynest.io.vn/google-callback?token={result.AccessToken}");
+            return Redirect($"{feUrl}/google-callback?token={result.AccessToken}");
         }
 
         private void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expires)
