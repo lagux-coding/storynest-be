@@ -26,8 +26,9 @@ namespace StoryNest.Application.Services
         private readonly IJwtService _jwtService;
         private readonly WelcomeEmailSender _welcomeEmailSender;
         private readonly IRedisService _redisService;
+        private readonly IAICreditService _aiCreditService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -36,6 +37,7 @@ namespace StoryNest.Application.Services
             _refreshTokenRepository = refreshTokenRepository;
             _welcomeEmailSender = welcomeEmailSender;
             _redisService = redisService;
+            _aiCreditService = aiCreditService;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -89,10 +91,12 @@ namespace StoryNest.Application.Services
                 FullName = request.FullName,
                 PasswordHash = PasswordHelper.HashPassword(request.Password),
                 AvatarUrl = GetRandomAvatar()
-            };
+            };            
 
             await _userRepository.AddAsync(user);
             await _unitOfWork.SaveAsync();
+
+            await _aiCreditService.AddCreditsAsync(user.Id, 5);
 
             await _welcomeEmailSender.SendAsync(
                 user.Email,

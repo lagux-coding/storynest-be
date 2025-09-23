@@ -175,6 +175,7 @@ builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -188,6 +189,7 @@ builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IGoogleService, GoogleService>();
+builder.Services.AddScoped<IAICreditService, AICreditService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
