@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenAI.Images;
 using Resend;
 using StackExchange.Redis;
 using StoryNest.Application.Dtos.Request;
@@ -20,6 +21,7 @@ using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
+using StoryNest.Infrastructure.Services.OpenAI;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
@@ -175,6 +177,7 @@ builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
 builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -188,6 +191,7 @@ builder.Services.AddScoped<IMediaService, MediaService>();
 builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IGoogleService, GoogleService>();
+builder.Services.AddScoped<IAICreditService, AICreditService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -202,6 +206,12 @@ builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
+builder.Services.AddSingleton<ImageClient>(serviceProvider =>
+{
+    var apiKey = builder.Configuration["OPENAI_API_KEY"];
+    var model = "dall-e-3";
+    return new ImageClient(model, apiKey);
+});
 
 var app = builder.Build();
 app.UseForwardedHeaders();
