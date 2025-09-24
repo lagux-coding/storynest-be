@@ -7,6 +7,7 @@ using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class LikeController : ControllerBase
@@ -19,8 +20,7 @@ namespace StoryNest.API.Controllers
             _likeService = likeService;
             _currentUserService = currentUserService;
         }
-
-        [Authorize]
+       
         [HttpPost("like/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Like(int storyId)
         {
@@ -43,7 +43,6 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(like, "Story liked"));
         }
 
-        [Authorize]
         [HttpPost("unlike/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Unlike(int storyId)
         {
