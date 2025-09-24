@@ -128,9 +128,6 @@ namespace StoryNest.Application.Services
                 {
                     var dto = _mapper.Map<StoryResponse>(s);
 
-                    dto.LikeCount = s.Likes.Count;
-                    dto.CommentCount = s.Comments.Count;
-
                     // user chưa login => false
                     dto.IsLiked = userId != null && s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
 
