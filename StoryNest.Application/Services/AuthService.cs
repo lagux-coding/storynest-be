@@ -96,7 +96,7 @@ namespace StoryNest.Application.Services
             await _userRepository.AddAsync(user);
             await _unitOfWork.SaveAsync();
 
-            await _aiCreditService.AddCreditsAsync(user.Id, 5);
+            await _aiCreditService.AddCreditsAsync(user.Id, 10);
 
             await _welcomeEmailSender.SendAsync(
                 user.Email,
