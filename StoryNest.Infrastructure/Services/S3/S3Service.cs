@@ -55,7 +55,7 @@ namespace StoryNest.Infrastructure.Services.S3
             var request = new PutObjectRequest
             {
                 BucketName = _bucket,
-                Key = $"generated-content/temp/{guid}.webp",
+                Key = $"generated-content/image/img_{guid}.webp",
                 InputStream = ms,
                 ContentType = "image/png"
             };
@@ -65,13 +65,13 @@ namespace StoryNest.Infrastructure.Services.S3
             return request.Key;
         }
 
-        public async Task<string> UploadAudio(MemoryStream ms)
+        public async Task<string> UploadAIAudio(MemoryStream ms)
         {
             string guid = Guid.NewGuid().ToString("N");
             var request = new PutObjectRequest
             {
                 BucketName = _bucket,
-                Key = $"generated-content/temp/{guid}.opus",
+                Key = $"generated-content/audio/aud_{guid}.opus",
                 InputStream = ms,
                 ContentType = "audio/ogg"
             };

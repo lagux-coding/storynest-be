@@ -10,6 +10,6 @@ namespace StoryNest.Application.Interfaces
     {
         public string GeneratePresignUrl(string key, string contentType, int expiredMins = 15);
         public Task<string> UploadAIImage(MemoryStream ms);
-        public Task<string> UploadAudio(MemoryStream ms);
+        public Task<string> UploadAIAudio(MemoryStream ms);
     }
 }

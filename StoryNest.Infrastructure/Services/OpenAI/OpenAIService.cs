@@ -2,6 +2,7 @@
 using OpenAI.Audio;
 using OpenAI.Images;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Enums;
 
 namespace StoryNest.Infrastructure.Services.OpenAI
 {
@@ -13,8 +14,9 @@ namespace StoryNest.Infrastructure.Services.OpenAI
         private readonly AudioClient _audioClient;
         private readonly IS3Service _s3Service;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IUserMediaService _userMediaService;
 
-        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient)
+        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient, IUserMediaService userMediaService)
         {
             _configuration = configuration;
             _aiCredit = aiCredit;
@@ -22,6 +24,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
             _s3Service = s3Service;
             _unitOfWork = unitOfWork;
             _audioClient = audioClient;
+            _userMediaService = userMediaService;
         }
 
         public async Task<string> GenerateAudioAsync(string content, long userId)
@@ -46,11 +49,14 @@ namespace StoryNest.Infrastructure.Services.OpenAI
 
                 var audio = await _audioClient.GenerateSpeechAsync(content, "sage", options);
                 BinaryData bytes = audio.Value;
-                var ms = new MemoryStream(bytes.ToArray());
+                using var ms = new MemoryStream(bytes.ToArray());
 
-                var key = await _s3Service.UploadAIImage(ms);
+                var key = await _s3Service.UploadAIAudio(ms);
                 if (string.IsNullOrEmpty(key))
-                    return "Failed to upload audio to S3";
+                    throw new Exception("Failed to upload audio to S3");
+
+                // Add to user media
+                var media = await _userMediaService.AddUserMedia(userId, key, MediaType.Audio, UserMediaStatus.Orphaned);
 
                 // Deduct user credit
                 userCredit.TotalCredits -= 1;
@@ -75,7 +81,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
                 var userCredit = await _aiCredit.GetUserCredit(userId);
                 if (userCredit == null || userCredit.TotalCredits <= 0)
                 {
-                    return "Not enough credit";
+                    throw new InvalidOperationException("Not enough credit");
                 }
 
                 // Generate image using OpenAI
@@ -96,10 +102,13 @@ namespace StoryNest.Infrastructure.Services.OpenAI
                 GeneratedImage image = await _imageClient.GenerateImageAsync(prompt, options);
                 BinaryData bytes = image.ImageBytes;
 
-                var ms = new MemoryStream(bytes.ToArray());
+                using var ms = new MemoryStream(bytes.ToArray());
                 var key = await _s3Service.UploadAIImage(ms);
                 if (string.IsNullOrEmpty(key))
-                    return "Failed to upload image to S3";
+                    throw new Exception("Failed to upload image to S3");
+
+                // Add to user media
+                var media = await _userMediaService.AddUserMedia(userId, key, MediaType.Image, UserMediaStatus.Orphaned);
 
                 // Deduct user credit
                 userCredit.TotalCredits -= 1;
@@ -112,7 +121,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
     }
