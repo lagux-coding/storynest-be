@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenAI.Audio;
 using OpenAI.Images;
 using Resend;
 using StackExchange.Redis;
@@ -178,6 +179,7 @@ builder.Services.AddScoped<IMediaRepository, MediaRepository>();
 builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
+builder.Services.AddScoped<IUserMediaRepository, UserMediaRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -192,6 +194,7 @@ builder.Services.AddScoped<ILikeService, LikeService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IGoogleService, GoogleService>();
 builder.Services.AddScoped<IAICreditService, AICreditService>();
+builder.Services.AddScoped<IUserMediaService, UserMediaService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -203,6 +206,7 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 builder.Services.AddScoped<IRedisService, RedisService>();
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddScoped<IUploadService, UploadService>();
+builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 
@@ -211,6 +215,13 @@ builder.Services.AddSingleton<ImageClient>(serviceProvider =>
     var apiKey = builder.Configuration["OPENAI_API_KEY"];
     var model = "dall-e-3";
     return new ImageClient(model, apiKey);
+});
+
+builder.Services.AddSingleton<AudioClient>(serviceProvider =>
+{
+    var apiKey = builder.Configuration["OPENAI_API_KEY"];
+    var model = "gpt-4o-mini-tts";
+    return new AudioClient(model, apiKey);
 });
 
 var app = builder.Build();
