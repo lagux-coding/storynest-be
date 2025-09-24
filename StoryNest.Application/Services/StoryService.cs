@@ -132,7 +132,7 @@ namespace StoryNest.Application.Services
                     dto.CommentCount = s.Comments.Count;
 
                     // user chưa login => false
-                    dto.IsLiked = userId != null && s.Likes.Any(l => l.UserId == userId);
+                    dto.IsLiked = userId != null && s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
 
                     return dto;
                 }).ToList();
