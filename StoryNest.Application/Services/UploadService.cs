@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using HtmlAgilityPack;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
@@ -18,13 +17,14 @@ namespace StoryNest.Application.Services
     public class UploadService : IUploadService
     {
         private readonly IS3Service _s3Service;
+        private readonly IUserMediaService _userMediaService;
         private readonly IStoryService _storyService;
         private readonly IMediaService _mediaService;
         private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public UploadService(IS3Service s3Service, IStoryService storyService, IUserService userService, IUnitOfWork unitOfWork, IMediaService mediaService, IMapper mapper)
+        public UploadService(IS3Service s3Service, IStoryService storyService, IUserService userService, IUnitOfWork unitOfWork, IMediaService mediaService, IMapper mapper, IUserMediaService userMediaService)
         {
             _s3Service = s3Service;
             _storyService = storyService;
@@ -32,6 +32,7 @@ namespace StoryNest.Application.Services
             _unitOfWork = unitOfWork;
             _mediaService = mediaService;
             _mapper = mapper;
+            _userMediaService = userMediaService;
         }
 
         public async Task<bool> ConfirmUpload(ConfirmUploadRequest request, long userId)
@@ -54,6 +55,12 @@ namespace StoryNest.Application.Services
 
                         await _userService.UpdateUserAsync(user);
                         await _unitOfWork.SaveAsync();
+
+                        foreach (var key in request.FileKeys)
+                        {
+                            await _userMediaService.AddUserMedia(userId, key, MediaType.Image, UserMediaStatus.Confirmed);
+                        }
+
                         return true;
 
                     case "story":
