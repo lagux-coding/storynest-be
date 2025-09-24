@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OpenAI.Chat;
 using OpenAI.Images;
+using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -12,11 +13,26 @@ namespace StoryNest.API.Controllers
     {
         private readonly ImageClient _imageClient;
         private readonly IS3Service _s3Service;
+        private readonly IOpenAIService _openAIService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AIStoryController(ImageClient imageClient, IS3Service s3Service)
+        public AIStoryController(ImageClient imageClient, IS3Service s3Service, IOpenAIService openAIService, ICurrentUserService currentUserService)
         {
             _imageClient = imageClient;
             _s3Service = s3Service;
+            _openAIService = openAIService;
+            _currentUserService = currentUserService;
+        }
+
+        [HttpPost("generate-image")]
+        public async Task<ActionResult<ApiResponse<object>>> GenerateImage([FromBody] string content)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+
+            var result = await _openAIService.GenerateImageAsync(content, userId.Value);
+            return Ok(ApiResponse<object>.Success(result, "Image generated"));
         }
 
         [HttpPost("complete")]

@@ -203,6 +203,7 @@ builder.Services.AddScoped<ResetPasswordEmailSender>();
 builder.Services.AddScoped<IRedisService, RedisService>();
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddScoped<IUploadService, UploadService>();
+builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 

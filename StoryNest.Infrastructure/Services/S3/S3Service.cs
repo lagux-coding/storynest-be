@@ -51,17 +51,18 @@ namespace StoryNest.Infrastructure.Services.S3
 
         public async Task<string> UploadAIImage(MemoryStream ms)
         {
+            string guid = Guid.NewGuid().ToString("N");
             var request = new PutObjectRequest
             {
                 BucketName = _bucket,
-                Key = $"generated-content/temp/{Guid.NewGuid}.png",
+                Key = $"generated-content/temp/{guid}.webp",
                 InputStream = ms,
                 ContentType = "image/png"
             };
 
             await _s3Client.PutObjectAsync(request);
 
-            return "ok";
+            return request.Key;
         }
     }
 }

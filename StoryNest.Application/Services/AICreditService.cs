@@ -39,5 +39,30 @@ namespace StoryNest.Application.Services
                 throw new Exception(ex.InnerException?.Message);
             }
         }
+
+        public async Task<AICredit?> GetUserCredit(long userId)
+        {
+            try
+            {
+                var result = await _creditRepository.GetByUserId(userId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.InnerException?.Message);
+            }
+        }
+
+        public async Task UpdateCreditsAsync(AICredit aiCredit)
+        {
+            try
+            {        
+                _creditRepository.UpdateAsync(aiCredit);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.InnerException?.Message);
+            }
+        }
     }
 }
