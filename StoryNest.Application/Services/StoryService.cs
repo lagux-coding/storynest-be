@@ -18,6 +18,7 @@ namespace StoryNest.Application.Services
 {
     public class StoryService : IStoryService
     {
+        private readonly IUserMediaService _userMediaService;
         private readonly IStoryRepository _storyRepository;
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
@@ -25,7 +26,7 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -33,6 +34,7 @@ namespace StoryNest.Application.Services
             _storyTagService = storyTagService;
             _mapper = mapper;
             _mediaService = mediaService;
+            _userMediaService = userMediaService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -96,7 +98,14 @@ namespace StoryNest.Application.Services
                 // Add media urls
                 if (request.MediaUrls != null && request.MediaUrls.Count > 0)
                 {
-                    await _mediaService.CreateMediaAsync(story.Id, request.MediaUrls);
+                    var media = await _mediaService.CreateMediaAsync(story.Id, request.MediaUrls);
+                    if (media > 0)
+                    {
+                        foreach (var url in request.MediaUrls)
+                        {
+                            await _userMediaService.AddUserMedia(userId, url, MediaType.Image, UserMediaStatus.Confirmed);
+                        }
+                    }
                 }
 
                 return story.Id;
