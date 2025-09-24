@@ -51,6 +51,8 @@ namespace StoryNest.Domain.Entities
         public ICollection<UserReport> ReportsCreated { get; set; } = new List<UserReport>();
         public ICollection<UserReport> ReportsReceived { get; set; } = new List<UserReport>();
         public ICollection<YearlyMemory> YearlyMemories { get; set; } = new List<YearlyMemory>();
+        public ICollection<UserMedia> UserMedias { get; set; } = new List<UserMedia>();
+
 
         // 1 - 1 relations
         public AICredit AICredit { get; set; } = default!;

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenAI.Audio;
 using OpenAI.Images;
 using Resend;
 using StackExchange.Redis;
@@ -212,6 +213,13 @@ builder.Services.AddSingleton<ImageClient>(serviceProvider =>
     var apiKey = builder.Configuration["OPENAI_API_KEY"];
     var model = "dall-e-3";
     return new ImageClient(model, apiKey);
+});
+
+builder.Services.AddSingleton<AudioClient>(serviceProvider =>
+{
+    var apiKey = builder.Configuration["OPENAI_API_KEY"];
+    var model = "gpt-4o-mini-tts";
+    return new AudioClient(model, apiKey);
 });
 
 var app = builder.Build();

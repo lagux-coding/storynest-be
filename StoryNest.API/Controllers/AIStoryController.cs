@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using OpenAI.Audio;
 using OpenAI.Chat;
 using OpenAI.Images;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Interfaces;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace StoryNest.API.Controllers
 {
@@ -12,16 +14,18 @@ namespace StoryNest.API.Controllers
     public class AIStoryController : ControllerBase
     {
         private readonly ImageClient _imageClient;
+        private readonly AudioClient _audioClient;
         private readonly IS3Service _s3Service;
         private readonly IOpenAIService _openAIService;
         private readonly ICurrentUserService _currentUserService;
 
-        public AIStoryController(ImageClient imageClient, IS3Service s3Service, IOpenAIService openAIService, ICurrentUserService currentUserService)
+        public AIStoryController(ImageClient imageClient, IS3Service s3Service, IOpenAIService openAIService, ICurrentUserService currentUserService, AudioClient audioClient)
         {
             _imageClient = imageClient;
             _s3Service = s3Service;
             _openAIService = openAIService;
             _currentUserService = currentUserService;
+            _audioClient = audioClient;
         }
 
         [HttpPost("generate-image")]
@@ -33,6 +37,18 @@ namespace StoryNest.API.Controllers
 
             var result = await _openAIService.GenerateImageAsync(content, userId.Value);
             return Ok(ApiResponse<object>.Success(result, "Image generated"));
+        }
+
+        [HttpPost("generate-audio")]
+        public async Task<ActionResult<ApiResponse<object>>> GenerateAudio([FromBody] string content)
+        {
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+
+            var result = await _openAIService.GenerateAudioAsync(content, userId.Value);
+
+            return Ok(ApiResponse<object>.Success(result, "Audio generated"));
         }
 
         [HttpPost("complete")]

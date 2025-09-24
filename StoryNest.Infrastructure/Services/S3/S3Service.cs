@@ -64,5 +64,21 @@ namespace StoryNest.Infrastructure.Services.S3
 
             return request.Key;
         }
+
+        public async Task<string> UploadAudio(MemoryStream ms)
+        {
+            string guid = Guid.NewGuid().ToString("N");
+            var request = new PutObjectRequest
+            {
+                BucketName = _bucket,
+                Key = $"generated-content/temp/{guid}.opus",
+                InputStream = ms,
+                ContentType = "audio/ogg"
+            };
+
+            await _s3Client.PutObjectAsync(request);
+
+            return request.Key;
+        }
     }
 }
