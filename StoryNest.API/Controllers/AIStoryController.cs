@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OpenAI.Audio;
 using OpenAI.Chat;
@@ -9,6 +10,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace StoryNest.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AIStoryController : ControllerBase
