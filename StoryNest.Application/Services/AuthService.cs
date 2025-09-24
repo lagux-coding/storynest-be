@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Constants;
+using StoryNest.Domain.Enums;
 
 namespace StoryNest.Application.Services
 {
@@ -27,8 +28,10 @@ namespace StoryNest.Application.Services
         private readonly WelcomeEmailSender _welcomeEmailSender;
         private readonly IRedisService _redisService;
         private readonly IAICreditService _aiCreditService;
+        private readonly IUserMediaService _userMediaService;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -38,6 +41,8 @@ namespace StoryNest.Application.Services
             _welcomeEmailSender = welcomeEmailSender;
             _redisService = redisService;
             _aiCreditService = aiCreditService;
+            _userMediaService = userMediaService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -96,6 +101,7 @@ namespace StoryNest.Application.Services
             await _userRepository.AddAsync(user);
             await _unitOfWork.SaveAsync();
 
+            await _userMediaService.AddUserMedia(user.Id, user.AvatarUrl!, MediaType.Image, UserMediaStatus.Confirmed);
             await _aiCreditService.AddCreditsAsync(user.Id, 10);
 
             await _welcomeEmailSender.SendAsync(
@@ -218,7 +224,8 @@ namespace StoryNest.Application.Services
         {
             var rnd = new Random();
             int index = rnd.Next(DefaultAvatars.Avatars.Count);
-            return DefaultAvatars.Avatars[index];
+            string result = DefaultAvatars.Avatars[index];
+            return result;
         }
     }
 }
