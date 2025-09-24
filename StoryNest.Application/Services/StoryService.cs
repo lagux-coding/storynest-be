@@ -108,32 +108,44 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor)
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null)
         {
             try
             {
                 var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
 
                 var hasMore = stories.Count > limit;
-                var items = _mapper.Map<List<StoryResponse>>(stories.Take(limit).ToList());
-                //var items = stories.Take(limit).Select(s => new StoryResponse
-                //{
-                //    Id = s.Id,
-                //    Title = s.Title,
-                //    Content = s.Content,
-                //    CoverImageUrl = s.CoverImageUrl,
-                //    CreatedAt = s.CreatedAt,
-                //    LikeCount = s.LikeCount,
-                //    CommentCount = s.CommentCount,
-                //    User = new UserBasicResponse
-                //    {
-                //        Id = s.User.Id,
-                //        Username = s.User.Username,
-                //        AvatarUrl = s.User.AvatarUrl,
-                //    },
-                //    Media = _mapper.Map<List<MediaResponse>>(s.Media.ToList()),
-                //    Tags = _mapper.Map<List<TagResponse>>(s.StoryTags.Select(st => st.Tag).ToList())
-                //});
+                var items = stories.Take(limit).Select(s =>
+                {
+                    var dto = _mapper.Map<StoryResponse>(s);
+
+                    dto.LikeCount = s.Likes.Count;
+                    dto.CommentCount = s.Comments.Count;
+
+                    // user chưa login => false
+                    dto.IdLiked = userId != null && s.Likes.Any(l => l.UserId == userId);
+
+                    return dto;
+                }).ToList();
+                
+                    //var items = stories.Take(limit).Select(s => new StoryResponse
+                    //{
+                    //    Id = s.Id,
+                    //    Title = s.Title,
+                    //    Content = s.Content,
+                    //    CoverImageUrl = s.CoverImageUrl,
+                    //    CreatedAt = s.CreatedAt,
+                    //    LikeCount = s.LikeCount,
+                    //    CommentCount = s.CommentCount,
+                    //    User = new UserBasicResponse
+                    //    {
+                    //        Id = s.User.Id,
+                    //        Username = s.User.Username,
+                    //        AvatarUrl = s.User.AvatarUrl,
+                    //    },
+                    //    Media = _mapper.Map<List<MediaResponse>>(s.Media.ToList()),
+                    //    Tags = _mapper.Map<List<TagResponse>>(s.StoryTags.Select(st => st.Tag).ToList())
+                    //});
 
                 var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
 

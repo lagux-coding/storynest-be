@@ -30,7 +30,14 @@ namespace StoryNest.API.Controllers
         [HttpGet("get-stories")]
         public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetPreviewStories([FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
         {
-            var result = await _storyService.GetStoriesPreviewAsync(limit, cursor);
+            PaginatedResponse<StoryResponse> result = new();
+            var userId = _currentUserService.UserId;   
+            
+            if (userId != null)
+                result = await _storyService.GetStoriesPreviewAsync(limit, cursor, userId.Value);
+            else
+                result = await _storyService.GetStoriesPreviewAsync(limit, cursor);
+
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
