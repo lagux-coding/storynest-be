@@ -42,7 +42,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task<Like?> GetLikeAsync(int? storyId, long? userId)
         {
             return await _context.Likes
-                .FirstOrDefaultAsync(l => l.StoryId == storyId || l.UserId == userId);
+                .FirstOrDefaultAsync(l => l.StoryId == storyId && l.UserId == userId);
         }
 
         public async Task<User?> GetUserLikeAsync(int storyId, long userId)
