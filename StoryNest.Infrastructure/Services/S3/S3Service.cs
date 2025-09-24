@@ -1,5 +1,6 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
+using Microsoft.AspNetCore.Http.HttpResults;
 using StoryNest.Application.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -46,6 +47,21 @@ namespace StoryNest.Infrastructure.Services.S3
             };
 
             return _s3Client.GetPreSignedURL(request);
+        }
+
+        public async Task<string> UploadAIImage(MemoryStream ms)
+        {
+            var request = new PutObjectRequest
+            {
+                BucketName = _bucket,
+                Key = $"generated-content/temp/{Guid.NewGuid}.png",
+                InputStream = ms,
+                ContentType = "image/png"
+            };
+
+            await _s3Client.PutObjectAsync(request);
+
+            return "ok";
         }
     }
 }

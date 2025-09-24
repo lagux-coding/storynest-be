@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Application.Interfaces
 {
-    public interface IAICreditService
+    public interface IOpenAIService
     {
-        public Task AddCreditsAsync(long userId, int amount);
+        Task<string> GenerateImageAsync(string content);
     }
 }

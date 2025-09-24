@@ -9,5 +9,6 @@ namespace StoryNest.Application.Interfaces
     public interface IS3Service
     {
         public string GeneratePresignUrl(string key, string contentType, int expiredMins = 15);
+        public Task<string> UploadAIImage(MemoryStream ms);
     }
 }
