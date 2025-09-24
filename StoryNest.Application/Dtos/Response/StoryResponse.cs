@@ -19,7 +19,7 @@ namespace StoryNest.Application.Dtos.Response
         public DateTime CreatedAt { get; set; }
         public DateTime? LastUpdatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }
-        public bool IdLiked { get; set; }
+        public bool IsLiked { get; set; }
         public int LikeCount { get; set; }
         public int CommentCount { get; set; }
         public PrivacyStatus PrivacyStatus { get; set; }
