@@ -30,7 +30,7 @@ namespace StoryNest.Application.Features.Users
                 ["Year"] = DateTime.UtcNow.Year.ToString()
             };
 
-            var html = _renderer.Render("Welcome", data);
+            var html = _renderer.Render("WelcomeGoogle", data);
 
             await _emailService.SendAsync(toEmail, "Thông tin tài khoản StoryNest của bạn", html, ct: ct);
         }
