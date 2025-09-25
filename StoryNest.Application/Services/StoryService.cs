@@ -76,7 +76,7 @@ namespace StoryNest.Application.Services
                         tag = new Tag
                         {
                             Name = tagName,
-                            Slug = slug,
+                            Slug = $"slug-{RandomString(6)}",
                             IsUserGenerated = true,
                         };
 
@@ -310,6 +310,15 @@ namespace StoryNest.Application.Services
         {
             _storyRepository.UpdateStory(story);
             return _unitOfWork.SaveAsync();
+        }
+
+        private string RandomString(int seed)
+        {
+            string code = string.Concat(Guid.NewGuid().ToString("N")
+                                .Where(char.IsDigit)
+                                .Take(seed));
+
+            return code;
         }
     }
 }
