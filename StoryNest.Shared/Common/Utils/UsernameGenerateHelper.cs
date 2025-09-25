@@ -16,12 +16,12 @@ namespace StoryNest.Shared.Common.Utils
 
         private static readonly string[] Adjectives =
         {
-            "Dũng cảm", "Hài hước", "Nhanh nhẹn", "Thông minh", "Tinh nghịch",
-            "Lười biếng", "Vui vẻ", "Trầm lặng", "Mạnh mẽ", "Nhỏ bé",
-            "Hiền lành", "Ngốc nghếch", "Gan dạ", "Lanh lợi", "Ngạo nghễ",
-            "Hồn nhiên", "Đáng yêu", "Kỳ lạ", "Bí ẩn", "Tinh anh",
-            "Dịu dàng", "Hoang dã", "Cứng cỏi", "Điềm tĩnh", "Quỷ quyệt",
-            "Thân thiện", "Ngầu lòi", "Khù khờ", "Bá đạo", "Khôn ngoan"
+            "dũng cảm", "hài hước", "nhanh nhẹn", "thông minh", "tinh nghịch",
+            "lười biếng", "tui vẻ", "trầm lặng", "mạnh mẽ", "nhỏ bé",
+            "hiền lành", "ngốc nghếch", "gan dạ", "lanh lợi", "ngạo nghễ",
+            "hồn nhiên", "đáng yêu", "kỳ lạ", "bí ẩn", "tinh anh",
+            "dịu dàng", "hoang dã", "cứng cỏi", "điềm tĩnh", "quỷ quyệt",
+            "thân thiện", "ngầu lòi", "khù khờ", "bá đạo", "khôn ngoan"
         };
 
         private static readonly string[] AnimalsDisplayName =
