@@ -21,6 +21,21 @@ namespace StoryNest.Application.Services
             _unitOfWork = unitOfWork;
         }
 
+        public async Task<int> CreateAudioMediaAsync(int storyId, string url)
+        {
+            var media = new Media
+            {
+                StoryId = storyId,
+                MediaUrl = url,
+                MediaType = MediaType.Audio,
+                Caption = "story audio",
+                MimeType = "audio",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _mediaRepository.CreateMediaAsync(media);
+            return await _unitOfWork.SaveAsync();
+        }
+
         public async Task<int> CreateMediaAsync(int storyId, List<string> url)
         {
             foreach (var imgUrl in url)

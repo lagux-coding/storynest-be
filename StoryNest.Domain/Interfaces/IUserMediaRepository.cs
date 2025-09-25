@@ -13,5 +13,6 @@ namespace StoryNest.Domain.Interfaces
         public Task AddAsync(UserMedia media);
         public Task UpdateAsync(UserMedia media);
         public Task<bool> ExistsAsync(Expression<Func<UserMedia, bool>> predicate);
+        public Task<List<UserMedia>> GetByUserAndUrls(long userId, List<string> urls);
     }
 }

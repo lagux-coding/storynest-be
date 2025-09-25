@@ -71,9 +71,9 @@ namespace StoryNest.Infrastructure.Services.S3
             var request = new PutObjectRequest
             {
                 BucketName = _bucket,
-                Key = $"generated-content/audio/aud_{guid}.opus",
+                Key = $"generated-content/audio/aud_{guid}.wav",
                 InputStream = ms,
-                ContentType = "audio/ogg"
+                ContentType = "audio/wav"
             };
 
             await _s3Client.PutObjectAsync(request);

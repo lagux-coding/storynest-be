@@ -9,6 +9,7 @@ namespace StoryNest.Application.Interfaces
     public interface IMediaService
     {
         Task<int> CreateMediaAsync(int storyId, List<string> url);
+        Task<int> CreateAudioMediaAsync(int storyId, string url);
         Task<int> DeleteMediaByStoryIdAsync(int storyId);
     }
 }

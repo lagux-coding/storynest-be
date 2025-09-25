@@ -40,5 +40,23 @@ namespace StoryNest.Application.Services
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<List<UserMedia>> GetByUserAndUrls(long userId, List<string> urls)
+        {
+            try
+            {
+                return await _userMediaRepository.GetByUserAndUrls(userId, urls);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public Task<int> UpdateUserMedia(UserMedia media)
+        {
+            _userMediaRepository.UpdateAsync(media);
+            return _unitOfWork.SaveAsync();
+        }
     }
 }

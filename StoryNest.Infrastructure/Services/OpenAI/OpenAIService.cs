@@ -44,7 +44,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
 #pragma warning disable OPENAI001
                     Instructions = $"Affect: A caring, gentle presence—like a close friend who listens with patience and empathy.\r\n\r\nTone: Soft, soothing, and approachable. Neutral enough to adapt, yet warm enough to comfort.\r\n\r\nDelivery: Smooth and unhurried most of the time, with gentle pauses. But when urgency or excitement is needed, the pace naturally quickens—clear, but never rushed.\r\n\r\nEmotion: Subtle warmth and reassurance, mixed with encouragement. Always calm at the core, but able to add a spark of energy when the moment calls for it.\r\n\r\nPunctuation: Light, flowing sentences with commas guiding a gentle rhythm. Occasionally shorter, sharper sentences to match faster delivery—easy to follow, like natural conversation.",
 #pragma warning restore OPENAI001
-                    ResponseFormat = GeneratedSpeechFormat.Opus
+                    ResponseFormat = GeneratedSpeechFormat.Wav
                 };
 
                 var audio = await _audioClient.GenerateSpeechAsync(content, "sage", options);

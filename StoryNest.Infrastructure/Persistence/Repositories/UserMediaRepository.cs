@@ -29,6 +29,16 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return _context.UserMedias.AnyAsync(predicate);
         }
 
+        public async Task<List<UserMedia>> GetByUserAndUrls(long userId, List<string> urls)
+        {
+            if (urls == null || urls.Count == 0)
+                return new List<UserMedia>();
+
+            return await _context.UserMedias
+                    .Where(m => m.UserId == userId && urls.Contains(m.MediaUrl))
+                    .ToListAsync();
+        }
+
         public async Task UpdateAsync(UserMedia media)
         {
             _context.UserMedias.Update(media);

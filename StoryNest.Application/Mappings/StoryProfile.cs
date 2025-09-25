@@ -25,7 +25,7 @@ namespace StoryNest.Application.Mappings
                 {
                     if (src.IsAnonymous)
                     {
-                        var username = UsernameGenerateHelperHelper.GenerateAnonymousName(13);
+                        var username = UsernameGenerateHelperHelper.GenerateAnonymousName(src.Id);
                         var FullName = "Anonymous";
                         return new UserBasicResponse
                         {

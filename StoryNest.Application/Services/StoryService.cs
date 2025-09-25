@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using AngleSharp.Io;
+using AutoMapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
@@ -9,6 +10,7 @@ using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -19,14 +21,16 @@ namespace StoryNest.Application.Services
     public class StoryService : IStoryService
     {
         private readonly IUserMediaService _userMediaService;
+        private readonly HttpClient _httpClient;
         private readonly IStoryRepository _storyRepository;
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
         private readonly IMediaService _mediaService;
+        private readonly IS3Service _s3Service;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -35,16 +39,18 @@ namespace StoryNest.Application.Services
             _mapper = mapper;
             _mediaService = mediaService;
             _userMediaService = userMediaService;
+            _httpClient = httpClient;
+            _s3Service = s3Service;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
         {
             try
             {
-
                 var story = _mapper.Map<Story>(request);
 
                 story.Slug = SlugGenerationHelper.GenerateSlug(request.Title);
+                story.Slug = $"{story.Slug}-{RandomString(6)}"; // ensure unique
                 story.Summary = SummaryHelper.Generate(request.Content);
                 story.UserId = userId;
 
@@ -76,7 +82,7 @@ namespace StoryNest.Application.Services
                         tag = new Tag
                         {
                             Name = tagName,
-                            Slug = $"slug-{RandomString(6)}",
+                            Slug = slug,
                             IsUserGenerated = true,
                         };
 
@@ -95,18 +101,47 @@ namespace StoryNest.Application.Services
 
                 await _unitOfWork.SaveAsync();
 
-                // Add media urls
-                if (request.MediaUrls != null && request.MediaUrls.Count > 0)
+                //// Merge audio files if any
+                //if (request.AudioUrls != null && request.AudioUrls.Count > 0)
+                //{
+                //    string finalAudioKey;
+                //    if (request.AudioUrls.Count == 1)
+                //    {
+                //        finalAudioKey = request.AudioUrls.First();
+                //    }
+                //    else
+                //    {
+                //        finalAudioKey = await MergeAudio(request.AudioUrls);
+                //    }
+                //    var media = await _mediaService.CreateAudioMediaAsync(story.Id, finalAudioKey);
+                //    if (media > 0)
+                //        await _userMediaService.AddUserMedia(userId, finalAudioKey, MediaType.Audio, UserMediaStatus.Confirmed);
+                //}
+
+
+                //// Add media urls
+                //if (request.MediaUrls != null && request.MediaUrls.Count > 0)
+                //{
+                //    var media = await _mediaService.CreateMediaAsync(story.Id, request.MediaUrls);
+                //    if (media > 0)
+                //    {
+                //        foreach (var url in request.MediaUrls)
+                //        {
+                //            await _userMediaService.AddUserMedia(userId, url, MediaType.Image, UserMediaStatus.Confirmed);
+                //        }
+                //    }
+                //}
+
+                if (request.MediaUrls?.Any() == true)
                 {
-                    var media = await _mediaService.CreateMediaAsync(story.Id, request.MediaUrls);
-                    if (media > 0)
-                    {
-                        foreach (var url in request.MediaUrls)
-                        {
-                            await _userMediaService.AddUserMedia(userId, url, MediaType.Image, UserMediaStatus.Confirmed);
-                        }
-                    }
+                    await SyncUserMedia(userId, story.Id, request.MediaUrls, MediaType.Image);
                 }
+
+                if (request.AudioUrls?.Any() == true)
+                {
+                    await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
+                }
+
 
                 return story.Id;
                 
@@ -116,6 +151,48 @@ namespace StoryNest.Application.Services
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task SyncUserMedia(long userId, int storyId, List<string> urls, MediaType type)
+        {
+            var existing = await _userMediaService.GetByUserAndUrls(userId, urls);
+
+            if (type == MediaType.Audio)
+            {
+                // Nếu có nhiều audio → merge trước
+                string finalAudioKey = urls.Count > 1
+                    ? await MergeAudio(urls)
+                    : urls.First();
+
+                // Tạo mới cả Media và UserMedia
+                var media = await _mediaService.CreateAudioMediaAsync(storyId, finalAudioKey);
+                if (media > 0)
+                    await _userMediaService.AddUserMedia(userId, finalAudioKey, MediaType.Audio, UserMediaStatus.Confirmed);
+                
+            }
+            else if (type == MediaType.Image)
+            {
+                // Confirm hoặc add từng ảnh
+                foreach (var url in urls)
+                {
+                    var media = await _mediaService.CreateMediaAsync(storyId, new List<string> { url });
+
+                    var orphan = existing.FirstOrDefault(m => m.MediaUrl == url);                   
+                    if (orphan != null)
+                    {
+                        orphan.Status = UserMediaStatus.Confirmed;
+                        await _userMediaService.UpdateUserMedia(orphan);
+                    }
+                    else
+                    {                      
+                        if (media > 0)
+                            await _userMediaService.AddUserMedia(userId, url, MediaType.Image, UserMediaStatus.Confirmed);
+                    }
+                }
+            }
+
+            await _unitOfWork.SaveAsync();
+        }
+
 
         public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null)
         {
@@ -319,6 +396,92 @@ namespace StoryNest.Application.Services
                                 .Take(seed));
 
             return code;
+        }
+
+        private async Task<string> MergeAudio(List<string> audioUrls)
+        {
+            if (audioUrls == null || audioUrls.Count == 0)
+            {
+                throw new Exception("No audio files provided");
+            }
+            var tempFiles = new List<string>();
+            
+            try
+            {
+                // 1. Tải từng file về local tạm
+                foreach (var url in audioUrls)
+                {
+                    var bytes = await _httpClient.GetByteArrayAsync($"https://cdn.storynest.io.vn/{url}");
+                    var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
+                    await System.IO.File.WriteAllBytesAsync(tempFile, bytes);
+                    tempFiles.Add(tempFile);
+                }
+
+                // 2. Merge ra MemoryStream
+                using var mergedStream = MergeWavFilesToStream(tempFiles.ToArray());
+
+                // 3. Upload lên S3
+                var key = await _s3Service.UploadAIAudio(mergedStream);
+
+                return key;
+            }
+            finally
+            {
+                // Cleanup file tạm
+                foreach (var f in tempFiles)
+                {
+                    if (System.IO.File.Exists(f))
+                        System.IO.File.Delete(f);
+                }
+            }
+        }
+
+        private MemoryStream MergeWavFilesToStream(params string[] sourceFiles)
+        {
+            var outputStream = new MemoryStream();
+            byte[] header = null;
+            int dataSize = 0;
+
+            for (int i = 0; i < sourceFiles.Length; i++)
+            {
+                var bytes = System.IO.File.ReadAllBytes(sourceFiles[i]);
+
+                if (i == 0)
+                {
+                    // Copy header từ file đầu tiên
+                    header = new byte[44];
+                    Array.Copy(bytes, 0, header, 0, 44);
+
+                    // Ghi header tạm
+                    outputStream.Write(header, 0, header.Length);
+                    outputStream.Write(bytes, 44, bytes.Length - 44);
+
+                    dataSize += bytes.Length - 44;
+                }
+                else
+                {
+                    // Các file sau bỏ header
+                    outputStream.Write(bytes, 44, bytes.Length - 44);
+                    dataSize += bytes.Length - 44;
+                }
+            }
+
+            // Update header (ChunkSize & Subchunk2Size)
+            outputStream.Seek(4, SeekOrigin.Begin);
+            var bw = new BinaryWriter(outputStream, Encoding.ASCII, leaveOpen: true);
+
+            int chunkSize = 36 + dataSize;
+            int subChunk2Size = dataSize;
+
+            bw.Write(chunkSize);
+
+            outputStream.Seek(40, SeekOrigin.Begin);
+            bw.Write(subChunk2Size);
+
+            // Reset lại về đầu stream để đọc upload
+            outputStream.Seek(0, SeekOrigin.Begin);
+
+            return outputStream;
         }
     }
 }
