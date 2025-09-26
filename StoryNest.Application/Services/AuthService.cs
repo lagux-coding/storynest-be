@@ -30,8 +30,9 @@ namespace StoryNest.Application.Services
         private readonly IAICreditService _aiCreditService;
         private readonly IUserMediaService _userMediaService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IAITransactionService _aiTransactionService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService, IAITransactionService aiTransactionService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -43,6 +44,7 @@ namespace StoryNest.Application.Services
             _aiCreditService = aiCreditService;
             _userMediaService = userMediaService;
             _currentUserService = currentUserService;
+            _aiTransactionService = aiTransactionService;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -103,6 +105,8 @@ namespace StoryNest.Application.Services
 
             await _userMediaService.AddUserMedia(user.Id, user.AvatarUrl!, MediaType.Image, UserMediaStatus.Confirmed);
             await _aiCreditService.AddCreditsAsync(user.Id, 10);
+
+            await _aiTransactionService.AddTransactionAsync(user.Id, int.Parse(user.Id.ToString()), 10, "init credits", AITransactionType.Earned);
 
             await _welcomeEmailSender.SendAsync(
                 user.Email,

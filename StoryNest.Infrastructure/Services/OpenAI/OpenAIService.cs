@@ -2,6 +2,7 @@
 using OpenAI.Audio;
 using OpenAI.Images;
 using StoryNest.Application.Interfaces;
+using StoryNest.Application.Services;
 using StoryNest.Domain.Enums;
 
 namespace StoryNest.Infrastructure.Services.OpenAI
@@ -15,8 +16,9 @@ namespace StoryNest.Infrastructure.Services.OpenAI
         private readonly IS3Service _s3Service;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserMediaService _userMediaService;
+        private readonly IAITransactionService _aiTransactionService;
 
-        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient, IUserMediaService userMediaService)
+        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient, IUserMediaService userMediaService, IAITransactionService aiTransactionService)
         {
             _configuration = configuration;
             _aiCredit = aiCredit;
@@ -25,6 +27,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
             _unitOfWork = unitOfWork;
             _audioClient = audioClient;
             _userMediaService = userMediaService;
+            _aiTransactionService = aiTransactionService;
         }
 
         public async Task<string> GenerateAudioAsync(string content, long userId)
@@ -63,6 +66,9 @@ namespace StoryNest.Infrastructure.Services.OpenAI
                 userCredit.UsedCredits += 1;
 
                 await _aiCredit.UpdateCreditsAsync(userCredit);
+
+                await _aiTransactionService.AddTransactionAsync(userId, userCredit.Id, 1, "gen audio", AITransactionType.Spent);
+
                 await _unitOfWork.SaveAsync();
 
                 return key;
@@ -115,6 +121,9 @@ namespace StoryNest.Infrastructure.Services.OpenAI
                 userCredit.UsedCredits += 1;
 
                 await _aiCredit.UpdateCreditsAsync(userCredit);
+
+                await _aiTransactionService.AddTransactionAsync(userId, userCredit.Id, 1, "gen image", AITransactionType.Spent);
+
                 await _unitOfWork.SaveAsync();
 
                 return key;

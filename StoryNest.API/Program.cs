@@ -180,6 +180,7 @@ builder.Services.AddScoped<ILikeRepository, LikeRepository>();
 builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
 builder.Services.AddScoped<IUserMediaRepository, UserMediaRepository>();
+builder.Services.AddScoped<IAITransactionRepository, AITransactionRepository>();    
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -195,6 +196,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IGoogleService, GoogleService>();
 builder.Services.AddScoped<IAICreditService, AICreditService>();
 builder.Services.AddScoped<IUserMediaService, UserMediaService>();
+builder.Services.AddScoped<IAITransactionService, AITransactionService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
