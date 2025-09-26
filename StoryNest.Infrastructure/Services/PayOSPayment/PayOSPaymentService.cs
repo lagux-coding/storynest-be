@@ -147,10 +147,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                     await _unitOfWork.SaveAsync();
                     // AI transaction credit
 
-                    var transaction = await _aiTransactionService.GetByUserAsync(payment.UserId);
-                    transaction.Type = AITransactionType.Earned;
-                    transaction.Amount = sub.Plan.AiCreditsDaily;
-                    await _aiTransactionService.UpdateTransactionAsync(transaction);
+                    var transaction = await _aiTransactionService.AddTransactionAsync(payment.UserId, (int)payment.UserId, sub.Plan.AiCreditsDaily, $"upgrade {sub.Plan.Name} plan", AITransactionType.Earned);
 
                     return true;
                 }
