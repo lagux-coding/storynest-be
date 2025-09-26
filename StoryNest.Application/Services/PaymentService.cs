@@ -46,6 +46,18 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<Payment> GetPaymentByTXN(string code)
+        {
+            try
+            {
+                return await _paymentRepository.GetByTXN(code);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<Payment> GetPaymentByUserAndSubAsync(long userId, int subscriptionId)
         {
             try

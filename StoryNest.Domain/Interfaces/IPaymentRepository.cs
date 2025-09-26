@@ -10,6 +10,7 @@ namespace StoryNest.Domain.Interfaces
     public interface IPaymentRepository
     {
         public Task AddAsync(Payment payment);
+        Task<Payment?> GetByTXN(string code);
         Task<Payment?> GetByUserAndSub(long userId, int subscriptionId);
         Task UpdateAsync(Payment payment);
     }

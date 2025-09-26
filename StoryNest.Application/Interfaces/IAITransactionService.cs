@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Enums;
+﻿using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,5 +11,7 @@ namespace StoryNest.Application.Interfaces
     public interface IAITransactionService
     {
         public Task<int> AddTransactionAsync(long userId, int referenceId, int amount, string desc, AITransactionType type);
+        public Task<AITransaction> GetByUserAsync(long userId);
+        public Task UpdateTransactionAsync(AITransaction transaction);
     }
 }

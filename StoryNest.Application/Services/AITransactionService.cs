@@ -47,5 +47,30 @@ namespace StoryNest.Application.Services
                 throw;
             }
         }
+
+        public async Task<AITransaction> GetByUserAsync(long userId)
+        {
+            try
+            {
+                return await _aiTransactionRepository.GetByUserIdAsync(userId);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateTransactionAsync(AITransaction transaction)
+        {
+            try
+            {
+                await _aiTransactionRepository.UpdateAsync(transaction);
+                _unitOfWork.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

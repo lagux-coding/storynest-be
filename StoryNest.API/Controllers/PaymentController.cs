@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Net.payOS;
 using Net.payOS.Types;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Interfaces;
+using System.Threading.Tasks;
 
 namespace StoryNest.API.Controllers
 {
@@ -38,34 +40,10 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpPost("webhook")]
-        public IActionResult Webhook([FromBody] WebhookType body)
+        public async Task<IActionResult> Webhook([FromBody] WebhookType body)
         {
-            try
-            {
-                var clientId = _configuration["PAYOS_CLIENT_ID"];
-                var apiKey = _configuration["PAYOS_API_KEY"];
-                var checksum = _configuration["PAYOS_CHECKSUM"];
-
-                PayOS _payOS = new PayOS(clientId, apiKey, checksum);
-                WebhookData data = _payOS.verifyPaymentWebhookData(body);
-
-
-                if (data.code == "00")
-                {
-                    _logger.LogInformation("✅ Webhook success. Order {OrderCode}, Amount {Amount}", data.orderCode, data.amount);
-                    return Ok("ok");
-                }
-                else
-                {
-                    return Ok("fail");
-                }
-
-                return Ok("ok");
-            }
-            catch (Exception ex)
-            {
-                return Ok("error");
-            }
+            var result = await _payOSPaymenService.WebhookAsync(body);
+            return Ok("ok");
         }
 
 

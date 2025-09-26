@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using StoryNest.Domain.Entities;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,17 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task AddAsync(AITransaction transaction)
         {
             await _context.AITransactions.AddAsync(transaction);
+        }
+
+        public async Task<AITransaction?> GetByUserIdAsync(long userId)
+        {
+            return await _context.AITransactions.FirstOrDefaultAsync(t => t.UserId == userId);
+        }
+
+        public async Task UpdateAsync(AITransaction transaction)
+        {
+            _context.AITransactions.Update(transaction);
+            await Task.CompletedTask;
         }
     }
 }

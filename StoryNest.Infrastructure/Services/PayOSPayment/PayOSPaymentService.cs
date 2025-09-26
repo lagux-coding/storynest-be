@@ -13,13 +13,17 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
         private readonly IPlanService _planService;
         private readonly ISubscriptionService _subscriptionService;
         private readonly IPaymentService _paymentService;
+        private readonly IAICreditService _aiCreditService;
+        private readonly IAITransactionService _aiTransactionService;
 
-        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService)
+        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService, IAITransactionService aiTransactionService, IAICreditService aiCreditService)
         {
             _configuration = configuration;
             _subscriptionService = subscriptionService;
             _paymentService = paymentService;
             _planService = planService;
+            _aiTransactionService = aiTransactionService;
+            _aiCreditService = aiCreditService;
         }
 
         public async Task<bool> CancelAsync(long userId, long orderCode)
@@ -94,6 +98,55 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                 else
                 {
                     throw new Exception("Failed to create payment record");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<bool> WebhookAsync(WebhookType body)
+        {
+            try
+            {
+                var clientId = _configuration["PAYOS_CLIENT_ID"];
+                var apiKey = _configuration["PAYOS_API_KEY"];
+                var checksum = _configuration["PAYOS_CHECKSUM"];
+
+                PayOS _payOS = new PayOS(clientId, apiKey, checksum);
+                WebhookData data = _payOS.verifyPaymentWebhookData(body);
+
+
+                if (data.code == "00")
+                {
+                    // Change status
+                    var payment = await _paymentService.GetPaymentByTXN(data.code);
+                    var sub = await _subscriptionService.GetByIdAsync(payment.SubscriptionId);
+
+                    payment.Status = PaymentStatus.Success;
+                    sub.Status = SubscriptionStatus.Active;
+
+                    await _paymentService.UpdatePaymentAsync(payment);
+                    await _subscriptionService.UpdateSubscriptionAsync(sub);
+
+                    // Update credits
+                    // AI credit
+                    var credit = await _aiCreditService.GetUserCredit(payment.UserId);
+                    credit.TotalCredits += sub.Plan.AiCreditsDaily;
+                    await _aiCreditService.UpdateCreditsAsync(credit);
+                    // AI transaction credit
+
+                    var transaction = await _aiTransactionService.GetByUserAsync(payment.UserId);
+                    transaction.Type = AITransactionType.Earned;
+                    transaction.Amount = sub.Plan.AiCreditsDaily;
+                    await _aiTransactionService.UpdateTransactionAsync(transaction);
+
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
             catch (Exception ex)

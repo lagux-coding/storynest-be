@@ -11,6 +11,7 @@ namespace StoryNest.Application.Interfaces
     public interface IPaymentService
     {
         public Task<int> AddPaymentAsync(long userId, int subscriptionId, decimal amount, string currency, string provider, string providerTXN, PaymentStatus status);
+        Task<Payment> GetPaymentByTXN(string code);
         public Task<Payment> GetPaymentByUserAndSubAsync(long userId, int subscriptionId);
         public Task UpdatePaymentAsync(Payment payment);
     }

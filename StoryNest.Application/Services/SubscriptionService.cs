@@ -56,6 +56,18 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<Subscription> GetByIdAsync(int subscriptionId)
+        {
+            try
+            {
+                return await _subscriptionRepository.GetByIdAsync(subscriptionId);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task UpdateSubscriptionAsync(Subscription sub)
         {
             try

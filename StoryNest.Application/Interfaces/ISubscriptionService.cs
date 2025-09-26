@@ -12,6 +12,7 @@ namespace StoryNest.Application.Interfaces
     {
         public Task<int> AddSubscriptionAsync(long userId, int planId, DateTime startDate, DateTime endDate, SubscriptionStatus status);
         public Task<Subscription> GetActiveSubByUser(long userId);
+        Task<Subscription> GetByIdAsync(int subscriptionId);
         Task UpdateSubscriptionAsync(Subscription sub);
     }
 }

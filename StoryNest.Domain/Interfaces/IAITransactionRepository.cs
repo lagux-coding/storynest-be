@@ -10,5 +10,7 @@ namespace StoryNest.Domain.Interfaces
     public interface IAITransactionRepository
     {
         public Task AddAsync(AITransaction transaction);
+        Task<AITransaction?> GetByUserIdAsync(long userId);
+        Task UpdateAsync(AITransaction transaction);
     }
 }
