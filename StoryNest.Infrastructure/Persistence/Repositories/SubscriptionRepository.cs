@@ -26,7 +26,9 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<Subscription?> GetByIdAsync(int subscriptionId)
         {
-            return await _context.Subscriptions.FirstOrDefaultAsync(s => s.Id == subscriptionId);
+            return await _context.Subscriptions
+                .Include(s => s.Plan)
+                .FirstOrDefaultAsync(s => s.Id == subscriptionId);
         }
 
         public async Task<Subscription?> GetByUserId(long userId)
