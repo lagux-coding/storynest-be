@@ -4,6 +4,7 @@ using OpenAI.Images;
 using StoryNest.Application.Interfaces;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Enums;
+using SharpToken;
 
 namespace StoryNest.Infrastructure.Services.OpenAI
 {
@@ -17,8 +18,9 @@ namespace StoryNest.Infrastructure.Services.OpenAI
         private readonly IUnitOfWork _unitOfWork;
         private readonly IUserMediaService _userMediaService;
         private readonly IAITransactionService _aiTransactionService;
+        private readonly IAIUsageLogService _aiUsageLogService;
 
-        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient, IUserMediaService userMediaService, IAITransactionService aiTransactionService)
+        public OpenAIService(IConfiguration configuration, IAICreditService aiCredit, ImageClient imageClient, IS3Service s3Service, IUnitOfWork unitOfWork, AudioClient audioClient, IUserMediaService userMediaService, IAITransactionService aiTransactionService, IAIUsageLogService aiUsageLogService)
         {
             _configuration = configuration;
             _aiCredit = aiCredit;
@@ -28,6 +30,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
             _audioClient = audioClient;
             _userMediaService = userMediaService;
             _aiTransactionService = aiTransactionService;
+            _aiUsageLogService = aiUsageLogService;
         }
 
         public async Task<string> GenerateAudioAsync(string content, long userId)

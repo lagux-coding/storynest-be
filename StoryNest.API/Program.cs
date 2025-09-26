@@ -181,6 +181,8 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
 builder.Services.AddScoped<IUserMediaRepository, UserMediaRepository>();
 builder.Services.AddScoped<IAITransactionRepository, AITransactionRepository>();    
+builder.Services.AddScoped<IAIUsageLogRepository, AIUsageLogRepository>();
+builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -197,6 +199,8 @@ builder.Services.AddScoped<IGoogleService, GoogleService>();
 builder.Services.AddScoped<IAICreditService, AICreditService>();
 builder.Services.AddScoped<IUserMediaService, UserMediaService>();
 builder.Services.AddScoped<IAITransactionService, AITransactionService>();
+builder.Services.AddScoped<IAIUsageLogService, AIUsageLogService>();
+builder.Services.AddScoped<IPlanService, PlanService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
