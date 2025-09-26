@@ -158,7 +158,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
             }
             catch (Exception ex)
             {
-                throw;
+                return false;
             }
         }
     }
