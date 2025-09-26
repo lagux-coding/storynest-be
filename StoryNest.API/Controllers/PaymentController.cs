@@ -11,10 +11,12 @@ namespace StoryNest.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<PaymentController> _logger;
 
-        public PaymentController(IConfiguration configuration)
+        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         [HttpGet("checkout/{planId}")]
@@ -29,7 +31,11 @@ namespace StoryNest.API.Controllers
             List<ItemData> items = new List<ItemData>();
             items.Add(item);
 
-            PaymentData paymentData = new PaymentData(1004, 4000, "StoryNest", items, "https://dev.storynest.io.vn", "https://dev.storynest.io.vn");
+            long expiredAt = new DateTimeOffset(DateTime.UtcNow.AddMinutes(10))
+                    .ToUnixTimeSeconds();
+
+            PaymentData paymentData = new PaymentData(3335, 4000, "StoryNest", items, "https://dev.storynest.io.vn", "https://dev.storynest.io.vn", expiredAt: expiredAt);
+
 
             CreatePaymentResult createPayment = await payos.createPaymentLink(paymentData);
             return Ok(ApiResponse<object>.Success(createPayment, "Checkout link created successfully"));
@@ -50,7 +56,7 @@ namespace StoryNest.API.Controllers
 
                 if (data.code == "00")
                 {
-                    Console.WriteLine($"{data.orderCode}");
+                    _logger.LogInformation("✅ Webhook success. Order {OrderCode}, Amount {Amount}", data.orderCode, data.amount);
                     return Ok("ok");
                 }
                 else
