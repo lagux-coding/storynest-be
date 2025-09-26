@@ -123,7 +123,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                 if (data.code == "00")
                 {
                     // Change status
-                    var payment = await _paymentService.GetPaymentByTXN(data.code);
+                    var payment = await _paymentService.GetPaymentByTXN(data.orderCode.ToString());
                     var sub = await _subscriptionService.GetByIdAsync(payment.SubscriptionId);
 
                     payment.Status = PaymentStatus.Success;
