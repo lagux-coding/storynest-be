@@ -50,6 +50,7 @@ namespace StoryNest.API.Controllers
 
                 if (data.code == "00")
                 {
+                    Console.WriteLine($"{data.orderCode}");
                     return Ok("ok");
                 }
                 else
