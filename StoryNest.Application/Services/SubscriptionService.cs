@@ -48,7 +48,7 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                return await _subscriptionRepository.GetByUserId(userId);
+                return await _subscriptionRepository.GetActiveByUserId(userId);
             }
             catch (Exception ex)
             {
@@ -61,6 +61,18 @@ namespace StoryNest.Application.Services
             try
             {
                 return await _subscriptionRepository.GetByIdAsync(subscriptionId);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<Subscription> GetPendingSubByUser(long userId)
+        {
+            try
+            {
+                return await _subscriptionRepository.GetByUserId(userId);
             }
             catch (Exception ex)
             {

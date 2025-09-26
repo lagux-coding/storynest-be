@@ -72,12 +72,19 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                 // Get plan
                 var plan = await _planService.GetPlanByIdAsync(planId);
 
+                // Check if activated payment and subscription
+                var existingSub = await _subscriptionService.GetActiveSubByUser(userId);
+                if (existingSub != null)
+                {
+                    throw new Exception("You already have an active subscription");
+                }
+
                 // Create subscription
                 var startDate = DateTime.UtcNow;
                 var endDate = startDate.AddMonths(1);
                 var check1 = await _subscriptionService.AddSubscriptionAsync(userId, planId, startDate, endDate, SubscriptionStatus.Pending);
 
-                var sub = await _subscriptionService.GetActiveSubByUser(userId);
+                var sub = await _subscriptionService.GetPendingSubByUser(userId);
 
                 int check2 = 0;
                 if (check1 > 0)
