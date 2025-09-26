@@ -40,5 +40,17 @@ namespace StoryNest.Application.Services
                 throw;
             }
         }
+
+        public async Task<Plan> GetPlanByIdAsync(int planId)
+        {
+            try
+            {
+                return await _planRepository.GetById(planId);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

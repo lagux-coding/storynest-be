@@ -7,9 +7,10 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Domain.Interfaces
 {
-    public interface IPlanRepository
+    public interface IPaymentRepository
     {
-        public Task AddAsync(Plan plan);
-        Task<Plan?> GetById(int planId);
+        public Task AddAsync(Payment payment);
+        Task<Payment?> GetByUserAndSub(long userId, int subscriptionId);
+        Task UpdateAsync(Payment payment);
     }
 }

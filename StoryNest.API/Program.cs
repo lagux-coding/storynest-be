@@ -23,6 +23,7 @@ using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
 using StoryNest.Infrastructure.Services.OpenAI;
+using StoryNest.Infrastructure.Services.PayOSPayment;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
@@ -183,6 +184,8 @@ builder.Services.AddScoped<IUserMediaRepository, UserMediaRepository>();
 builder.Services.AddScoped<IAITransactionRepository, AITransactionRepository>();    
 builder.Services.AddScoped<IAIUsageLogRepository, AIUsageLogRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -201,6 +204,9 @@ builder.Services.AddScoped<IUserMediaService, UserMediaService>();
 builder.Services.AddScoped<IAITransactionService, AITransactionService>();
 builder.Services.AddScoped<IAIUsageLogService, AIUsageLogService>();
 builder.Services.AddScoped<IPlanService, PlanService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Net.payOS;
 using Net.payOS.Types;
 using StoryNest.API.ApiWrapper;
+using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
 {
@@ -11,34 +12,29 @@ namespace StoryNest.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly IPayOSPaymentService _payOSPaymenService;
+        private readonly ICurrentUserService _currentService;
         private readonly ILogger<PaymentController> _logger;
 
-        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger)
+        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger, IPayOSPaymentService payOSPaymenService, ICurrentUserService currentService)
         {
             _configuration = configuration;
             _logger = logger;
+            _payOSPaymenService = payOSPaymenService;
+            _currentService = currentService;
         }
 
         [HttpGet("checkout/{planId}")]
         public async Task<ActionResult<ApiResponse<object>>> Checkout(int planId)
         {
-            var clientId = _configuration["PAYOS_CLIENT_ID"];
-            var apiKey = _configuration["PAYOS_API_KEY"];
-            var checksum = _configuration["PAYOS_CHECKSUM"];
+            var userId = _currentService.UserId;
+            if (userId == null || userId <= 0)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+            }
 
-            PayOS payos = new PayOS(clientId, apiKey, checksum);
-            ItemData item = new ItemData("Bloom", 1, 4000);
-            List<ItemData> items = new List<ItemData>();
-            items.Add(item);
-
-            long expiredAt = new DateTimeOffset(DateTime.UtcNow.AddMinutes(10))
-                    .ToUnixTimeSeconds();
-
-            PaymentData paymentData = new PaymentData(3335, 4000, "StoryNest", items, "https://dev.storynest.io.vn", "https://dev.storynest.io.vn", expiredAt: expiredAt);
-
-
-            CreatePaymentResult createPayment = await payos.createPaymentLink(paymentData);
-            return Ok(ApiResponse<object>.Success(createPayment, "Checkout link created successfully"));
+            var result = await _payOSPaymenService.CheckoutAsync(userId.Value, planId);
+            return Ok(ApiResponse<object>.Success(result, "Checkout link created successfully"));
         }
 
         [HttpPost("webhook")]
@@ -76,14 +72,19 @@ namespace StoryNest.API.Controllers
         [HttpGet("cancel")]
         public async Task<ActionResult<ApiResponse<object>>> Cancel(long orderCode)
         {
-            var clientId = _configuration["PAYOS_CLIENT_ID"];
-            var apiKey = _configuration["PAYOS_API_KEY"];
-            var checksum = _configuration["PAYOS_CHECKSUM"];
+            var userId = _currentService.UserId;
+            if (userId == null || userId <= 0)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+            }
 
-            PayOS payos = new PayOS(clientId, apiKey, checksum);
-            PaymentLinkInformation cancelledPaymentLinkInfo = await payos.cancelPaymentLink(orderCode, "User cancel");
+            var result = await _payOSPaymenService.CancelAsync(userId.Value, orderCode);
+            if (!result)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Failed to cancel payment"));
+            }
 
-            return Ok(ApiResponse<object>.Success(cancelledPaymentLinkInfo, "Payment cancelled successfully"));
+            return Ok(ApiResponse<object>.Success(result, "Payment cancelled successfully"));
         }
 
         [HttpGet("confirm-webhook")]

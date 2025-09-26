@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Entities;
+﻿using Microsoft.EntityFrameworkCore;
+using StoryNest.Domain.Entities;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -20,6 +21,11 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task AddAsync(Plan plan)
         {
             await _context.AddAsync(plan);
+        }
+
+        public async Task<Plan?> GetById(int planId)
+        {
+            return await _context.Plans.FirstOrDefaultAsync(p => p.Id == planId && p.IsActive);
         }
     }
 }
