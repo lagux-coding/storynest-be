@@ -65,7 +65,7 @@ namespace StoryNest.Application.Services
             try
             {
                 await _aiTransactionRepository.UpdateAsync(transaction);
-                _unitOfWork.SaveAsync();
+                await _unitOfWork.SaveAsync();
             }
             catch (Exception ex)
             {

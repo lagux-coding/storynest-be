@@ -73,7 +73,7 @@ namespace StoryNest.Application.Services
             try
             {
                 await _subscriptionRepository.UpdateAsync(sub);
-                _unitOfWork.SaveAsync();
+                await _unitOfWork.SaveAsync();
             }
             catch (Exception ex)
             {

@@ -75,7 +75,7 @@ namespace StoryNest.Application.Services
             try
             {
                 await _paymentRepository.UpdateAsync(payment);
-                _unitOfWork.SaveAsync();
+                await _unitOfWork.SaveAsync();
             }
             catch (Exception ex)
             {

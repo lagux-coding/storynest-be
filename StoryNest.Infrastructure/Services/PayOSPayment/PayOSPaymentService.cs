@@ -15,8 +15,9 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
         private readonly IPaymentService _paymentService;
         private readonly IAICreditService _aiCreditService;
         private readonly IAITransactionService _aiTransactionService;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService, IAITransactionService aiTransactionService, IAICreditService aiCreditService)
+        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService, IAITransactionService aiTransactionService, IAICreditService aiCreditService, IUnitOfWork unitOfWork)
         {
             _configuration = configuration;
             _subscriptionService = subscriptionService;
@@ -24,6 +25,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
             _planService = planService;
             _aiTransactionService = aiTransactionService;
             _aiCreditService = aiCreditService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<bool> CancelAsync(long userId, long orderCode)
@@ -135,6 +137,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                     var credit = await _aiCreditService.GetUserCredit(payment.UserId);
                     credit.TotalCredits += sub.Plan.AiCreditsDaily;
                     await _aiCreditService.UpdateCreditsAsync(credit);
+                    await _unitOfWork.SaveAsync();
                     // AI transaction credit
 
                     var transaction = await _aiTransactionService.GetByUserAsync(payment.UserId);
