@@ -175,14 +175,14 @@ namespace StoryNest.Application.Services
             };
         }
 
-        public async Task<bool> LogoutAsync(string refreshTokenPlain)
+        public async Task<bool> LogoutAsync(string refreshTokenPlain, string type)
         {
             var hash = HashHelper.SHA256(refreshTokenPlain);
             var stored = await _refreshTokenRepository.GetByHashAsync(hash);
             if (stored == null || !stored.IsActive) return false;
 
             stored.RevokedAt = DateTime.UtcNow;
-            stored.RevokedBy = "user";
+            stored.RevokedBy = type;
             stored.RevokeReason = "logout";
             await _refreshTokenRepository.UpdateAsync(stored);
             await _unitOfWork.SaveAsync();

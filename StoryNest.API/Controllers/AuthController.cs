@@ -27,8 +27,9 @@ namespace StoryNest.API.Controllers
         private readonly ResetPasswordEmailSender _resetPasswordEmailSender;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
+        private readonly ICurrentUserService _currentUserService;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService)
         {
             _authService = authService;
             _registerValidator = registerValidator;
@@ -38,6 +39,7 @@ namespace StoryNest.API.Controllers
             _jwtService = jwtService;
             _resetPasswordEmailSender = resetPasswordEmailSender;
             _googleService = googleService;
+            _currentUserService = currentUserService;
         }
 
         [HttpPost("register")]
@@ -120,12 +122,18 @@ namespace StoryNest.API.Controllers
         [HttpGet("logout")]
         public async Task<ActionResult<ApiResponse<object>>> Logout()
         {
+            var type = _currentUserService.Type;
+            if (type == null)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Authentication failed"));
+            }
+
             if (!Request.Cookies.TryGetValue("refreshToken", out var refresh))
             {
                 return Unauthorized(ApiResponse<object>.Fail(new { }, "No refresh token found"));
             }
 
-            bool result = await _authService.LogoutAsync(refresh);
+            bool result = await _authService.LogoutAsync(refresh, type);
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
 
             SetRefreshTokenCookie(Response, "", DateTime.UtcNow.AddDays(-1));
