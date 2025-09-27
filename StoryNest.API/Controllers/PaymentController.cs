@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace StoryNest.API.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PaymentController : ControllerBase
@@ -28,6 +27,7 @@ namespace StoryNest.API.Controllers
             _currentService = currentService;
         }
 
+        [Authorize]
         [HttpGet("checkout/{planId}")]
         public async Task<ActionResult<ApiResponse<object>>> Checkout(int planId)
         {
