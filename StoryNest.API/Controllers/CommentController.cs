@@ -8,6 +8,7 @@ using StoryNest.Domain.Entities;
 
 namespace StoryNest.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class CommentController : ControllerBase

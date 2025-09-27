@@ -9,6 +9,7 @@ using StoryNest.Infrastructure.Services.S3;
 
 namespace StoryNest.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UploadController : ControllerBase
@@ -26,7 +27,6 @@ namespace StoryNest.API.Controllers
             _uploadService = uploadService;
         }
 
-        [Authorize]
         [HttpPost("presign-upload")]
         public async Task<ActionResult<ApiResponse<object>>> PresignUrl([FromBody] UploadMediaRequest request)
         {
@@ -48,7 +48,6 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(response, "Upload image successfully"));
         }
 
-        [Authorize]
         [HttpPost("confirm-upload")]
         public async Task<ActionResult<ApiResponse<object>>> ConfirmUpload([FromBody] ConfirmUploadRequest request)
         {

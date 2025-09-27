@@ -23,6 +23,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Tags.AddAsync(tag);
         }
 
+        public async Task<List<Tag>> GetAllSystemTagAsync()
+        {
+            return await _context.Tags
+                .Where(t => t.IsUserGenerated == false && t.DeletedAt == null)
+                .ToListAsync();
+        }
+
         public async Task<Tag?> GetByNameAsync(string name)
         {
             return await _context.Tags.FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());

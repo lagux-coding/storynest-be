@@ -25,6 +25,11 @@ namespace StoryNest.Application.Services
             await _tagRepository.AddAsync(tag);
         }
 
+        public async Task<List<Tag>> GetAllSystemTagsAsync()
+        {
+            return await _tagRepository.GetAllSystemTagAsync();
+        }
+
         public async Task<Tag> GetTagAsync(string tagName)
         {
             try
