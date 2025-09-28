@@ -34,6 +34,11 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return await _context.Payments.FirstOrDefaultAsync(p => p.UserId == userId && p.SubscriptionId == subscriptionId && p.Status == PaymentStatus.Pending);
         }
 
+        public async Task<Payment?> GetSuccessByTXN(long userId, string code)
+        {
+            return await _context.Payments.FirstOrDefaultAsync(p => p.ProviderTXN == code && p.UserId == userId && p.Status == PaymentStatus.Success);
+        }
+
         public async Task UpdateAsync(Payment payment)
         {
             _context.Payments.Update(payment);

@@ -17,14 +17,16 @@ namespace StoryNest.API.Controllers
         private readonly IConfiguration _configuration;
         private readonly IPayOSPaymentService _payOSPaymenService;
         private readonly ICurrentUserService _currentService;
+        private readonly IPaymentService _paymentService;
         private readonly ILogger<PaymentController> _logger;
 
-        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger, IPayOSPaymentService payOSPaymenService, ICurrentUserService currentService)
+        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger, IPayOSPaymentService payOSPaymenService, ICurrentUserService currentService, IPaymentService paymentService)
         {
             _configuration = configuration;
             _logger = logger;
             _payOSPaymenService = payOSPaymenService;
             _currentService = currentService;
+            _paymentService = paymentService;
         }
 
         [Authorize]
@@ -39,6 +41,23 @@ namespace StoryNest.API.Controllers
 
             var result = await _payOSPaymenService.CheckoutAsync(userId.Value, plan);
             return Ok(ApiResponse<object>.Success(result, "Checkout link created successfully"));
+        }
+
+        [HttpGet("check-update")]
+        public async Task<ActionResult<ApiResponse<object>>> CheckUpdate([FromQuery] long orderCode)
+        {
+            var userId = _currentService.UserId;
+            if (userId == null || userId <= 0)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Authentication failed"));
+            }
+
+            var result = await _paymentService.GetSuccessPaymentByTXN(userId.Value, orderCode.ToString());
+            if (result == null)
+            {
+                return NotFound(ApiResponse<object>.NotFound("Payment not found"));
+            }
+            return Ok(ApiResponse<object>.Success(result, "Payment fetched successfully"));
         }
 
         [HttpPost("webhook")]

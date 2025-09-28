@@ -12,6 +12,7 @@ namespace StoryNest.Domain.Interfaces
         public Task AddAsync(Payment payment);
         Task<Payment?> GetByTXN(string code);
         Task<Payment?> GetByUserAndSub(long userId, int subscriptionId);
+        Task<Payment?> GetSuccessByTXN(long userId, string code);
         Task UpdateAsync(Payment payment);
     }
 }
