@@ -98,7 +98,8 @@ namespace StoryNest.Infrastructure.Services.OpenAI
                     + "Blend 2D and 3D effects for depth, with a warm and creative atmosphere. "
                     + "The image should feel light, inspiring, and imaginative, evoking the spirit of personal storytelling. "
                     + "Backgrounds may include cozy or abstract elements that symbolize memory, creativity, and connection. "
-                    + "Overall tone: safe, positive, whimsical, and welcoming — perfectly suited for the StoryNest community.";
+                    + "Overall tone: safe, positive, whimsical, and welcoming — perfectly suited for the StoryNest community. "
+                    + "Do not include any text or writing in the image.";
 
                 string prompt = $"{basePrompt} Nội dung truyện: {content}";
 
