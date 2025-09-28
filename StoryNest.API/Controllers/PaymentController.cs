@@ -28,8 +28,8 @@ namespace StoryNest.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("checkout/{planId}")]
-        public async Task<ActionResult<ApiResponse<object>>> Checkout(int planId)
+        [HttpGet("checkout/{plan}")]
+        public async Task<ActionResult<ApiResponse<object>>> Checkout(int plan)
         {
             var userId = _currentService.UserId;
             if (userId == null || userId <= 0)
@@ -37,7 +37,7 @@ namespace StoryNest.API.Controllers
                 return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
             }
 
-            var result = await _payOSPaymenService.CheckoutAsync(userId.Value, planId);
+            var result = await _payOSPaymenService.CheckoutAsync(userId.Value, plan);
             return Ok(ApiResponse<object>.Success(result, "Checkout link created successfully"));
         }
 
