@@ -28,8 +28,8 @@ namespace StoryNest.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("checkout/{plan}")]
-        public async Task<ActionResult<ApiResponse<object>>> Checkout(int plan)
+        [HttpGet("checkout")]
+        public async Task<ActionResult<ApiResponse<object>>> Checkout([FromQuery] int plan)
         {
             var userId = _currentService.UserId;
             if (userId == null || userId <= 0)
