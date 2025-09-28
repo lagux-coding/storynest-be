@@ -30,8 +30,9 @@ namespace StoryNest.API.Controllers
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
         private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService, ILogger<AuthController> logger)
         {
             _authService = authService;
             _registerValidator = registerValidator;
@@ -42,6 +43,7 @@ namespace StoryNest.API.Controllers
             _resetPasswordEmailSender = resetPasswordEmailSender;
             _googleService = googleService;
             _currentUserService = currentUserService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -246,6 +248,17 @@ namespace StoryNest.API.Controllers
                 ["planName"] = result.PlanName,
                 ["planId"] = result.PlanId?.ToString(),
             };
+
+            _logger.LogInformation(
+                "Google login successful for user {Username}, redirecting to {RedirectUrl}: PlanName={PlanName}, PlanId={PlanId}, Token={Token}, Avatar={Avatar}",
+                result.Username,
+                feUrl,
+                result.PlanName,
+                result.PlanId,
+                result.AccessToken,
+                result.AvatarUrl
+            );
+
 
             var redirectUrl = QueryHelpers.AddQueryString($"{feUrl}/google-callback", queryParams);
 
