@@ -10,6 +10,8 @@ using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using System.Text.Json;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
@@ -240,7 +242,9 @@ namespace StoryNest.API.Controllers
             var queryParams = new Dictionary<string, string?>
             {
                 ["token"] = result.AccessToken,
-                ["avatar"] = result.AvatarUrl
+                ["avatar"] = result.AvatarUrl,
+                ["planName"] = result.PlanName,
+                ["planId"] = result.PlanId?.ToString(),
             };
 
             var redirectUrl = QueryHelpers.AddQueryString($"{feUrl}/google-callback", queryParams);

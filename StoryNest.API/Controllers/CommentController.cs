@@ -22,7 +22,6 @@ namespace StoryNest.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [Authorize]
         [HttpPost("{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> Comment(int storyId, [FromBody] CreateCommentRequest request)
         {
@@ -43,7 +42,6 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(result, "Story commented"));
         }
 
-        [Authorize]
         [HttpPost("update/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> UpdateComment(int storyId, int commentId, [FromBody] CreateCommentRequest request)
         {
@@ -62,7 +60,6 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(result, "Comment updated"));
         }
 
-        [Authorize]
         [HttpPost("delete/{commentId}")]
         public async Task<ActionResult<ApiResponse<object>>> DeleteComment(int commentId)
         {

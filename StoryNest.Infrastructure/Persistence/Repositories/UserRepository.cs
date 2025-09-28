@@ -38,6 +38,8 @@ namespace StoryNest.Application.Services
         public async Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _context.Users
+                    .Include(u => u.Subscriptions)
+                        .ThenInclude(u => u.Plan)
                     .FirstOrDefaultAsync(u => (u.Username == usernameOrEmail || u.Email == usernameOrEmail) && u.IsActive == true);
         }
 

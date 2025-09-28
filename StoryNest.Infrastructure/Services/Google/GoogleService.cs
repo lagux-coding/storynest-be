@@ -7,6 +7,7 @@ using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 using StoryNest.Application.Services;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Shared.Common.Utils;
 using System;
@@ -90,10 +91,15 @@ namespace StoryNest.Infrastructure.Services.Google
                 await _refreshTokenRepository.AddAsync(rt);
                 await _unitOfWork.SaveAsync();
 
+                var activeSub = user.Subscriptions?
+                            .FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
+
                 return new LoginUserResponse
                 {
                     Username = user.Username,
                     AvatarUrl = user.AvatarUrl,
+                    PlanName = activeSub?.Plan?.Name,
+                    PlanId = activeSub?.Plan?.Id,
                     AccessToken = accessToken,
                     RefreshToken = refresTokenPlain,
                 };

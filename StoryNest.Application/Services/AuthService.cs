@@ -77,10 +77,15 @@ namespace StoryNest.Application.Services
             await _refreshTokenRepository.AddAsync(rt);
             await _unitOfWork.SaveAsync();
 
+            var activeSub = user.Subscriptions?
+                        .FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
+
             return new LoginUserResponse
             {
                 Username = user.Username,
                 AvatarUrl = user.AvatarUrl,
+                PlanName = activeSub?.Plan?.Name,
+                PlanId = activeSub?.Plan?.Id,
                 AccessToken = accessToken,
                 RefreshToken = refresTokenPlain,
             };
@@ -224,7 +229,7 @@ namespace StoryNest.Application.Services
             return true;
         }
 
-        private string GetRandomAvatar()
+        private string GetRandomAvatar()    
         {
             var rnd = new Random();
             int index = rnd.Next(DefaultAvatars.Avatars.Count);
