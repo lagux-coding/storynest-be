@@ -48,6 +48,19 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task AddTransactionByEntityAsync(AITransaction transaction)
+        {
+            try
+            {
+                await _aiTransactionRepository.AddAsync(transaction);
+                await _unitOfWork.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<AITransaction> GetByUserAsync(long userId)
         {
             try

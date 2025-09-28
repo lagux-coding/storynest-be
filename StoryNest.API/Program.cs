@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using OpenAI.Audio;
 using OpenAI.Images;
+using Quartz;
 using Resend;
 using StackExchange.Redis;
 using StoryNest.Application.Dtos.Request;
@@ -24,6 +25,7 @@ using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
 using StoryNest.Infrastructure.Services.OpenAI;
 using StoryNest.Infrastructure.Services.PayOSPayment;
+using StoryNest.Infrastructure.Services.QuartzSchedule;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
@@ -221,6 +223,22 @@ builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
+//builder.Services.AddScoped<RenewCreditJob>();
+
+builder.Services.AddQuartz(q =>
+{
+    var jobKey = new JobKey(nameof(RenewCreditJob));
+    q.AddJob<RenewCreditJob>(opts => opts.WithIdentity(jobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(jobKey)
+        .WithIdentity($"{nameof(RenewCreditJob)}-trigger")
+        .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+});
+
+builder.Services.AddQuartzHostedService(opt =>
+{
+    opt.WaitForJobsToComplete = true;
+});
 
 builder.Services.AddSingleton<ImageClient>(serviceProvider =>
 {

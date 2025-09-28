@@ -11,6 +11,7 @@ namespace StoryNest.Application.Interfaces
     {
         Task<User> GetUserByEmailAsync(string email);
         Task<User?> GetUserByIdAsync(long userId);
+        Task<List<User>> GetAllUser();
         Task UpdateUserAsync(User user);
     }
 }

@@ -18,6 +18,11 @@ namespace StoryNest.Application.Services
             _userRepository = userRepository;
         }
 
+        public async Task<List<User>> GetAllUser()
+        {
+            return await _userRepository.GetAllUserAsync();
+        }
+
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             var user = await _userRepository.GetByEmailAsync(email);

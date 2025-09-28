@@ -11,6 +11,7 @@ namespace StoryNest.Application.Interfaces
     public interface IAITransactionService
     {
         public Task<int> AddTransactionAsync(long userId, int referenceId, int amount, string desc, AITransactionType type);
+        Task AddTransactionByEntityAsync(AITransaction transaction);
         public Task<AITransaction> GetByUserAsync(long userId);
         public Task UpdateTransactionAsync(AITransaction transaction);
     }

@@ -44,6 +44,9 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.Property(ac => ac.UpdatedAt)
                    .HasColumnName("updated_at");
 
+            builder.Property(ac => ac.LastRenewDate)
+                   .HasColumnName("last_renew_date");
+
             // 1-1 relation với User
             builder.HasOne(ac => ac.User)
                    .WithOne(u => u.AICredit)

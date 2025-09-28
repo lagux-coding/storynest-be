@@ -25,6 +25,13 @@ namespace StoryNest.Application.Services
             await _context.Users.AddAsync(user);
         }
 
+        public async Task<List<User>> GetAllUserAsync()
+        {
+            return await _context.Users
+                .Where(u => u.AICredit != null)
+                .ToListAsync();
+        }
+
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users
