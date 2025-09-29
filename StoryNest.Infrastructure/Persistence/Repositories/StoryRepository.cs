@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,31 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task AddAsync(Story story)
         {
             await _context.Stories.AddAsync(story);
+        }
+
+        public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner)
+        {
+            var query = _context.Stories.AsQueryable();
+            if (!isOwner)
+            {
+                query = query.Where(s => s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
+            }
+            if (cursor.HasValue)
+            {
+                query = query.Where(s => s.CreatedAt < cursor.Value);
+            }
+
+            return query
+                    .Where(s => s.UserId == userId)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .Take(10 + 1)
+                    .Include(s => s.User)
+                    .Include(m => m.Media)
+                    .Include(st => st.StoryTags)
+                        .ThenInclude(t => t.Tag)
+                    .Include(l => l.Likes)
+                    .Include(c => c.Comments)
+                    .ToListAsync();
         }
 
         public async Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor)

@@ -41,6 +41,18 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
+        [HttpGet("get-by-user")]
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetStoriesByUser(long userId, [FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
+        {
+            PaginatedResponse<StoryResponse> result = new();
+            var currentUserId = _currentUserService.UserId;
+            if (currentUserId != null)
+                result = await _storyService.GetStoriesNotOwnerByUserAsync(userId, cursor, currentUserId.Value);
+            else
+                result = await _storyService.GetStoriesNotOwnerByUserAsync(userId, cursor);
+            return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
+        }
+
         [HttpGet("get-by-id-or-slug")]
         public async Task<ActionResult<ApiResponse<object>>> GetStoryByIdOrSlug(int? id, string? slug)
         {

@@ -10,6 +10,7 @@ namespace StoryNest.Domain.Interfaces
     public interface IStoryRepository
     {
         public Task AddAsync(Story story);
+        public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner);
         public Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
         public Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
         public void RemoveStory(Story story); 
