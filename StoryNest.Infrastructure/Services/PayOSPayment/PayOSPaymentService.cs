@@ -134,6 +134,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                     var sub = await _subscriptionService.GetByIdAsync(payment.SubscriptionId);
 
                     payment.Status = PaymentStatus.Success;
+                    payment.PaidAt = DateTime.UtcNow;
                     sub.Status = SubscriptionStatus.Active;
 
                     await _paymentService.UpdatePaymentAsync(payment);

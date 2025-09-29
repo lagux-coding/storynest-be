@@ -227,10 +227,10 @@ builder.Services.AddAutoMapper(typeof(UserProfile));
 
 builder.Services.AddQuartz(q =>
 {
-    var jobKey = new JobKey(nameof(RenewCreditJob));
-    q.AddJob<RenewCreditJob>(opts => opts.WithIdentity(jobKey));
+    var renewCreditJobKey = new JobKey(nameof(RenewCreditJob));
+    q.AddJob<RenewCreditJob>(opts => opts.WithIdentity(renewCreditJobKey));
     q.AddTrigger(opts => opts
-        .ForJob(jobKey)
+        .ForJob(renewCreditJobKey)
         .WithIdentity($"{nameof(RenewCreditJob)}-trigger")
         .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
 });
