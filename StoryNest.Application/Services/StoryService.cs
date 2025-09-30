@@ -222,6 +222,35 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAsync(long userId, DateTime? cursor, long userLikeId)
+        {
+            try
+            {
+                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, true);
+                var hasMore = stories.Count > 10;
+                var items = stories.Take(10).Select(s =>
+                {
+                    var dto = _mapper.Map<StoryResponse>(s);
+                    // user chưa login => false
+                    dto.IsLiked = userLikeId != null && s.Likes.Any(l => l.UserId == userLikeId && l.RevokedAt == null);
+                    return dto;
+                }).ToList();
+
+                var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
+
+                return new PaginatedResponse<StoryResponse>
+                {
+                    Items = items,
+                    NextCursor = nextCursor,
+                    HasMore = hasMore,
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null)
         {
             try

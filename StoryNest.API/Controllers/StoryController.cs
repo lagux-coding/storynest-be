@@ -53,6 +53,27 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
+        [HttpGet("get-by-owner")]
+        public async Task<ActionResult<ApiResponse<object>>> GetStoriesByOwner(
+                    [FromQuery] int limit = 10,
+                    [FromQuery] DateTime? cursor = null)
+        {
+            var currentUserId = _currentUserService.UserId;
+
+            if (currentUserId == null)
+                return Unauthorized(ApiResponse<object>.Fail("Authentication failed"));
+
+            var result = await _storyService.GetStoriesByOwnerAsync(
+                currentUserId.Value,
+                cursor,
+                currentUserId.Value
+            );
+
+            return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
+        }
+
+
+
         [HttpGet("get-by-id-or-slug")]
         public async Task<ActionResult<ApiResponse<object>>> GetStoryByIdOrSlug(int? id, string? slug)
         {
