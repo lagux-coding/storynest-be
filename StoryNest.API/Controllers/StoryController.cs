@@ -42,14 +42,14 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpGet("get-by-user")]
-        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetStoriesByUser(long userId, [FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
+        public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetStoriesByUser([FromQuery] long userId, [FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
         {
             PaginatedResponse<StoryResponse> result = new();
             var currentUserId = _currentUserService.UserId;
             if (currentUserId != null)
-                result = await _storyService.GetStoriesNotOwnerByUserAsync(userId, cursor, currentUserId.Value);
+                result = await _storyService.GetStoriesByUserAsync(userId, cursor, currentUserId.Value);
             else
-                result = await _storyService.GetStoriesNotOwnerByUserAsync(userId, cursor);
+                result = await _storyService.GetStoriesByUserAsync(userId, cursor);
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 

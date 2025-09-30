@@ -193,7 +193,7 @@ namespace StoryNest.Application.Services
             await _unitOfWork.SaveAsync();
         }
 
-        public async Task<PaginatedResponse<StoryResponse>> GetStoriesNotOwnerByUserAsync(long userId, DateTime? cursor, long? userLikeId = null)
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAsync(long userId, DateTime? cursor, long? userLikeId = null)
         {
             try
             {
