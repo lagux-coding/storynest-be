@@ -40,7 +40,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                 PaymentLinkInformation cancelledPaymentLinkInfo = await payos.cancelPaymentLink(orderCode, "User cancel");
 
                 // Cancel payment
-                var sub = await _subscriptionService.GetActiveSubByUser(userId);
+                var sub = await _subscriptionService.GetPendingSubByUser(userId);
                 var payment = await _paymentService.GetPaymentByUserAndSubAsync(userId, sub.Id);
                 payment.Status = PaymentStatus.Failed;
                 await _paymentService.UpdatePaymentAsync(payment);
