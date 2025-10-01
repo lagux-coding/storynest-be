@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using NpgsqlTypes;
 using StoryNest.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -126,6 +127,18 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .WithOne(st => st.Story)
                    .HasForeignKey(st => st.StoryId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            // --- Full Text Search ---
+            builder.Property<NpgsqlTsVector>("SearchVector")
+            .HasColumnType("tsvector")
+            .HasComputedColumnSql(@"
+                setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||
+                setweight(to_tsvector('simple', coalesce(content, '')), 'B') ||
+                setweight(to_tsvector('simple', coalesce(summary, '')), 'C') ||
+                setweight(to_tsvector('simple', coalesce(slug, '')), 'D')
+            ", stored: true);
+
+            builder.HasIndex("SearchVector").HasMethod("GIN");
         }
     }
 }

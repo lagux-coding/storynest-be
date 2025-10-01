@@ -27,11 +27,10 @@ namespace StoryNest.Application.Services
         private readonly IStoryTagService _storyTagService;
         private readonly IMediaService _mediaService;
         private readonly IS3Service _s3Service;
-        private readonly IELSService _eLSService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service, IELSService eLSService)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -42,7 +41,6 @@ namespace StoryNest.Application.Services
             _userMediaService = userMediaService;
             _httpClient = httpClient;
             _s3Service = s3Service;
-            _eLSService = eLSService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -144,9 +142,6 @@ namespace StoryNest.Application.Services
                     await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
                 }
 
-                story = await _storyRepository.GetStoryByIdOrSlugAsync(story.Id, null);
-
-                await _eLSService.IndexStoryAsync(story);
                 return story.Id;
                 
             }
@@ -346,8 +341,6 @@ namespace StoryNest.Application.Services
 
                 _storyRepository.RemoveStory(story);
                 var result = await _unitOfWork.SaveAsync();
-
-                await _eLSService.DeleteStoryAsync(story);
                 return result;
             }
             catch (Exception ex)
@@ -441,10 +434,7 @@ namespace StoryNest.Application.Services
                     await _storyTagService.RemoveStoryTagAsync(story.Id, tagId);
                 }              
 
-                var result = await _unitOfWork.SaveAsync();
-                
-                story = await _storyRepository.GetStoryByIdOrSlugAsync(story.Id, null, true);
-                await _eLSService.UpdateStoryAsync(story);
+                var result = await _unitOfWork.SaveAsync();             
 
                 return result;
             }
@@ -553,6 +543,25 @@ namespace StoryNest.Application.Services
             outputStream.Seek(0, SeekOrigin.Begin);
 
             return outputStream;
+        }
+
+        public async Task<StorySearchResult> SearchStoriesAsync(string keyword, int limit = 20, int? lastId = null)
+        {
+            try
+            {
+                var stories = await _storyRepository.SearchAsync(keyword, limit, lastId);
+
+                return new StorySearchResult
+                {
+                    Stories = stories.Select(s => _mapper.Map<StoryResponse>(s)).ToList(),
+                    LastId = stories.LastOrDefault()?.Id,
+                    HasMore = stories.Count == limit
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

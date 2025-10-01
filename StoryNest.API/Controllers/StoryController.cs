@@ -41,6 +41,13 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<PaginatedResponse<StoryResponse>>.Success(result));
         }
 
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchStories([FromQuery] string keyword, [FromQuery] int limit = 20, [FromQuery] int? lastId = null)
+        {
+            var result = await _storyService.SearchStoriesAsync(keyword, limit, lastId);
+            return Ok(result);
+        }
+
         [HttpGet("get-by-user")]
         public async Task<ActionResult<ApiResponse<PaginatedResponse<StoryResponse>>>> GetStoriesByUser([FromQuery] long userId, [FromQuery] int limit = 10, [FromQuery] DateTime? cursor = null)
         {

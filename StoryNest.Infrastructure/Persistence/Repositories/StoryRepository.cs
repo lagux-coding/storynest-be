@@ -106,6 +106,59 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             _context.Stories.Remove(story);
         }
 
+        public async Task<List<Story>> SearchAsync(string keyword, int limit = 20, int? lastId = null)
+        {
+            List<int> ids;
+
+            if (lastId.HasValue)
+            {
+                ids = await _context.Stories
+                    .FromSqlInterpolated($@"
+                        WITH q AS (SELECT plainto_tsquery('simple', unaccent({keyword})) AS query)
+                        SELECT s.id
+                        FROM ""Stories"" s, q
+                        WHERE s.""SearchVector"" @@ q.query
+                          AND s.privacy_status = 'Public'
+                          AND s.story_status = 'Published'
+                          AND s.id < {lastId}
+                        ORDER BY s.id DESC
+                        LIMIT {limit}
+                    ")
+                    .Select(s => s.Id)
+                    .ToListAsync();
+            }
+            else
+            {
+                ids = await _context.Stories
+                    .FromSqlInterpolated($@"
+                        WITH q AS (SELECT plainto_tsquery('simple', unaccent({keyword})) AS query)
+                        SELECT s.id
+                        FROM ""Stories"" s, q
+                        WHERE s.""SearchVector"" @@ q.query
+                          AND s.privacy_status = 'Public'
+                          AND s.story_status = 'Published'
+                        ORDER BY s.id DESC
+                        LIMIT {limit}
+                    ")
+                    .Select(s => s.Id)
+                    .ToListAsync();
+            }
+
+            if (!ids.Any())
+                return new List<Story>();
+
+            return await _context.Stories
+                .Where(s => ids.Contains(s.Id) && s.User.IsActive)
+                .Include(s => s.User)
+                .Include(s => s.Media)
+                .Include(st => st.StoryTags).ThenInclude(t => t.Tag)
+                .Include(l => l.Likes)
+                .Include(c => c.Comments)
+                .OrderByDescending(s => s.Id)
+                .ToListAsync();
+        }
+
+
         public void UpdateStory(Story story)
         {
             _context.Stories.Update(story);
