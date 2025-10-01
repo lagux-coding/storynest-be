@@ -106,8 +106,33 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             _context.Stories.Remove(story);
         }
 
-        public async Task<List<Story>> SearchAsync(string keyword, int limit = 20, int? lastId = null)
+        public async Task<List<Story>> SearchAsync(string? keyword, int limit = 20, int? lastId = null)
         {
+            // Nếu keyword null hoặc rỗng => trả về danh sách story bình thường
+            if (string.IsNullOrWhiteSpace(keyword))
+            {
+                var query = _context.Stories
+                    .Where(s => s.PrivacyStatus == PrivacyStatus.Public &&
+                                s.StoryStatus == StoryStatus.Published &&
+                                s.User.IsActive);
+
+                if (lastId.HasValue)
+                {
+                    query = query.Where(s => s.Id < lastId);
+                }
+
+                return await query
+                    .OrderByDescending(s => s.Id)
+                    .Take(limit)
+                    .Include(s => s.User)
+                    .Include(s => s.Media)
+                    .Include(st => st.StoryTags).ThenInclude(t => t.Tag)
+                    .Include(l => l.Likes)
+                    .Include(c => c.Comments)
+                    .ToListAsync();
+            }
+
+            // Nếu có keyword thì chạy FTS + Tag như cũ
             List<int> ids;
 
             if (lastId.HasValue)
@@ -167,6 +192,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .OrderByDescending(s => s.Id)
                 .ToListAsync();
         }
+
 
 
         public void UpdateStory(Story story)

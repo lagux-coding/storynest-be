@@ -8,8 +8,8 @@ namespace StoryNest.Application.Dtos.Response
 {
     public class StorySearchResult
     {
-        public List<StoryResponse> Stories { get; set; } = new List<StoryResponse>();
         public int? LastId { get; set; }
         public bool HasMore { get; set; }
+        public List<StoryResponse> Stories { get; set; } = new List<StoryResponse>();       
     }
 }
