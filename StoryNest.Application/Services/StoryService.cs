@@ -371,7 +371,9 @@ namespace StoryNest.Application.Services
                 story.Slug = SlugGenerationHelper.GenerateSlug(request.Title);
                 story.Content = request.Content;
                 story.Summary = SummaryHelper.Generate(request.Content);
-                story.CoverImageUrl = request.CoverImageUrl;
+                story.CoverImageUrl = string.IsNullOrWhiteSpace(request.CoverImageUrl)
+                                        ? null
+                                        : request.CoverImageUrl;
                 story.PrivacyStatus = request.PrivacyStatus;
                 story.StoryStatus = request.StoryStatus;
                 story.LastUpdatedAt = DateTime.UtcNow;
@@ -434,9 +436,14 @@ namespace StoryNest.Application.Services
                 {
                     var tagId = await _tagService.GetTagIdByNameAsync(tagName);
                     await _storyTagService.RemoveStoryTagAsync(story.Id, tagId);
-                }
+                }              
 
-                return await _unitOfWork.SaveAsync();
+                var result = await _unitOfWork.SaveAsync();
+                
+                story = await _storyRepository.GetStoryByIdOrSlugAsync(story.Id, null, true);
+                await _eLSService.UpdateStoryAsync(story);
+
+                return result;
             }
             catch (Exception ex)
             {

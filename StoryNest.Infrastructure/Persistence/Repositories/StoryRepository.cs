@@ -73,9 +73,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                     .ToListAsync();
         }
 
-        public async Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
+        public async Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug, bool asNoTracking = false)
         {
-            var query = _context.Stories.AsQueryable();
+            IQueryable<Story> query = _context.Stories;
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
             query = query
                 .Include(s => s.User)
                 .Include(m => m.Media)

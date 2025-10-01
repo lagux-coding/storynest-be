@@ -60,5 +60,30 @@ namespace StoryNest.Infrastructure.Services.ELSService
             }
         }
 
+        public async Task UpdateStoryAsync(Story story)
+        {
+            var doc = _mapper.Map<ELSDoc>(story);
+            var id = story.Id.ToString();
+
+            var response = await _client.IndexAsync(doc, i => i
+                .Index("stories_v2")
+                .Id(id)
+                .Refresh(Refresh.True) // để search ra ngay
+            );
+
+            if (!response.IsValidResponse)
+            {
+                // Log chi tiết DebugInformation (request + response)
+                Console.WriteLine("Update failed:");
+                Console.WriteLine(response.DebugInformation);
+
+                // Nếu muốn, throw exception kèm thông tin
+                throw new Exception($"Elasticsearch indexing failed: {response.DebugInformation}");
+            }
+            else
+            {
+                Console.WriteLine($"Update story {id} successfully");
+            }
+        }
     }
 }

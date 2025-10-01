@@ -10,5 +10,6 @@ namespace StoryNest.Application.Interfaces
     public interface IELSService
     {
         public Task IndexStoryAsync(Story story);
+        public Task UpdateStoryAsync(Story story);
     }
 }

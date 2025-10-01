@@ -12,7 +12,7 @@ namespace StoryNest.Domain.Interfaces
         public Task AddAsync(Story story);
         public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner);
         public Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
-        public Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
+        public Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug, bool asNoTracking = false);
         public void RemoveStory(Story story); 
         public void UpdateStory(Story story);
     }
