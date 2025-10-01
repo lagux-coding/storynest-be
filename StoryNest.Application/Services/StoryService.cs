@@ -27,10 +27,11 @@ namespace StoryNest.Application.Services
         private readonly IStoryTagService _storyTagService;
         private readonly IMediaService _mediaService;
         private readonly IS3Service _s3Service;
+        private readonly IELSService _eLSService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service, IELSService eLSService)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -41,6 +42,7 @@ namespace StoryNest.Application.Services
             _userMediaService = userMediaService;
             _httpClient = httpClient;
             _s3Service = s3Service;
+            _eLSService = eLSService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -132,17 +134,19 @@ namespace StoryNest.Application.Services
                 //    }
                 //}
 
-                if (request.MediaUrls?.Any() == true)
+                if (request.MediaUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
                 {
                     await SyncUserMedia(userId, story.Id, request.MediaUrls, MediaType.Image);
                 }
 
-                if (request.AudioUrls?.Any() == true)
+                if (request.AudioUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
                 {
                     await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
                 }
 
+                story = await _storyRepository.GetStoryByIdOrSlugAsync(story.Id, null);
 
+                await _eLSService.IndexStoryAsync(story);
                 return story.Id;
                 
             }

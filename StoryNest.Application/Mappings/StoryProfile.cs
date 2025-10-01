@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using StoryNest.Application.Dtos;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
@@ -38,6 +39,24 @@ namespace StoryNest.Application.Mappings
                 }));
             CreateMap<Media, MediaResponse>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
+            CreateMap<Story, ELSDoc>()
+                .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.CoverImageUrl) ? null : $"https://cdn.storynest.io.vn/{src.CoverImageUrl}"))
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User))
+                .ForMember(dest => dest.Media, opt => opt.MapFrom(src => src.Media))
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.StoryTags.Select(st => st.Tag)))
+                .ForMember(dest => dest.User, opt => opt.MapFrom((src, dest, _, context) =>
+                {
+                    if (src.IsAnonymous)
+                    {
+                        return new UserBasicResponse
+                        {
+                            Id = 0,
+                            Username = UsernameGenerateHelperHelper.GenerateAnonymousName(src.Id),
+                            AvatarUrl = "https://cdn.storynest.io.vn/system-assets/anonymous-avatarV2.webp"
+                        };
+                    }
+                    return context.Mapper.Map<UserBasicResponse>(src.User);
+                }));
             CreateMap<Tag, TagResponse>();
             CreateMap<Comment, CommentResponse>();
         }

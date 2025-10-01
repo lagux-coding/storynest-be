@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.S3" Version="4.0.7.2" />
+    <PackageReference Include="Elastic.Clients.Elasticsearch" Version="8.19.8" />
     <PackageReference Include="Google.Apis.Auth" Version="1.71.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.18">
       <PrivateAssets>all</PrivateAssets>
