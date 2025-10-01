@@ -115,9 +115,14 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 ids = await _context.Stories
                     .FromSqlInterpolated($@"
                         WITH q AS (SELECT plainto_tsquery('simple', unaccent({keyword})) AS query)
-                        SELECT s.id
-                        FROM ""Stories"" s, q
-                        WHERE s.""SearchVector"" @@ q.query
+                        SELECT DISTINCT s.id
+                        FROM ""Stories"" s
+                        LEFT JOIN ""StoryTags"" st ON s.id = st.story_id
+                        LEFT JOIN ""Tags"" t ON t.id = st.tag_id, q
+                        WHERE (
+                                s.""SearchVector"" @@ q.query
+                                OR unaccent(t.name) ILIKE '%' || unaccent({keyword}) || '%'
+                              )
                           AND s.privacy_status = 'Public'
                           AND s.story_status = 'Published'
                           AND s.id < {lastId}
@@ -132,9 +137,14 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 ids = await _context.Stories
                     .FromSqlInterpolated($@"
                         WITH q AS (SELECT plainto_tsquery('simple', unaccent({keyword})) AS query)
-                        SELECT s.id
-                        FROM ""Stories"" s, q
-                        WHERE s.""SearchVector"" @@ q.query
+                        SELECT DISTINCT s.id
+                        FROM ""Stories"" s
+                        LEFT JOIN ""StoryTags"" st ON s.id = st.story_id
+                        LEFT JOIN ""Tags"" t ON t.id = st.tag_id, q
+                        WHERE (
+                                s.""SearchVector"" @@ q.query
+                                OR unaccent(t.name) ILIKE '%' || unaccent({keyword}) || '%'
+                              )
                           AND s.privacy_status = 'Public'
                           AND s.story_status = 'Published'
                         ORDER BY s.id DESC
