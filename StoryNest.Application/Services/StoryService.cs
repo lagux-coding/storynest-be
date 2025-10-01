@@ -345,7 +345,10 @@ namespace StoryNest.Application.Services
                     throw new Exception("You do not have permission to delete this story");
 
                 _storyRepository.RemoveStory(story);
-                return await _unitOfWork.SaveAsync();
+                var result = await _unitOfWork.SaveAsync();
+
+                await _eLSService.DeleteStoryAsync(story);
+                return result;
             }
             catch (Exception ex)
             {

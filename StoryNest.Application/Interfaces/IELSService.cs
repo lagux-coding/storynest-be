@@ -11,5 +11,6 @@ namespace StoryNest.Application.Interfaces
     {
         public Task IndexStoryAsync(Story story);
         public Task UpdateStoryAsync(Story story);
+        public Task DeleteStoryAsync(Story story);
     }
 }

@@ -38,6 +38,24 @@ namespace StoryNest.Infrastructure.Services.ELSService
             _mapper = mapper;
         }
 
+        public async Task DeleteStoryAsync(Story story)
+        {
+            var docId = story.Id.ToString();
+
+            var response = await _client.DeleteAsync("stories_v2", docId);
+
+            if (!response.IsValidResponse)
+            {
+                Console.WriteLine($"Delete failed: {response.DebugInformation}");
+                throw new Exception($"Failed to delete story {docId} from Elasticsearch");
+            }
+            else
+            {
+                Console.WriteLine($"Deleted story {docId} successfully from Elasticsearch");
+            }
+
+        }
+
         public async Task IndexStoryAsync(Story story)
         {
             var doc = _mapper.Map<ELSDoc>(story);
