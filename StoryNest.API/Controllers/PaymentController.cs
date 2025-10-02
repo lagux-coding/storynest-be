@@ -55,7 +55,7 @@ namespace StoryNest.API.Controllers
             var result = await _paymentService.GetSuccessPaymentByTXN(userId.Value, orderCode.ToString());
             if (result == null)
             {
-                return NotFound(ApiResponse<object>.NotFound("Payment not found"));
+                return Ok(ApiResponse<object>.NotFound("Payment not found"));
             }
             return Ok(ApiResponse<object>.Success(result, "Payment fetched successfully"));
         }
