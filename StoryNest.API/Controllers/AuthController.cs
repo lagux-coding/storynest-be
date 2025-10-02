@@ -195,7 +195,7 @@ namespace StoryNest.API.Controllers
         [Authorize]
         [HttpPost("revoke-all")]
         public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
-        {
+        {   
             var count = await _authService.RevokeAllAsync(userId, request.Reason, request.RevokedBy);
 
             return Ok(ApiResponse<object>.Success(new { revoke = count }));
@@ -245,6 +245,7 @@ namespace StoryNest.API.Controllers
             {
                 ["token"] = result.AccessToken,
                 ["avatar"] = result.AvatarUrl,
+                ["userId"] = result.UserId.ToString(),
                 ["planName"] = result.PlanName,
                 ["planId"] = result.PlanId?.ToString(),
             };

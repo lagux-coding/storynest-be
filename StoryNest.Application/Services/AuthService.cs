@@ -82,6 +82,7 @@ namespace StoryNest.Application.Services
 
             return new LoginUserResponse
             {
+                UserId = user.Id,
                 Username = user.Username,
                 AvatarUrl = user.AvatarUrl,
                 PlanName = activeSub?.Plan?.Name,
