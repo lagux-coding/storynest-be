@@ -35,6 +35,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         {
             return await _context.Subscriptions
                 .Include(s => s.Plan)
+                .Include(s => s.User)
                 .FirstOrDefaultAsync(s => s.Id == subscriptionId);
         }
 

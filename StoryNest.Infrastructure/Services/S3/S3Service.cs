@@ -80,5 +80,31 @@ namespace StoryNest.Infrastructure.Services.S3
 
             return request.Key;
         }
+
+        public async Task<string> UploadInvoice(MemoryStream ms, long orderCode, long userId)
+        {
+            if (ms == null || ms.Length == 0)
+                throw new ArgumentException("Invoice stream is empty");
+
+            ms.Position = 0;
+
+            string year = DateTime.UtcNow.Year.ToString();
+            string month = DateTime.UtcNow.Month.ToString("D2");
+
+            string key = $"invoices/{userId}/{year}/{month}/invoice_{orderCode}.pdf";
+
+            var request = new PutObjectRequest
+            {
+                BucketName = _bucket,
+                Key = key,
+                InputStream = ms,
+                ContentType = "application/pdf",
+                CannedACL = S3CannedACL.Private
+            };
+
+            await _s3Client.PutObjectAsync(request);
+
+            return key;
+        }
     }
 }

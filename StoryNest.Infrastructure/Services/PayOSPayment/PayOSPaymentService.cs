@@ -2,8 +2,11 @@
 using Microsoft.Extensions.Configuration;
 using Net.payOS;
 using Net.payOS.Types;
+using StoryNest.Application.Dtos.Dto;
+using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Enums;
+using StoryNest.Infrastructure.Services.S3;
 
 namespace StoryNest.Infrastructure.Services.PayOSPayment
 {
@@ -15,9 +18,12 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
         private readonly IPaymentService _paymentService;
         private readonly IAICreditService _aiCreditService;
         private readonly IAITransactionService _aiTransactionService;
+        private readonly IQuestPdfService _pdfService;
+        private readonly IS3Service _s3Service;
+        private readonly InvoiceEmailSender _invoiceEmailSender;
         private readonly IUnitOfWork _unitOfWork;
 
-        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService, IAITransactionService aiTransactionService, IAICreditService aiCreditService, IUnitOfWork unitOfWork)
+        public PayOSPaymentService(IConfiguration configuration, ISubscriptionService subscriptionService, IPaymentService paymentService, IPlanService planService, IAITransactionService aiTransactionService, IAICreditService aiCreditService, IUnitOfWork unitOfWork, IQuestPdfService pdfService, IS3Service s3Service, InvoiceEmailSender invoiceEmailSender)
         {
             _configuration = configuration;
             _subscriptionService = subscriptionService;
@@ -26,6 +32,9 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
             _aiTransactionService = aiTransactionService;
             _aiCreditService = aiCreditService;
             _unitOfWork = unitOfWork;
+            _pdfService = pdfService;
+            _s3Service = s3Service;
+            _invoiceEmailSender = invoiceEmailSender;
         }
 
         public async Task<bool> CancelAsync(long userId, long orderCode)
@@ -149,6 +158,24 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                     // AI transaction credit
 
                     var transaction = await _aiTransactionService.AddTransactionAsync(payment.UserId, (int)payment.UserId, sub.Plan.AiCreditsDaily, $"upgrade {sub.Plan.Name} plan", AITransactionType.Earned);
+
+                    // Send pdf through mail
+                    var invoiceDto = new InvoiceDto
+                    {
+                        OrderCode = data.orderCode,
+                        Amount = data.amount,
+                        IssueDate = DateTime.UtcNow,
+                        User = sub.User,
+                        Subscription = sub,
+                        Payment = payment
+                    };
+
+                    var pdfBytes = _pdfService.Generate(invoiceDto);
+
+                    using var ms = new MemoryStream(pdfBytes);
+                    string key = await _s3Service.UploadInvoice(ms, invoiceDto.OrderCode, sub.UserId);
+
+                    await _invoiceEmailSender.SendAsync(sub.User.Email, sub.User.FullName, invoiceDto.OrderCode, sub.Plan.Name, sub.StartDate, sub.EndDate, invoiceDto.Amount, invoiceDto.Payment.Currency, "VietQR", invoiceDto.Payment.PaidAt?.ToString("g"), key, CancellationToken.None);
 
                     return true;
                 }

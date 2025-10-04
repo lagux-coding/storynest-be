@@ -5,7 +5,9 @@ using Microsoft.AspNetCore.Mvc;
 using Net.payOS;
 using Net.payOS.Types;
 using StoryNest.API.ApiWrapper;
+using StoryNest.Application.Dtos.Dto;
 using StoryNest.Application.Interfaces;
+using System.Reflection.Emit;
 using System.Threading.Tasks;
 
 namespace StoryNest.API.Controllers
@@ -19,14 +21,24 @@ namespace StoryNest.API.Controllers
         private readonly ICurrentUserService _currentService;
         private readonly IPaymentService _paymentService;
         private readonly ILogger<PaymentController> _logger;
+        private readonly IQuestPdfService _pdfService;
 
-        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger, IPayOSPaymentService payOSPaymenService, ICurrentUserService currentService, IPaymentService paymentService)
+        public PaymentController(IConfiguration configuration, ILogger<PaymentController> logger, IPayOSPaymentService payOSPaymenService, ICurrentUserService currentService, IPaymentService paymentService, IQuestPdfService pdfService)
         {
             _configuration = configuration;
             _logger = logger;
             _payOSPaymenService = payOSPaymenService;
             _currentService = currentService;
             _paymentService = paymentService;
+            _pdfService = pdfService;
+        }
+
+        [HttpGet("pdf")]
+        public IActionResult GetInvoicePdf(int id)
+        {
+            var dto = new InvoiceDto();
+            var pdfBytes = _pdfService.Generate(dto);
+            return File(pdfBytes, "application/pdf", $"invoice.pdf");
         }
 
         [Authorize]

@@ -21,17 +21,22 @@ using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
+using StoryNest.Infrastructure.Services;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
+using StoryNest.Infrastructure.Services.LogoProvider;
 using StoryNest.Infrastructure.Services.OpenAI;
 using StoryNest.Infrastructure.Services.PayOSPayment;
 using StoryNest.Infrastructure.Services.QuartzSchedule;
+using StoryNest.Infrastructure.Services.QuestPdfService;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // CORS
 builder.Services.AddCors(options =>
@@ -215,6 +220,7 @@ builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
 builder.Services.AddScoped<WelcomeEmailSender>();
 builder.Services.AddScoped<WelcomeEmailGoogleSender>();
 builder.Services.AddScoped<ResetPasswordEmailSender>();
+builder.Services.AddScoped<InvoiceEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
@@ -223,6 +229,8 @@ builder.Services.AddScoped<IUploadService, UploadService>();
 builder.Services.AddScoped<IOpenAIService, OpenAIService>();
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddSingleton<ILogoProvider, FileLogoProvider>();
+builder.Services.AddScoped<IQuestPdfService, QuestPdfService>();
 //builder.Services.AddScoped<RenewCreditJob>();
 
 builder.Services.AddQuartz(q =>
@@ -261,6 +269,7 @@ app.UseForwardedHeaders();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
