@@ -174,8 +174,9 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
 
                     using var ms = new MemoryStream(pdfBytes);
                     string key = await _s3Service.UploadInvoice(ms, invoiceDto.OrderCode, sub.UserId);
+                    string pdfUrl = $"{_configuration["CDN_DOMAIN"]}/{key}";
 
-                    await _invoiceEmailSender.SendAsync(sub.User.Email, sub.User.FullName, invoiceDto.OrderCode, sub.Plan.Name, sub.StartDate, sub.EndDate, invoiceDto.Amount, invoiceDto.Payment.Currency, "VietQR", invoiceDto.Payment.PaidAt?.ToString("g"), key, CancellationToken.None);
+                    await _invoiceEmailSender.SendAsync(sub.User.Email, sub.User.FullName, invoiceDto.OrderCode, sub.Plan.Name, sub.StartDate, sub.EndDate, invoiceDto.Amount, invoiceDto.Payment.Currency, "VietQR", invoiceDto.Payment.PaidAt?.ToString("g"), pdfUrl, CancellationToken.None);
 
                     return true;
                 }

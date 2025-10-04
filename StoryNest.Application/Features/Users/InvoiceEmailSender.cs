@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Interfaces;
+﻿using StoryNest.Application.Dtos.Dto;
+using StoryNest.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,13 +33,17 @@ namespace StoryNest.Application.Features.Users
             string invoiceUrl,
             CancellationToken ct)
         {
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // UTC+7
+            var startDateLocal = TimeZoneInfo.ConvertTimeFromUtc(startDate, timeZone);
+            var endDateLocal = TimeZoneInfo.ConvertTimeFromUtc(endDate, timeZone);
+
             var data = new Dictionary<string, string>
             {
                 ["DisplayName"] = displayName,
                 ["InvoiceCode"] = invoiceCode.ToString(),
                 ["PlanName"] = planName,
-                ["StartDate"] = startDate.ToString("dd/MM/yyyy HH:mm"),
-                ["EndDate"] = endDate.ToString("dd/MM/yyyy HH:mm"),
+                ["StartDate"] = startDateLocal.ToString("dd/MM/yyyy HH:mm"),
+                ["EndDate"] = endDateLocal.ToString("dd/MM/yyyy HH:mm"),
                 ["Amount"] = amount.ToString(),
                 ["Currency"] = currency,
                 ["Provider"] = provider,

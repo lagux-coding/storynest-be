@@ -39,6 +39,12 @@ namespace StoryNest.Infrastructure.Services.QuestPdfService
             FontManager.RegisterFont(File.OpenRead(Path.Combine(fontPath, "Roboto-Light.ttf")));
             FontManager.RegisterFont(File.OpenRead(Path.Combine(fontPath, "Roboto-Italic.ttf")));
 
+            var timeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh");
+            var issueDateLocal = TimeZoneInfo.ConvertTimeFromUtc(_invoice.IssueDate, timeZone);
+            var paidAtLocal = _invoice.Payment.PaidAt.HasValue ? TimeZoneInfo.ConvertTimeFromUtc(_invoice.Payment.PaidAt.Value, timeZone) : (DateTime?)null;
+            var startDateLocal = TimeZoneInfo.ConvertTimeFromUtc(_invoice.Subscription.StartDate, timeZone);
+            var endDateLocal = TimeZoneInfo.ConvertTimeFromUtc(_invoice.Subscription.EndDate, timeZone);
+
             container
                 .Page(page =>
                 {
@@ -86,8 +92,8 @@ namespace StoryNest.Infrastructure.Services.QuestPdfService
                                         });
 
                                         table.Cell().Text("Số hoá đơn").Light(); table.Cell().Text($"{_invoice.OrderCode}").Light();
-                                        table.Cell().Text("Ngày phát hành").Light(); table.Cell().Text(_invoice.IssueDate.ToString("dd/MM/yyyy HH:mm")).Light();
-                                        table.Cell().Text("Ngày thanh toán").Light(); table.Cell().Text(_invoice.Payment.PaidAt.Value.ToString("dd/MM/yyyy HH:mm")).Light();
+                                        table.Cell().Text("Ngày phát hành").Light(); table.Cell().Text(issueDateLocal.ToString("dd/MM/yyyy HH:mm")).Light();
+                                        table.Cell().Text("Ngày thanh toán").Light(); table.Cell().Text(paidAtLocal.Value.ToString("dd/MM/yyyy HH:mm")).Light();
                                     });
                                 });
                             });
@@ -133,7 +139,7 @@ namespace StoryNest.Infrastructure.Services.QuestPdfService
                                     c.RelativeColumn();
                                 });
 
-                                table.Cell().PaddingBottom(5).Text("Tổng số tiền").Light(); table.Cell().PaddingBottom(5).AlignRight().Text(_invoice.Amount.ToString()).Light();
+                                table.Cell().PaddingBottom(5).Text("Tổng số tiền").Light(); table.Cell().PaddingBottom(5).AlignRight().Text($"{_invoice.Amount.ToString()} VND").Light();
                                 table.Cell().Text("Giảm giá").Light(); table.Cell().AlignRight().Text("0 VND").Light();
                             });
                             subCol.Item().LineHorizontal(1).LineColor(Colors.Black);
@@ -145,7 +151,7 @@ namespace StoryNest.Infrastructure.Services.QuestPdfService
                                     c.RelativeColumn();
                                 });
 
-                                table.Cell().Text("Tổng số tiền phải trả").FontSize(20).Bold(); table.Cell().AlignRight().Text(_invoice.Amount.ToString()).FontSize(20).Bold();                               
+                                table.Cell().Text("Tổng số tiền phải trả").FontSize(20).Bold(); table.Cell().AlignRight().Text($"{_invoice.Amount.ToString()} VND").FontSize(20).Bold();                               
                             });
                             subCol.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                             subCol.Item().Column(detail =>
@@ -172,11 +178,11 @@ namespace StoryNest.Infrastructure.Services.QuestPdfService
                                 table.Cell().PaddingBottom(10).PaddingTop(10).BorderBottom(1).BorderColor(Colors.Grey.Lighten1).AlignRight().Text("Giá").SemiBold();
 
                                 // Data
-                                table.Cell().Text(_invoice.Subscription.Plan.Name);
-                                table.Cell().AlignCenter().Text(_invoice.Subscription.Plan.DurationInDays.ToString());
-                                table.Cell().AlignCenter().Text(_invoice.Subscription.StartDate.ToString("dd/MM/yyyy HH:mm"));
-                                table.Cell().AlignCenter().Text(_invoice.Subscription.EndDate.ToString("dd/MM/yyyy HH:mm"));
-                                table.Cell().AlignRight().Text(_invoice.Amount.ToString());
+                                table.Cell().Text(_invoice.Subscription.Plan.Name).Light();
+                                table.Cell().AlignCenter().Text($"{_invoice.Subscription.Plan.DurationInDays.ToString()} ngày").Light();
+                                table.Cell().AlignCenter().Text(startDateLocal.ToString("dd/MM/yyyy HH:mm")).Light();
+                                table.Cell().AlignCenter().Text(startDateLocal.ToString("dd/MM/yyyy HH:mm")).Light();
+                                table.Cell().AlignRight().Text($"{_invoice.Amount.ToString()} VND").Light();
                             });
                         });
                     });
