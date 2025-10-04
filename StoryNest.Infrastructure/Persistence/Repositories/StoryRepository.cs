@@ -24,7 +24,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Stories.AddAsync(story);
         }
 
-        public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner)
+        public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner, bool excludeAiMedia = false, bool onlyAiMedia = false)
         {
             var query = _context.Stories.AsQueryable();
             if (!isOwner)
@@ -34,6 +34,18 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             if (cursor.HasValue)
             {
                 query = query.Where(s => s.CreatedAt < cursor.Value);
+            }
+            if (excludeAiMedia)
+            {
+                query = query.Where(s =>
+                    !s.Media.Any(m => EF.Functions.Like(m.MediaUrl, "%generated-content/%"))
+                );
+            }
+            if (onlyAiMedia)
+            {
+                query = query.Where(s =>
+                    s.Media.Any(m => EF.Functions.Like(m.MediaUrl, "%generated-content/%"))
+                );
             }
 
             return query

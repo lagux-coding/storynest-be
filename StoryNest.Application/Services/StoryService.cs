@@ -196,7 +196,7 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, false);
+                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, false, true, false);
                 var hasMore = stories.Count > 10;
                 var items = stories.Take(10).Select(s =>
                 {
@@ -225,7 +225,64 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, true);
+                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, true, true, false);
+                var hasMore = stories.Count > 10;
+                var items = stories.Take(10).Select(s =>
+                {
+                    var dto = _mapper.Map<StoryResponse>(s);
+                    // user chưa login => false
+                    dto.IsLiked = userLikeId != null && s.Likes.Any(l => l.UserId == userLikeId && l.RevokedAt == null);
+                    return dto;
+                }).ToList();
+
+                var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
+
+                return new PaginatedResponse<StoryResponse>
+                {
+                    Items = items,
+                    NextCursor = nextCursor,
+                    HasMore = hasMore,
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAIAsync(long userId, DateTime? cursor, long? userLikeId = null)
+        {
+            try
+            {
+                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, false, false, true);
+                var hasMore = stories.Count > 10;
+                var items = stories.Take(10).Select(s =>
+                {
+                    var dto = _mapper.Map<StoryResponse>(s);
+                    // user chưa login => false
+                    dto.IsLiked = userLikeId != null && s.Likes.Any(l => l.UserId == userLikeId && l.RevokedAt == null);
+                    return dto;
+                }).ToList();
+
+                var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
+
+                return new PaginatedResponse<StoryResponse>
+                {
+                    Items = items,
+                    NextCursor = nextCursor,
+                    HasMore = hasMore,
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAIAsync(long userId, DateTime? cursor, long userLikeId)
+        {
+            try
+            {
+                var stories = await _storyRepository.GetStoriesByUserAsync(userId, cursor, true, false, true);
                 var hasMore = stories.Count > 10;
                 var items = stories.Take(10).Select(s =>
                 {

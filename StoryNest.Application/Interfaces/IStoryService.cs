@@ -16,10 +16,12 @@ namespace StoryNest.Application.Interfaces
         public Task<int> UpdateWithEntityAsync(Story story);
         public Task<int> RemoveStoryAsync(int storyId, long userId);
         public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAsync(long userId, DateTime? cursor, long? userLikeId = null);
         public Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
         public Task<Story> GetStoryByIdAsync(int storyId);
+        public Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAsync(long userId, DateTime? cursor, long? userLikeId = null);
         public Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAsync(long userId, DateTime? cursor, long userLikeId);
+        public Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAIAsync(long userId, DateTime? cursor, long? userLikeId = null);
+        public Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAIAsync(long userId, DateTime? cursor, long userLikeId);
         public Task<StorySearchResult> SearchStoriesAsync(string keyword, int limit = 20, int? lastId = null);
     }
 }
