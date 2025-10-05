@@ -16,6 +16,10 @@ namespace StoryNest.Application.Mappings
     {
         public StoryProfile()
         {
+            CreateMap<Media, MediaResponse>()
+                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
+            CreateMap<Tag, TagResponse>();
+            CreateMap<Comment, CommentResponse>();
             CreateMap<CreateStoryRequest, Story>();
             CreateMap<Story, StoryResponse>()
                 .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.CoverImageUrl) ? null : $"https://cdn.storynest.io.vn/{src.CoverImageUrl}"))
@@ -39,10 +43,6 @@ namespace StoryNest.Application.Mappings
                 }));
             CreateMap<Story, GetStoryResponse>()
                 .IncludeBase<Story, StoryResponse>();
-            CreateMap<Media, MediaResponse>()
-                .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
-            CreateMap<Tag, TagResponse>();
-            CreateMap<Comment, CommentResponse>();
         }
     }
 }
