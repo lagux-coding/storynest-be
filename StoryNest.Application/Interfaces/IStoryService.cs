@@ -18,10 +18,10 @@ namespace StoryNest.Application.Interfaces
         public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null);
         public Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
         public Task<Story> GetStoryByIdAsync(int storyId);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAsync(long userId, DateTime? cursor, long? userLikeId = null);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAsync(long userId, DateTime? cursor, long userLikeId);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesByUserAIAsync(long userId, DateTime? cursor, long? userLikeId = null);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesByOwnerAIAsync(long userId, DateTime? cursor, long userLikeId);
+        public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByUserAsync(long userId, DateTime? cursor, long? userLikeId = null);
+        public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByOwnerAsync(long userId, DateTime? cursor, long userLikeId);
+        public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByUserAIAsync(long userId, DateTime? cursor, long? userLikeId = null);
+        public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByOwnerAIAsync(long userId, DateTime? cursor, long userLikeId);
         public Task<StorySearchResult> SearchStoriesAsync(string keyword, int limit = 20, int? lastId = null);
     }
 }
