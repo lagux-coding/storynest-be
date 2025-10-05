@@ -37,7 +37,8 @@ namespace StoryNest.Application.Mappings
                     }
                     return context.Mapper.Map<UserBasicResponse>(src.User);
                 }));
-            CreateMap<Story, GetStoryResponse>();
+            CreateMap<Story, GetStoryResponse>()
+                .IncludeBase<Story, StoryResponse>();
             CreateMap<Media, MediaResponse>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
             CreateMap<Tag, TagResponse>();
