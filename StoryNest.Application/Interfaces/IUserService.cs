@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Entities;
+﻿using StoryNest.Application.Dtos.Response;
+using StoryNest.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace StoryNest.Application.Interfaces
     {
         Task<User> GetUserByEmailAsync(string email);
         Task<User?> GetUserByIdAsync(long userId);
+        Task<UserFullResponse> GetMe(long userId);
         Task<List<User>> GetAllUser();
         Task UpdateUserAsync(User user);
     }

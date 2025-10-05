@@ -42,7 +42,9 @@ namespace StoryNest.Application.Services
 
         public async Task<User?> GetByIdAsync(long userId)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            return await _context.Users
+                .Include(u => u.Follows)
+                .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
         }
 
         public async Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail)
