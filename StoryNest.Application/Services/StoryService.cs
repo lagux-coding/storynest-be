@@ -421,7 +421,7 @@ namespace StoryNest.Application.Services
                     throw new Exception("You do not have permission to update this story");
                
                 story.Title = request.Title;
-                story.Slug = SlugGenerationHelper.GenerateSlug(request.Title);
+                story.Slug = $"{SlugGenerationHelper.GenerateSlug(request.Title)}-{RandomString(6)}";
                 story.Content = request.Content;
                 story.Summary = SummaryHelper.Generate(request.Content);
                 story.CoverImageUrl = string.IsNullOrWhiteSpace(request.CoverImageUrl)
@@ -434,6 +434,11 @@ namespace StoryNest.Application.Services
                 if (request.StoryStatus == StoryStatus.Published && story.PublishedAt == null)
                 {
                     story.PublishedAt = DateTime.UtcNow;
+                }
+
+                if (request.StoryStatus != StoryStatus.Published)
+                {
+                    story.PublishedAt = null;
                 }
 
                 if (request.IsAnonymous)
@@ -491,7 +496,17 @@ namespace StoryNest.Application.Services
                     await _storyTagService.RemoveStoryTagAsync(story.Id, tagId);
                 }              
 
-                var result = await _unitOfWork.SaveAsync();             
+                var result = await _unitOfWork.SaveAsync();
+
+                if (request.MediaUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
+                {
+                    await SyncUserMedia(userId, story.Id, request.MediaUrls, MediaType.Image);
+                }
+
+                if (request.AudioUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
+                {
+                    await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
+                }
 
                 return result;
             }

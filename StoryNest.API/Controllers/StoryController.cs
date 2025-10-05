@@ -171,11 +171,11 @@ namespace StoryNest.API.Controllers
 
             var result = await _storyService.UpdateStoryAsync(request, userId.Value, storyId);
 
-            if (storyId < 0)
+            if (result < 0)
             {
                 return BadRequest(ApiResponse<object>.Fail("Failed to update story"));
             }
-            else if (storyId > 0 && request.IsAnonymous)
+            else if (result > 0 && request.IsAnonymous)
             {
                 var username = UsernameGenerateHelperHelper.GenerateAnonymousName(storyId);
                 var avatarUrl = "system-assets/anonymous-avatar.webp";
