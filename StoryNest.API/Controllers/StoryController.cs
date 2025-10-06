@@ -120,6 +120,27 @@ namespace StoryNest.API.Controllers
         }
 
         [Authorize]
+        [HttpGet("get-by-id-or-slug-owner")]
+        public async Task<ActionResult<ApiResponse<object>>> GetStoryByIdOrSlugOwner(int? id, string? slug)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                    return Unauthorized(ApiResponse<object>.Fail("Authentication failed"));
+
+                var result = await _storyService.GetStoryByIdOrSlugOwnerAsync(id, slug, userId.Value);
+                if (result == null)
+                    return NotFound(ApiResponse<object>.Fail("Story not found"));
+                return Ok(ApiResponse<object>.Success(result));
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [Authorize]
         [HttpPost("create")]
         public async Task<ActionResult<ApiResponse<object>>> CreateStory([FromBody] CreateStoryRequest request)
         {

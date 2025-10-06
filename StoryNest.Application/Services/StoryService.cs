@@ -375,16 +375,33 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<StoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
+        public async Task<GetStoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug)
         {
             try
             {
                 var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, slug);
-                return story == null ? null : _mapper.Map<StoryResponse>(story);
+                return story == null ? null : _mapper.Map<GetStoryResponse>(story);
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<GetStoryResponse?> GetStoryByIdOrSlugOwnerAsync(int? storyId, string? slug, long userId)
+        {
+            try
+            {
+                var story = await _storyRepository.GetStoryByIdOrSlugOwnerAsync(storyId, slug);
+                if (story == null)
+                    throw new Exception("Story not found");
+                if (story.UserId != userId)
+                    throw new Exception("You do not have permission to view this story");
+                return story == null ? null : _mapper.Map<GetStoryResponse>(story);
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
 

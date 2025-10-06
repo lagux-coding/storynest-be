@@ -87,30 +87,73 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug, bool asNoTracking = false)
         {
-            IQueryable<Story> query = _context.Stories;
-
-            if (asNoTracking)
-                query = query.AsNoTracking();
-
-            query = query
-                .Include(s => s.User)
-                .Include(m => m.Media)
-                .Include(st => st.StoryTags)
-                    .ThenInclude(t => t.Tag)
-                .Include(l => l.Likes)
-                .Include(c => c.Comments);
-
-            if (storyId.HasValue)
+            try
             {
-                return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value && s.User.IsActive == true);
-            }
-            else if (!string.IsNullOrEmpty(slug))
-            {
-                string normalizedSlug = slug.ToLower();
-                return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug && s.User.IsActive == true);
-            }
+                IQueryable<Story> query = _context.Stories;
 
-            return null;
+                if (asNoTracking)
+                    query = query.AsNoTracking();
+
+                query = query
+                    .Include(s => s.User)
+                    .Include(m => m.Media)
+                    .Include(st => st.StoryTags)
+                        .ThenInclude(t => t.Tag)
+                    .Include(l => l.Likes)
+                    .Include(c => c.Comments);
+
+                if (storyId.HasValue)
+                {
+                    return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value && s.PrivacyStatus == PrivacyStatus.Public && s.StoryStatus == StoryStatus.Published && s.User.IsActive == true);
+                }
+                else if (!string.IsNullOrEmpty(slug))
+                {
+                    string normalizedSlug = slug.ToLower();
+                    return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug && s.User.IsActive == true);
+                }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                var msg = ex.Message;
+                throw;
+            }
+        }
+
+        public async Task<Story> GetStoryByIdOrSlugOwnerAsync(int? storyId, string? slug, bool asNoTracking = false)
+        {
+            try
+            {
+                IQueryable<Story> query = _context.Stories;
+
+                if (asNoTracking)
+                    query = query.AsNoTracking();
+
+                query = query
+                    .Include(s => s.User)
+                    .Include(m => m.Media)
+                    .Include(st => st.StoryTags)
+                        .ThenInclude(t => t.Tag)
+                    .Include(l => l.Likes)
+                    .Include(c => c.Comments);
+
+                if (storyId.HasValue)
+                {
+                    return await query.FirstOrDefaultAsync(s => s.Id == storyId.Value && s.User.IsActive == true);
+                }
+                else if (!string.IsNullOrEmpty(slug))
+                {
+                    string normalizedSlug = slug.ToLower();
+                    return await query.FirstOrDefaultAsync(s => s.Slug.ToLower() == normalizedSlug && s.User.IsActive == true);
+                }
+
+                return null;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
         public void RemoveStory(Story story)
