@@ -13,6 +13,33 @@ namespace StoryNest.Shared.Common.Utils
         private const int KeySize = 32; // 256 bit
         private const int Iterations = 310000; // Number of iterations for PBKDF2
 
+        private const string Letters = "abcdefghijklmnopqrstuvwxyz";
+        private const string Digits = "0123456789";
+
+        public static string GenerateBasicPassword(int length = 6)
+        {
+            if (length < 6) length = 6; // enforce tối thiểu 6 ký tự
+
+            var allChars = Letters + Digits;
+            var random = new Random();
+
+            // đảm bảo có ít nhất 1 số
+            var passwordChars = new[]
+            {
+                Letters[random.Next(Letters.Length)],
+                Digits[random.Next(Digits.Length)]
+            }.ToList();
+
+            // fill phần còn lại
+            for (int i = passwordChars.Count; i < length; i++)
+            {
+                passwordChars.Add(allChars[random.Next(allChars.Length)]);
+            }
+
+            // shuffle cho random
+            return new string(passwordChars.OrderBy(_ => random.Next()).ToArray());
+        }
+
         public static string HashPassword(string password)
         {
             // Tạo salt random

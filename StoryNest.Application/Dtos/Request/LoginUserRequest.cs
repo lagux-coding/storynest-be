@@ -13,8 +13,8 @@ namespace StoryNest.Application.Dtos.Request
         public bool Remember { get; set; } = false;
 
         // Optional
-        public string? DeviceId { get; set; }
-        public string? IpAddress { get; set; }
-        public string? UserAgent { get; set; }
+        public string? DeviceId { get; set; } = string.Empty;
+        public string? IpAddress { get; set; } = string.Empty;
+        public string? UserAgent { get; set; } = string.Empty;
     }
 }

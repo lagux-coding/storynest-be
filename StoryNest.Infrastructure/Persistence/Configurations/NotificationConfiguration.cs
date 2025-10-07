@@ -27,8 +27,7 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .IsRequired();
 
             builder.Property(n => n.ActorId)
-                   .HasColumnName("actor_id")
-                   .IsRequired();
+                   .HasColumnName("actor_id");
 
             builder.Property(n => n.ReferenceId)
                    .HasColumnName("reference_id");
@@ -50,6 +49,9 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.Property(n => n.CreatedAt)
                    .HasColumnName("created_at")
                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+            builder.Property(n => n.ReadAt)
+                   .HasColumnName("read_at");
 
             // Relation: User nhận thông báo
             builder.HasOne(n => n.User)

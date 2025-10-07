@@ -7,8 +7,13 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using OpenAI.Audio;
+using OpenAI.Images;
+using Quartz;
 using Resend;
 using StackExchange.Redis;
+using StoryNest.API.Hubs;
+using StoryNest.API.Services;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Features.Users;
@@ -18,12 +23,22 @@ using StoryNest.Application.Services;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using StoryNest.Infrastructure.Persistence.Repositories;
+using StoryNest.Infrastructure.Services;
 using StoryNest.Infrastructure.Services.Email;
+using StoryNest.Infrastructure.Services.Google;
+using StoryNest.Infrastructure.Services.LogoProvider;
+using StoryNest.Infrastructure.Services.OpenAI;
+using StoryNest.Infrastructure.Services.PayOSPayment;
+using StoryNest.Infrastructure.Services.QuartzSchedule;
+using StoryNest.Infrastructure.Services.QuestPdfService;
 using StoryNest.Infrastructure.Services.Redis;
+using StoryNest.Infrastructure.Services.S3;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 // CORS
 builder.Services.AddCors(options =>
@@ -31,7 +46,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn")
+            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn", "http://127.0.0.1:5000")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -118,6 +133,22 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) &&
+            path.StartsWithSegments("/hubs/notify"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -160,6 +191,8 @@ builder.Services.AddSwaggerGen(c =>
 // Fluent Validation
 builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestValidator>();
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
+builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
+builder.Services.AddScoped<IValidator<UploadMediaRequest>, UploadImageRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -168,6 +201,17 @@ builder.Services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 builder.Services.AddScoped<IStoryRepository, StoryRepository>();
 builder.Services.AddScoped<ITagRepository, TagRepository>();
 builder.Services.AddScoped<IStoryTagRepository, StoryTagRepository>();
+builder.Services.AddScoped<IMediaRepository, MediaRepository>();
+builder.Services.AddScoped<ILikeRepository, LikeRepository>();
+builder.Services.AddScoped<ICommentRepository, CommentRepository>();
+builder.Services.AddScoped<IAICreditRepository, AICreditRepository>();
+builder.Services.AddScoped<IUserMediaRepository, UserMediaRepository>();
+builder.Services.AddScoped<IAITransactionRepository, AITransactionRepository>();    
+builder.Services.AddScoped<IAIUsageLogRepository, AIUsageLogRepository>();
+builder.Services.AddScoped<IPlanRepository, PlanRepository>();
+builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -177,17 +221,69 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IStoryService, StoryService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IStoryTagService, StoryTagService>();
+builder.Services.AddScoped<IMediaService, MediaService>();
+builder.Services.AddScoped<ILikeService, LikeService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IGoogleService, GoogleService>();
+builder.Services.AddScoped<IAICreditService, AICreditService>();
+builder.Services.AddScoped<IUserMediaService, UserMediaService>();
+builder.Services.AddScoped<IAITransactionService, AITransactionService>();
+builder.Services.AddScoped<IAIUsageLogService, AIUsageLogService>();
+builder.Services.AddScoped<IPlanService, PlanService>();
+builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
+builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
 builder.Services.AddScoped<WelcomeEmailSender>();
+builder.Services.AddScoped<WelcomeEmailGoogleSender>();
 builder.Services.AddScoped<ResetPasswordEmailSender>();
+builder.Services.AddScoped<InvoiceEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();
+builder.Services.AddScoped<IS3Service, S3Service>();
+builder.Services.AddScoped<IUploadService, UploadService>();
+builder.Services.AddScoped<IOpenAIService, OpenAIService>();    
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
+builder.Services.AddSingleton<ILogoProvider, FileLogoProvider>();
+builder.Services.AddScoped<IQuestPdfService, QuestPdfService>();
+//builder.Services.AddScoped<RenewCreditJob>();
 
+builder.Services.AddQuartz(q =>
+{
+    var renewCreditJobKey = new JobKey(nameof(RenewCreditJob));
+    q.AddJob<RenewCreditJob>(opts => opts.WithIdentity(renewCreditJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(renewCreditJobKey)
+        .WithIdentity($"{nameof(RenewCreditJob)}-trigger")
+        .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+});
+
+builder.Services.AddQuartzHostedService(opt =>
+{
+    opt.WaitForJobsToComplete = true;
+});
+
+builder.Services.AddSingleton<ImageClient>(serviceProvider =>
+{
+    var apiKey = builder.Configuration["OPENAI_API_KEY"];
+    var model = "dall-e-3";
+    return new ImageClient(model, apiKey);
+});
+
+builder.Services.AddSingleton<AudioClient>(serviceProvider =>
+{
+    var apiKey = builder.Configuration["OPENAI_API_KEY"];
+    var model = "gpt-4o-mini-tts";
+    return new AudioClient(model, apiKey);
+});
+
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 app.UseForwardedHeaders();
@@ -196,6 +292,7 @@ app.UseForwardedHeaders();
 app.UseSwagger();
 app.UseSwaggerUI();
 
+app.UseStaticFiles();
 
 app.UseHttpsRedirection();
 
@@ -205,5 +302,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notify");
 
 app.Run();

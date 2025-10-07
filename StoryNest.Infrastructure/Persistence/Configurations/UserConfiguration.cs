@@ -157,6 +157,12 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .WithOne(ac => ac.User)
                    .HasForeignKey<AICredit>(ac => ac.UserId)
                    .OnDelete(DeleteBehavior.Cascade);
+
+            // UserMedias (1-n)
+            builder.HasMany(u => u.UserMedias)
+                   .WithOne(m => m.User)
+                   .HasForeignKey(m => m.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -14,15 +14,17 @@ namespace StoryNest.Domain.Entities
         public long UserId { get; set; }
         public User User { get; set; } = default!;
 
-        public long ActorId { get; set; }
-        public User Actor { get; set; } = default!;
+        public long? ActorId { get; set; }
+        public User? Actor { get; set; } = default!;
 
-        public int ReferenceId { get; set; }
-
+        public int? ReferenceId { get; set; }
+        public string? ReferenceType { get; set; }
 
         public string Content { get; set; } = string.Empty;
         public NotificationType Type { get; set; } = NotificationType.System;
+
         public bool IsRead { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? ReadAt { get; set; }
     }
 }

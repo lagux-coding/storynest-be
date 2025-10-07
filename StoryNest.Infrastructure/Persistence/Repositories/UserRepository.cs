@@ -25,20 +25,34 @@ namespace StoryNest.Application.Services
             await _context.Users.AddAsync(user);
         }
 
+        public async Task<List<User>> GetAllUserAsync()
+        {
+            return await _context.Users
+                .Where(u => u.AICredit != null)
+                .ToListAsync();
+        }
+
         public async Task<User?> GetByEmailAsync(string email)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+            return await _context.Users
+                .Include(u => u.Subscriptions)
+                    .ThenInclude(u => u.Plan)
+                .FirstOrDefaultAsync(u => u.Email == email);
         }
 
         public async Task<User?> GetByIdAsync(long userId)
         {
-            return await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            return await _context.Users
+                .Include(u => u.Follows)
+                .FirstOrDefaultAsync(u => u.Id == userId && u.IsActive);
         }
 
         public async Task<User?> GetByUsernameOrEmailAsync(string usernameOrEmail)
         {
             return await _context.Users
-                    .FirstOrDefaultAsync(u => u.Username == usernameOrEmail || u.Email == usernameOrEmail);
+                    .Include(u => u.Subscriptions)
+                        .ThenInclude(u => u.Plan)
+                    .FirstOrDefaultAsync(u => (u.Username == usernameOrEmail || u.Email == usernameOrEmail) && u.IsActive == true);
         }
 
         public async Task UpdateAsync(User user)

@@ -4,11 +4,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
+using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace StoryNest.API.Controllers
 {
@@ -20,11 +25,14 @@ namespace StoryNest.API.Controllers
         private readonly IAuthService _authService;
         private readonly IUserService _userService;
         private readonly IJwtService _jwtService;
+        private readonly IGoogleService _googleService;
         private readonly ResetPasswordEmailSender _resetPasswordEmailSender;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService, ILogger<AuthController> logger)
         {
             _authService = authService;
             _registerValidator = registerValidator;
@@ -33,6 +41,9 @@ namespace StoryNest.API.Controllers
             _userService = userService;
             _jwtService = jwtService;
             _resetPasswordEmailSender = resetPasswordEmailSender;
+            _googleService = googleService;
+            _currentUserService = currentUserService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
@@ -115,12 +126,18 @@ namespace StoryNest.API.Controllers
         [HttpGet("logout")]
         public async Task<ActionResult<ApiResponse<object>>> Logout()
         {
+            var type = _currentUserService.Type;
+            if (type == null)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Authentication failed"));
+            }
+
             if (!Request.Cookies.TryGetValue("refreshToken", out var refresh))
             {
                 return Unauthorized(ApiResponse<object>.Fail(new { }, "No refresh token found"));
             }
 
-            bool result = await _authService.LogoutAsync(refresh);
+            bool result = await _authService.LogoutAsync(refresh, type);
             if (!result) return BadRequest(ApiResponse<object>.Fail("Invalid token or token expired"));
 
             SetRefreshTokenCookie(Response, "", DateTime.UtcNow.AddDays(-1));
@@ -178,10 +195,76 @@ namespace StoryNest.API.Controllers
         [Authorize]
         [HttpPost("revoke-all")]
         public async Task<ActionResult<ApiResponse<object>>> RevokeAll([FromQuery] long userId, [FromBody] RevokeAllRequest request)
-        {
+        {   
             var count = await _authService.RevokeAllAsync(userId, request.Reason, request.RevokedBy);
 
             return Ok(ApiResponse<object>.Success(new { revoke = count }));
+        }
+
+        [HttpGet("google-login")]
+        public IActionResult GoogleLogin()
+        {
+            var clientId = _configuration["GOOGLE_CLIENT_ID"];
+            var redirectUri = _configuration["GOOGLE_REDIRECT_URI"];
+            var scope = "openid profile email";
+
+            var url = $"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={clientId}&redirect_uri={redirectUri}&scope={scope}&access_type=offline&prompt=consent";
+
+            return Redirect(url);
+        }
+
+        [HttpGet("google-callback")]
+        public async Task<IActionResult> GoogleCallback([FromQuery] string code)
+        {
+            var feUrl = _configuration["FRONTEND_URL"];
+            using var client = new HttpClient();
+            var tokenResponse = await client.PostAsync("https://oauth2.googleapis.com/token",
+                new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    ["code"] = code,
+                    ["client_id"] = _configuration["GOOGLE_CLIENT_ID"]!,
+                    ["client_secret"] = _configuration["GOOGLE_CLIENT_SECRET"]!,
+                    ["redirect_uri"] = _configuration["GOOGLE_REDIRECT_URI"]!,
+                    ["grant_type"] = "authorization_code"
+                }));
+
+            if (!tokenResponse.IsSuccessStatusCode)
+                return BadRequest("Failed to exchange token");
+
+            var json = await tokenResponse.Content.ReadAsStringAsync();
+            var googleToken = JsonSerializer.Deserialize<GoogleTokenResponse>(json)!;
+
+            var result = await _googleService.GoogleLoginAsync(googleToken);
+            if (result == null)
+                return Redirect(feUrl);
+
+            // set cookie refresh
+            SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
+
+            var queryParams = new Dictionary<string, string?>
+            {
+                ["token"] = result.AccessToken,
+                ["avatar"] = result.AvatarUrl,
+                ["userId"] = result.UserId.ToString(),
+                ["planName"] = result.PlanName,
+                ["planId"] = result.PlanId?.ToString(),
+            };
+
+            _logger.LogInformation(
+                "Google login successful for user {Username}, redirecting to {RedirectUrl}: PlanName={PlanName}, PlanId={PlanId}, Token={Token}, Avatar={Avatar}",
+                result.Username,
+                feUrl,
+                result.PlanName,
+                result.PlanId,
+                result.AccessToken,
+                result.AvatarUrl
+            );
+
+
+            var redirectUrl = QueryHelpers.AddQueryString($"{feUrl}/google-callback", queryParams);
+
+            // redirect về FE
+            return Redirect(redirectUrl);
         }
 
         private void SetRefreshTokenCookie(HttpResponse response, string refreshToken, DateTime expires)

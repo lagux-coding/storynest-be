@@ -32,5 +32,12 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
             return false;
         }
+
+        public async Task RemoveAsync(int storyId, int tagId)
+        {
+            await _context.StoryTags
+                .Where(st => st.StoryId == storyId && st.TagId == tagId)
+                .ExecuteDeleteAsync();
+        }
     }
 }

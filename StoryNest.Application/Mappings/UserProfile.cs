@@ -17,6 +17,24 @@ namespace StoryNest.Application.Mappings
             CreateMap<UserBasicResponse, User>();
             CreateMap<User, UserBasicResponse>()
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.AvatarUrl}"));
+            CreateMap<UserFullResponse, User>();
+            CreateMap<User, UserFullResponse>()
+                .ForMember(dest => dest.FollowersCount, opt => opt.MapFrom(src => src.Follows.Count()));
+            CreateMap<Notification, NotificationResponse>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom(src => src.User != null ? new UserBasicResponse
+                {
+                    Id = src.User.Id,
+                    Username = src.User.Username,
+                    AvatarUrl = string.IsNullOrEmpty(src.User.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.User.AvatarUrl}"
+                } : null))
+                .ForMember(dest => dest.Actor, opt => opt.MapFrom(src => src.Actor != null ? new UserBasicResponse
+                {
+                    Id = src.Actor.Id,
+                    Username = src.Actor.Username,
+                    AvatarUrl = string.IsNullOrEmpty(src.Actor.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.Actor.AvatarUrl}"
+                } : null));
+
+
         }
     }
 }

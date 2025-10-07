@@ -20,6 +20,7 @@ namespace StoryNest.Domain.Entities
         public int ViewCount { get; set; } = 0;
         public int LikeCount { get; set; } = 0;
         public int CommentCount { get; set; } = 0;
+        public bool IsAnonymous { get; set; } = false;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? LastUpdatedAt { get; set; }
         public DateTime? PublishedAt { get; set; }

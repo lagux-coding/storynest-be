@@ -35,5 +35,10 @@ namespace StoryNest.Application.Services
         {
             throw new NotImplementedException();
         }
+
+        public async Task RemoveStoryTagAsync(int storyId, int tagId)
+        {
+            await _storyTagRepository.RemoveAsync(storyId, tagId);
+        }
     }
 }

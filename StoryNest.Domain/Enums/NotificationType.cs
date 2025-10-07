@@ -8,8 +8,11 @@ namespace StoryNest.Domain.Enums
 {
     public enum NotificationType
     {
-        Like,
-        Comment,
-        System
+        System,
+        StoryLiked,
+        StoryCommented,
+        StoryPublished,
+        Followed,
+        Mentioned
     }
 }

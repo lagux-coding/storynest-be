@@ -10,6 +10,7 @@ namespace StoryNest.Application.Interfaces
     public interface IStoryTagService
     {
         public Task AddStoryTagAsync(StoryTag storyTag);
+        public Task RemoveStoryTagAsync(int storyId, int tagId);
         public Task<bool> GetStoryTagAsync(int storyId = 0, int tagId = 0);
     }
 }

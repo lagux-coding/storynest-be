@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using NpgsqlTypes;
 using StoryNest.Infrastructure.Persistence;
 
 #nullable disable
@@ -36,6 +37,10 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("LastRenewDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_renew_date");
 
                     b.Property<int>("TotalCredits")
                         .ValueGeneratedOnAdd()
@@ -625,7 +630,7 @@ namespace StoryNest.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<int>("Id"));
 
-                    b.Property<long>("ActorId")
+                    b.Property<long?>("ActorId")
                         .HasColumnType("bigint")
                         .HasColumnName("actor_id");
 
@@ -647,9 +652,16 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_read");
 
-                    b.Property<int>("ReferenceId")
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("read_at");
+
+                    b.Property<int?>("ReferenceId")
                         .HasColumnType("integer")
                         .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceType")
+                        .HasColumnType("text");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -694,11 +706,9 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("currency");
 
-                    b.Property<DateTime>("PaidAt")
-                        .ValueGeneratedOnAdd()
+                    b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("paid_at")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                        .HasColumnName("paid_at");
 
                     b.Property<string>("Provider")
                         .IsRequired()
@@ -924,6 +934,12 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<bool>("IsAnonymous")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_anonymous");
+
                     b.Property<DateTime?>("LastUpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_updated_at");
@@ -942,6 +958,11 @@ namespace StoryNest.Infrastructure.Migrations
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
+
+                    b.Property<NpgsqlTsVector>("SearchVector")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("tsvector")
+                        .HasComputedColumnSql("\r\n                setweight(to_tsvector('simple', coalesce(title, '')), 'A') ||\r\n                setweight(to_tsvector('simple', coalesce(content, '')), 'B') ||\r\n                setweight(to_tsvector('simple', coalesce(summary, '')), 'C') ||\r\n                setweight(to_tsvector('simple', coalesce(slug, '')), 'D')\r\n            ", true);
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -975,6 +996,10 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnName("view_count");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SearchVector");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("SearchVector"), "GIN");
 
                     b.HasIndex("UserId");
 
@@ -1250,6 +1275,49 @@ namespace StoryNest.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("StoryNest.Domain.Entities.UserMedia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("MediaType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("MediaUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Pending");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserMedia", (string)null);
+                });
+
             modelBuilder.Entity("StoryNest.Domain.Entities.UserReport", b =>
                 {
                     b.Property<int>("Id")
@@ -1500,8 +1568,7 @@ namespace StoryNest.Infrastructure.Migrations
                     b.HasOne("StoryNest.Domain.Entities.User", "Actor")
                         .WithMany("ActorNotifications")
                         .HasForeignKey("ActorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("StoryNest.Domain.Entities.User", "User")
                         .WithMany("Notifications")
@@ -1607,6 +1674,17 @@ namespace StoryNest.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Plan");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoryNest.Domain.Entities.UserMedia", b =>
+                {
+                    b.HasOne("StoryNest.Domain.Entities.User", "User")
+                        .WithMany("UserMedias")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1734,6 +1812,8 @@ namespace StoryNest.Infrastructure.Migrations
                     b.Navigation("StoryViews");
 
                     b.Navigation("Subscriptions");
+
+                    b.Navigation("UserMedias");
 
                     b.Navigation("YearlyMemories");
                 });

@@ -18,5 +18,6 @@ namespace StoryNest.Domain.Entities
         public int RemainingCredits => TotalCredits - UsedCredits;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
-    }
+        public DateTime? LastRenewDate { get; set; }
+        }
 }

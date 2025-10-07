@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using System.Security.Claims;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Constants;
+using StoryNest.Domain.Enums;
 
 namespace StoryNest.Application.Services
 {
@@ -26,8 +27,12 @@ namespace StoryNest.Application.Services
         private readonly IJwtService _jwtService;
         private readonly WelcomeEmailSender _welcomeEmailSender;
         private readonly IRedisService _redisService;
+        private readonly IAICreditService _aiCreditService;
+        private readonly IUserMediaService _userMediaService;
+        private readonly ICurrentUserService _currentUserService;
+        private readonly IAITransactionService _aiTransactionService;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService, IAITransactionService aiTransactionService)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -36,6 +41,10 @@ namespace StoryNest.Application.Services
             _refreshTokenRepository = refreshTokenRepository;
             _welcomeEmailSender = welcomeEmailSender;
             _redisService = redisService;
+            _aiCreditService = aiCreditService;
+            _userMediaService = userMediaService;
+            _currentUserService = currentUserService;
+            _aiTransactionService = aiTransactionService;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -68,9 +77,16 @@ namespace StoryNest.Application.Services
             await _refreshTokenRepository.AddAsync(rt);
             await _unitOfWork.SaveAsync();
 
+            var activeSub = user.Subscriptions?
+                        .FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
+
             return new LoginUserResponse
             {
+                UserId = user.Id,
                 Username = user.Username,
+                AvatarUrl = user.AvatarUrl,
+                PlanName = activeSub?.Plan?.Name,
+                PlanId = activeSub?.Plan?.Id,
                 AccessToken = accessToken,
                 RefreshToken = refresTokenPlain,
             };
@@ -88,10 +104,15 @@ namespace StoryNest.Application.Services
                 FullName = request.FullName,
                 PasswordHash = PasswordHelper.HashPassword(request.Password),
                 AvatarUrl = GetRandomAvatar()
-            };
+            };            
 
             await _userRepository.AddAsync(user);
             await _unitOfWork.SaveAsync();
+
+            await _userMediaService.AddUserMedia(user.Id, user.AvatarUrl!, MediaType.Image, UserMediaStatus.Confirmed);
+            await _aiCreditService.AddCreditsAsync(user.Id, 10);
+
+            await _aiTransactionService.AddTransactionAsync(user.Id, int.Parse(user.Id.ToString()), 10, "init credits", AITransactionType.Earned);
 
             await _welcomeEmailSender.SendAsync(
                 user.Email,
@@ -160,14 +181,14 @@ namespace StoryNest.Application.Services
             };
         }
 
-        public async Task<bool> LogoutAsync(string refreshTokenPlain)
+        public async Task<bool> LogoutAsync(string refreshTokenPlain, string type)
         {
             var hash = HashHelper.SHA256(refreshTokenPlain);
             var stored = await _refreshTokenRepository.GetByHashAsync(hash);
             if (stored == null || !stored.IsActive) return false;
 
             stored.RevokedAt = DateTime.UtcNow;
-            stored.RevokedBy = "user";
+            stored.RevokedBy = type;
             stored.RevokeReason = "logout";
             await _refreshTokenRepository.UpdateAsync(stored);
             await _unitOfWork.SaveAsync();
@@ -209,11 +230,12 @@ namespace StoryNest.Application.Services
             return true;
         }
 
-        private string GetRandomAvatar()
+        private string GetRandomAvatar()    
         {
             var rnd = new Random();
             int index = rnd.Next(DefaultAvatars.Avatars.Count);
-            return DefaultAvatars.Avatars[index];
+            string result = DefaultAvatars.Avatars[index];
+            return result;
         }
     }
 }

@@ -56,8 +56,7 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .IsRequired();
 
             builder.Property(p => p.PaidAt)
-                   .HasColumnName("paid_at")
-                   .HasDefaultValueSql("CURRENT_TIMESTAMP");
+                   .HasColumnName("paid_at");
 
             builder.Property(p => p.CreatedAt)
                    .HasColumnName("created_at")
