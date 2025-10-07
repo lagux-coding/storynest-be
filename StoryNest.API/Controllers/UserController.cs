@@ -36,12 +36,5 @@ namespace StoryNest.API.Controllers
             var result = await _userService.GetMe(userId.Value);
             return Ok(ApiResponse<object>.Success(result, "Get profile successfully"));
         }
-
-        [HttpPost("send")]
-        public async Task<IActionResult> SendTestNotification([FromQuery] long userId)
-        {
-            await _notificationService.SendNotificationAsync(userId, null, "This is a test notification", NotificationType.System);
-            return Ok(new { message = "Notification sent!", userId });
-        }
     }
 }
