@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -16,15 +17,17 @@ namespace StoryNest.Application.Services
     {
         private readonly ILikeRepository _likeRepository;
         private readonly IStoryService _storyService;
+        private readonly INotificationService _notificationService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public LikeService(ILikeRepository likeRepository, IMapper mapper, IUnitOfWork unitOfWork, IStoryService storyService)
+        public LikeService(ILikeRepository likeRepository, IMapper mapper, IUnitOfWork unitOfWork, IStoryService storyService, INotificationService notificationService)
         {
             _likeRepository = likeRepository;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _storyService = storyService;
+            _notificationService = notificationService;
         }
 
         public async Task<List<UserBasicResponse>> GetAllUserLikesAsync(int storyId)
@@ -92,7 +95,19 @@ namespace StoryNest.Application.Services
                 }
                 story.LikeCount = likeCount;
                
-                return await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
+                var result = await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
+
+                var content = $"{story.User.Username} vừa yêu thích câu chuyện <strong>{story.Title}</strong> của bạn.";
+                await _notificationService.SendNotificationAsync(
+                    story.UserId,
+                    userId,
+                    content,
+                    NotificationType.StoryLiked,
+                    storyId,
+                    "story"
+                );
+
+                return result;
             }
             catch (Exception ex)
             {

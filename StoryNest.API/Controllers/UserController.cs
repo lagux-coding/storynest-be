@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Enums;
 
 namespace StoryNest.API.Controllers
 {
@@ -12,11 +14,13 @@ namespace StoryNest.API.Controllers
     {
         private readonly IUserService _userService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly INotificationService _notificationService;
 
-        public UserController(IUserService userService, ICurrentUserService currentUserService)
+        public UserController(IUserService userService, ICurrentUserService currentUserService, INotificationService notificationService)
         {
             _userService = userService;
             _currentUserService = currentUserService;
+            _notificationService = notificationService;
         }
 
         [Authorize]
@@ -31,6 +35,13 @@ namespace StoryNest.API.Controllers
 
             var result = await _userService.GetMe(userId.Value);
             return Ok(ApiResponse<object>.Success(result, "Get profile successfully"));
+        }
+
+        [HttpPost("send")]
+        public async Task<IActionResult> SendTestNotification([FromQuery] long userId)
+        {
+            await _notificationService.SendNotificationAsync(userId, null, "This is a test notification", NotificationType.System);
+            return Ok(new { message = "Notification sent!", userId });
         }
     }
 }

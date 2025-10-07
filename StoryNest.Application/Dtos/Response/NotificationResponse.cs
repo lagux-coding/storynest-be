@@ -5,26 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StoryNest.Domain.Entities
+namespace StoryNest.Application.Dtos.Response
 {
-    public class Notification
+    public class NotificationResponse
     {
-        public int Id { get; set; }
-
+        public long Id { get; set; }
         public long UserId { get; set; }
-        public User User { get; set; } = default!;
-
+        public UserBasicResponse User { get; set; } = new UserBasicResponse();
         public long? ActorId { get; set; }
-        public User? Actor { get; set; } = default!;
-
+        public UserBasicResponse? Actor { get; set; } = new UserBasicResponse();
         public int? ReferenceId { get; set; }
         public string? ReferenceType { get; set; }
-
         public string Content { get; set; } = string.Empty;
-        public NotificationType Type { get; set; } = NotificationType.System;
-
+        public NotificationType Type { get; set; }
         public bool IsRead { get; set; } = false;
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-        public DateTime? ReadAt { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

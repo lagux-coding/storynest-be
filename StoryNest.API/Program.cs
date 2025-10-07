@@ -12,6 +12,8 @@ using OpenAI.Images;
 using Quartz;
 using Resend;
 using StackExchange.Redis;
+using StoryNest.API.Hubs;
+using StoryNest.API.Services;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Validator;
 using StoryNest.Application.Features.Users;
@@ -44,7 +46,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy
-            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn")
+            .WithOrigins("https://localhost:3000", "http://localhost:3000", "https://storynest-fe.kusl.io.vn", "https://dev.storynest.io.vn", "https://storynest.io.vn", "http://127.0.0.1:5000")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -131,6 +133,22 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) &&
+            path.StartsWithSegments("/hubs/notify"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
@@ -193,6 +211,7 @@ builder.Services.AddScoped<IAIUsageLogRepository, AIUsageLogRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -214,6 +233,8 @@ builder.Services.AddScoped<IPlanService, PlanService>();
 builder.Services.AddScoped<ISubscriptionService, SubscriptionService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
+builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -226,7 +247,7 @@ builder.Services.AddScoped<InvoiceEmailSender>();
 builder.Services.AddScoped<IRedisService, RedisService>();
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddScoped<IUploadService, UploadService>();
-builder.Services.AddScoped<IOpenAIService, OpenAIService>();
+builder.Services.AddScoped<IOpenAIService, OpenAIService>();    
 builder.Services.AddAutoMapper(typeof(StoryProfile));
 builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddSingleton<ILogoProvider, FileLogoProvider>();
@@ -262,6 +283,8 @@ builder.Services.AddSingleton<AudioClient>(serviceProvider =>
     return new AudioClient(model, apiKey);
 });
 
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 app.UseForwardedHeaders();
 
@@ -279,5 +302,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notify");
 
 app.Run();
