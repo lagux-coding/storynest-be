@@ -17,15 +17,17 @@ namespace StoryNest.Application.Services
     {
         private readonly ICommentRepository _commentRepository;
         private readonly IStoryService _storyService;
+        private readonly INotificationService _notificationService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public CommentService(ICommentRepository commentRepository, IUnitOfWork unitOfWork, IMapper mapper, IStoryService storyService)
+        public CommentService(ICommentRepository commentRepository, IUnitOfWork unitOfWork, IMapper mapper, IStoryService storyService, INotificationService notificationService)
         {
             _commentRepository = commentRepository;
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _storyService = storyService;
+            _notificationService = notificationService;
         }
 
         public async Task<CommentResponse> AddCommentAsync(CreateCommentRequest request, int storyId, long userId)
@@ -65,6 +67,27 @@ namespace StoryNest.Application.Services
                 var response = _mapper.Map<CommentResponse>(newComment);
 
                 response.HasReplies = false;
+
+                if (story.UserId != userId)
+                {
+                    await _notificationService.SendNotificationAsync(story.UserId, userId, $"{comment.User.Username} vừa để lại vài dòng cảm xúc trong câu chuyện <strong>{story.Title}</strong> của bạn.", NotificationType.StoryCommented, story.Id, "Story");
+                }
+
+                if (newComment.ParentCommentId.HasValue && newComment.ParentCommentId.Value > 0)
+                {
+                    var parent = await _commentRepository.GetByIdAsync(newComment.ParentCommentId.Value);
+                    if (parent != null && parent.UserId != userId)
+                    {
+                        await _notificationService.SendNotificationAsync(
+                            parent.UserId,
+                            userId,
+                            $"{newComment.User.Username} đã phản hồi cảm xúc của bạn trong câu chuyện <strong>{story.Title}</strong>.",
+                            NotificationType.StoryCommented,
+                            parent.Id,
+                            "comment"
+                        );
+                    }
+                }
 
                 return response;
             }

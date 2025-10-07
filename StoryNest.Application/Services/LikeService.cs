@@ -18,16 +18,18 @@ namespace StoryNest.Application.Services
         private readonly ILikeRepository _likeRepository;
         private readonly IStoryService _storyService;
         private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public LikeService(ILikeRepository likeRepository, IMapper mapper, IUnitOfWork unitOfWork, IStoryService storyService, INotificationService notificationService)
+        public LikeService(ILikeRepository likeRepository, IMapper mapper, IUnitOfWork unitOfWork, IStoryService storyService, INotificationService notificationService, IUserService userService)
         {
             _likeRepository = likeRepository;
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _storyService = storyService;
             _notificationService = notificationService;
+            _userService = userService;
         }
 
         public async Task<List<UserBasicResponse>> GetAllUserLikesAsync(int storyId)
@@ -97,21 +99,26 @@ namespace StoryNest.Application.Services
                
                 var result = await _storyService.UpdateWithEntityAsync(story); // Include unit of work save
 
-                var content = $"{story.User.Username} vừa yêu thích câu chuyện <strong>{story.Title}</strong> của bạn.";
-                await _notificationService.SendNotificationAsync(
-                    story.UserId,
-                    userId,
-                    content,
-                    NotificationType.StoryLiked,
-                    storyId,
-                    "story"
-                );
+                if (story.UserId != userId)
+                {
+                    var actor = await _userService.GetUserByIdAsync(userId);
+
+                    var content = $"{actor.Username} vừa yêu thích câu chuyện <strong>{story.Title}</strong> của bạn.";
+                    await _notificationService.SendNotificationAsync(
+                        story.UserId,
+                        userId,
+                        content,
+                        NotificationType.StoryLiked,
+                        storyId,
+                        "story"
+                    );
+                }
 
                 return result;
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.InnerException?.Message);
+                throw;
             }
         }
 
