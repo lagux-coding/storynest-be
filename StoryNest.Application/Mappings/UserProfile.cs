@@ -33,6 +33,7 @@ namespace StoryNest.Application.Mappings
                     Username = src.Actor.Username,
                     AvatarUrl = string.IsNullOrEmpty(src.Actor.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.Actor.AvatarUrl}"
                 } : null));
+            CreateMap<UserMedia, UserMediaResponse>();
 
 
         }

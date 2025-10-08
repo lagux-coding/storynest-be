@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -37,6 +38,18 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return await _context.UserMedias
                     .Where(m => m.UserId == userId && urls.Contains(m.MediaUrl))
                     .ToListAsync();
+        }
+
+        public async Task<List<UserMedia>> GetUserMediasAsync(long userId, MediaType? type = null)
+        {
+            IQueryable<UserMedia> query = _context.UserMedias.Where(u => u.UserId == userId && (u.Status == UserMediaStatus.Orphaned || u.Status == UserMediaStatus.Confirmed));
+
+            if (type.HasValue)
+            {
+                query = query.Where(u => u.MediaType == type.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task UpdateAsync(UserMedia media)

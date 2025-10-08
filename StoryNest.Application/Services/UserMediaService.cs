@@ -1,4 +1,6 @@
-﻿using StoryNest.Application.Interfaces;
+﻿using AutoMapper;
+using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
@@ -9,11 +11,13 @@ namespace StoryNest.Application.Services
     {
         private readonly IUserMediaRepository _userMediaRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UserMediaService(IUserMediaRepository userMediaRepository, IUnitOfWork unitOfWork)
+        public UserMediaService(IUserMediaRepository userMediaRepository, IUnitOfWork unitOfWork, IMapper mapper)
         {
             _userMediaRepository = userMediaRepository;
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         public async Task<int> AddUserMedia(long userId, string key, MediaType type, UserMediaStatus status)
@@ -38,6 +42,20 @@ namespace StoryNest.Application.Services
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<List<UserMediaResponse>> GetAllMediaByUser(long userId, MediaType? type = null)
+        {
+            try
+            {
+                var medias = await _userMediaRepository.GetUserMediasAsync(userId, type);
+                var result = _mapper.Map<List<UserMediaResponse>>(medias);
+                return result ?? new List<UserMediaResponse>();
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
 

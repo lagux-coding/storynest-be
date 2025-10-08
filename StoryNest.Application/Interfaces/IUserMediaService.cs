@@ -1,4 +1,5 @@
 ﻿
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 
@@ -9,5 +10,6 @@ namespace StoryNest.Application.Interfaces
         public Task<int> AddUserMedia(long userId, string key, MediaType type, UserMediaStatus status);
         public Task<int> UpdateUserMedia(UserMedia media);
         public Task<List<UserMedia>> GetByUserAndUrls(long userId, List<string> urls);
+        public Task<List<UserMediaResponse>> GetAllMediaByUser(long userId, MediaType? type = null);
     }
 }
