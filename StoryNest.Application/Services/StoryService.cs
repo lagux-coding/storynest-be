@@ -315,7 +315,7 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                var stories = await _storyRepository.GetRecommendedStoriesAsync(userId, limit, cursor);
+                var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
 
                 var hasMore = stories.Count > limit;
                 var items = stories.Take(limit).Select(s =>
