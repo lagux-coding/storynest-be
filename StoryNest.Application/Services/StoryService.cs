@@ -521,12 +521,17 @@ namespace StoryNest.Application.Services
 
                 if (request.MediaUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
                 {
-                    await SyncUserMedia(userId, story.Id, request.MediaUrls, MediaType.Image);
+                    // Remove all existing media links
+                    var check = await _mediaService.DeleteMediaByStoryIdAsync(story.Id);
+                    if (check > 0)                       
+                        await SyncUserMedia(userId, story.Id, request.MediaUrls, MediaType.Image);
                 }
 
                 if (request.AudioUrls?.Any(u => !string.IsNullOrWhiteSpace(u)) == true)
                 {
-                    await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
+                    var check = await _mediaService.DeleteMediaByStoryIdAsync(story.Id);
+                    if (check > 0)
+                        await SyncUserMedia(userId, story.Id, request.AudioUrls, MediaType.Audio);
                 }
 
                 return result;
