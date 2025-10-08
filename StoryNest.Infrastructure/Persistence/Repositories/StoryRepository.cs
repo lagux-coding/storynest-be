@@ -293,36 +293,34 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<List<Story>> GetRecommendedStoriesAsync(long? userId, int limit, DateTime? cursor)
         {
-            // 🧩 Base query: chỉ story public, published, active user
-            var baseQuery = _context.Stories
+            // ===== Base pool: public, published, owner active =====
+            IQueryable<Story> baseQuery = _context.Stories
                 .AsNoTracking()
-                .Where(s =>
-                    s.PrivacyStatus == PrivacyStatus.Public &&
-                    s.StoryStatus == StoryStatus.Published &&
-                    s.User.IsActive == true);
+                .Where(s => s.PrivacyStatus == PrivacyStatus.Public &&
+                            s.StoryStatus == StoryStatus.Published &&
+                            s.User.IsActive);
 
-            // Pagination
-            if (cursor.HasValue)
-                baseQuery = baseQuery.Where(s => s.CreatedAt < cursor.Value);
-
-            // 🟣 1️⃣ Chưa login => fallback mặc định
+            // ===== Not logged-in: hot + new feed with cursor =====
             if (userId == null)
             {
-                return await baseQuery
-                    .OrderByDescending(s => s.LikeCount)
-                    .ThenByDescending(s => s.CreatedAt)
-                    .Include(s => s.User)
-                    .Include(s => s.Media)
-                    .Include(s => s.StoryTags).ThenInclude(st => st.Tag)
-                    .Include(s => s.Likes)
-                    .Include(s => s.Comments)
-                    .Take(limit + 1)
-                    .ToListAsync();
+                IQueryable<Story> feed = baseQuery;
+                if (cursor.HasValue)
+                    feed = feed.Where(s => s.CreatedAt < cursor.Value);
+
+                feed = feed.OrderByDescending(s => s.LikeCount)
+                           .ThenByDescending(s => s.CreatedAt);
+
+                var raw = await feed.Take(limit + 1).Select(s => s.Id).ToListAsync();
+                return await LoadFullStoriesPreservingOrder(raw);
             }
 
-            // 🟣 2️⃣ Lấy top tag user từng tương tác (like)
+            // ===== User taste: top tags from recent likes =====
+            // (có thể thêm time window 30–90 ngày nếu muốn "gu gần đây")
             var preferredTagIds = await _context.Likes
+                .AsNoTracking()
                 .Where(l => l.UserId == userId && l.RevokedAt == null)
+                .OrderByDescending(l => l.CreatedAt)           // ưu tiên like mới hơn
+                .Take(500)                                     // chặn nổ vì user quá “cày”
                 .SelectMany(l => l.Story.StoryTags.Select(st => st.TagId))
                 .GroupBy(id => id)
                 .OrderByDescending(g => g.Count())
@@ -330,79 +328,86 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .Select(g => g.Key)
                 .ToListAsync();
 
-            // Nếu user chưa có tương tác → fallback
-            if (!preferredTagIds.Any())
+            // ===== Personalized candidates (tag match) =====
+            var personalizedCandidates = baseQuery
+                .Where(s => s.UserId != userId &&
+                            (preferredTagIds.Count == 0 ||
+                             s.StoryTags.Any(st => preferredTagIds.Contains(st.TagId))));
+
+            // Áp dụng cursor CHỈ KHI có nó (để không out-of-order)
+            if (cursor.HasValue)
+                personalizedCandidates = personalizedCandidates.Where(s => s.CreatedAt < cursor.Value);
+
+            // Lấy rộng hơn limit cho re-ranking (3x để đủ đa dạng)
+            var personalizedRaw = await personalizedCandidates
+                .Select(s => new
+                {
+                    s.Id,
+                    s.CreatedAt,
+                    s.LikeCount,
+                    MatchCount = s.StoryTags.Count(st => preferredTagIds.Contains(st.TagId))
+                })
+                .Take(Math.Max(limit * 3, limit + 5))
+                .ToListAsync();
+
+            // ===== Re-rank in-memory (recency không cần hàm DB) =====
+            var rankedIds = personalizedRaw
+                .Select(x =>
+                {
+                    var daysOld = (DateTime.UtcNow - x.CreatedAt).TotalDays;
+                    var recency = 1.0 / (1.0 + Math.Max(0.0, daysOld));
+                    var score = (x.MatchCount * 0.6) + (x.LikeCount * 0.3) + (recency * 0.1);
+                    return new { x.Id, Score = score, x.CreatedAt };
+                })
+                .OrderByDescending(z => z.Score)
+                .ThenByDescending(z => z.CreatedAt) // ổn định theo thời gian
+                .Select(z => z.Id)
+                .ToList();
+
+            // ===== Fill fallback (hot + new) nếu thiếu =====
+            var selectedIds = rankedIds.Take(limit + 1).ToList();
+            if (selectedIds.Count < limit + 1)
             {
-                return await baseQuery
+                IQueryable<Story> fallback = baseQuery
+                    .Where(s => s.UserId != userId && !selectedIds.Contains(s.Id));
+
+                if (cursor.HasValue)
+                    fallback = fallback.Where(s => s.CreatedAt < cursor.Value);
+
+                fallback = fallback
                     .OrderByDescending(s => s.LikeCount)
-                    .ThenByDescending(s => s.CreatedAt)
+                    .ThenByDescending(s => s.CreatedAt);
+
+                var need = (limit + 1) - selectedIds.Count;
+                var fallbackIds = await fallback.Take(need * 2).Select(s => s.Id).ToListAsync(); // lấy dư 1 chút
+                selectedIds.AddRange(fallbackIds);
+                selectedIds = selectedIds.Distinct().Take(limit + 1).ToList();
+            }
+
+            // ===== Load full entities + giữ thứ tự =====
+            return await LoadFullStoriesPreservingOrder(selectedIds);
+
+            // ===== Local helper: load full + preserve order =====
+            async Task<List<Story>> LoadFullStoriesPreservingOrder(List<int> ids)
+            {
+                if (ids == null || ids.Count == 0) return new List<Story>();
+                var mapIndex = ids.Select((id, idx) => new { id, idx })
+                                  .ToDictionary(x => x.id, x => x.idx);
+
+                var full = await _context.Stories
+                    .AsNoTracking()
+                    .Where(s => ids.Contains(s.Id))
                     .Include(s => s.User)
                     .Include(s => s.Media)
                     .Include(s => s.StoryTags).ThenInclude(st => st.Tag)
                     .Include(s => s.Likes)
                     .Include(s => s.Comments)
-                    .Take(limit + 1)
-                    .ToListAsync();
-            }
-
-            // 🟣 3️⃣ Recommend story trùng tag, tính score sau khi load
-            var recommendedRaw = await baseQuery
-                .Where(s => s.UserId != userId &&
-                            s.StoryTags.Any(st => preferredTagIds.Contains(st.TagId)))
-                .Select(s => new
-                {
-                    Story = s,
-                    MatchCount = s.StoryTags.Count(st => preferredTagIds.Contains(st.TagId))
-                })
-                .Take(limit * 3) // lấy rộng hơn limit để sau lọc rank
-                .ToListAsync();
-
-            // 🧠 4️⃣ Rank story bằng score: tag match, likeCount, recency
-            var ranked = recommendedRaw
-                .Select(x =>
-                {
-                    var daysOld = (DateTime.UtcNow - x.Story.CreatedAt).TotalDays;
-                    double recency = 1 / (1 + daysOld); // càng mới càng cao
-                    double score = x.MatchCount * 0.6 + x.Story.LikeCount * 0.3 + recency * 0.1;
-                    return new { x.Story, Score = score };
-                })
-                .OrderByDescending(x => x.Score)
-                .Take(limit + 1)
-                .Select(x => x.Story)
-                .ToList();
-
-            // 🟣 5️⃣ Nếu recommend chưa đủ → fallback thêm story hot để fill
-            if (ranked.Count < limit)
-            {
-                var remaining = limit - ranked.Count;
-
-                var fallback = await baseQuery
-                    .Where(s => s.UserId != userId &&
-                                !ranked.Select(r => r.Id).Contains(s.Id))
-                    .OrderByDescending(s => s.LikeCount)
-                    .ThenByDescending(s => s.CreatedAt)
-                    .Take(remaining)
                     .ToListAsync();
 
-                ranked.AddRange(fallback);
+                return full.OrderBy(s => mapIndex[s.Id]).ToList();
             }
-
-            // 🟣 6️⃣ Load full info sau khi đã chọn story IDs (đỡ JOIN nặng sớm)
-            var storyIds = ranked.Select(s => s.Id).ToList();
-
-            var fullStories = await _context.Stories
-                .AsNoTracking()
-                .Where(s => storyIds.Contains(s.Id))
-                .Include(s => s.User)
-                .Include(s => s.Media)
-                .Include(s => s.StoryTags).ThenInclude(st => st.Tag)
-                .Include(s => s.Likes)
-                .Include(s => s.Comments)
-                .ToListAsync();
-
-            // Giữ đúng thứ tự theo ranking
-            return fullStories.OrderBy(s => storyIds.IndexOf(s.Id)).ToList();
         }
+
 
     }
 }
