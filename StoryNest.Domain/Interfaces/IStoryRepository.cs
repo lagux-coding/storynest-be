@@ -14,7 +14,7 @@ namespace StoryNest.Domain.Interfaces
         public Task<List<Story>> GetStoriesPreviewAsync(int limit, DateTime? cursor);
         public Task<Story> GetStoryByIdOrSlugAsync(int? storyId, string? slug, bool asNoTracking = false);
         public Task<Story> GetStoryByIdOrSlugOwnerAsync(int? storyId, string? slug, bool asNoTracking = false);
-        public Task<Story> GetStoryByIdOrSlugUpdateAsync(int? storyId, string? slug, bool asNoTracking = false)
+        public Task<Story> GetStoryByIdOrSlugUpdateAsync(int? storyId, string? slug, bool asNoTracking = false);
         public void RemoveStory(Story story); 
         public void UpdateStory(Story story);
         public Task<List<Story>> SearchAsync(string keyword, int limit = 20, int? lastId = null);
