@@ -432,7 +432,7 @@ namespace StoryNest.Application.Services
             try
             {
                 // Check if story exists
-                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, null);
+                var story = await _storyRepository.GetStoryByIdOrSlugUpdateAsync(storyId, null);
                 if (story == null)
                     throw new Exception("Story not found");
 
