@@ -130,7 +130,7 @@ namespace StoryNest.Shared.Common.Utils
             {
                 string connector = Connectors[rnd.Next(Connectors.Length)];
                 string obj = Objects[rnd.Next(Objects.Length)];
-                string adj = Adjectives[rnd.Next(Adjectives.Length)];
+                string adj = AdjectivesCom[rnd.Next(AdjectivesCom.Length)];
                 name += $" {connector} {obj}{(string.IsNullOrEmpty(adj) ? "" : " " + adj)}";
             }
 

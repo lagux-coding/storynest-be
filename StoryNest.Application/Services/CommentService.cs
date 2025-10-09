@@ -42,7 +42,8 @@ namespace StoryNest.Application.Services
                     ParentCommentId = request.ParentCommentId.Value > 0
                                             ? request.ParentCommentId
                                             : null,
-                    CommentStatus = CommentStatus.Active
+                    CommentStatus = CommentStatus.Active,
+                    IsAnonymous = request.IsAnonymous
                 };
 
                 if (request.ParentCommentId.Value > 0)
@@ -70,7 +71,7 @@ namespace StoryNest.Application.Services
 
                 if (story.UserId != userId)
                 {
-                    await _notificationService.SendNotificationAsync(story.UserId, userId, $"{comment.User.Username} vừa để lại vài dòng cảm xúc trong câu chuyện <strong>{story.Title}</strong> của bạn.", NotificationType.StoryCommented, story.Id, "Story");
+                    await _notificationService.SendNotificationAsync(story.UserId, userId, $"{response.User.Username} vừa để lại vài dòng cảm xúc trong câu chuyện <strong>{story.Title}</strong> của bạn.", NotificationType.StoryCommented, story.Id, "Story");
                 }
 
                 if (newComment.ParentCommentId.HasValue && newComment.ParentCommentId.Value > 0)
@@ -81,7 +82,7 @@ namespace StoryNest.Application.Services
                         await _notificationService.SendNotificationAsync(
                             parent.UserId,
                             userId,
-                            $"{newComment.User.Username} đã phản hồi cảm xúc của bạn trong câu chuyện <strong>{story.Title}</strong>.",
+                            $"{response.User.Username} đã phản hồi cảm xúc của bạn trong câu chuyện <strong>{story.Title}</strong>.",
                             NotificationType.StoryCommented,
                             parent.Id,
                             "comment"
