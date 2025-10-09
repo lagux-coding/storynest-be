@@ -34,6 +34,47 @@ namespace StoryNest.Shared.Common.Utils
             "Gấu nâu", "Chồn", "Nhím", "Cáo lửa", "Khủng long" 
         };
 
+        private static readonly string[] Prefixes =
+        {
+            "Người", "Kẻ", "Ai đó", "Bóng", "Cơn gió", "Giấc mộng",
+            "Dòng chữ", "Ánh trăng", "Mảnh hồn", "Tiếng nói", "Cú đêm"
+        };
+
+        private static readonly string[] Modifiers =
+        {
+            "", "đang", "từng", "vẫn", "chợt", "khẽ", "đã", "vô tình", "nhẹ nhàng", "một mình"
+        };
+
+        private static readonly string[] Actions =
+        {
+            "viết", "kể", "mơ", "lang thang", "giấu mình", "lặng im",
+            "đợi", "cười", "nhớ", "trôi", "tìm lại", "ngủ quên", "nghe", "gọi thầm", "mỉm cười"
+        };
+
+        private static readonly string[] Connectors =
+        {
+            "trong", "giữa", "bên", "trên", "dưới", "nơi", "về", "cùng", "phía sau", "bên kia"
+        };
+
+        private static readonly string[] Objects =
+        {
+            "mưa", "đêm", "chiều thu", "khung cửa", "ký ức", "trang giấy",
+            "giấc ngủ", "dòng sông", "ánh trăng", "bầu trời", "biển", "khoảng lặng",
+            "mùa cũ", "nỗi nhớ", "tiếng đàn", "kỷ niệm", "bức thư", "tán lá", "con phố",
+            "bình minh", "bóng tối", "hoàng hôn", "ánh nắng", "cơn mộng", "sương mai"
+        };
+
+        private static readonly string[] AdjectivesCom =
+        {
+            "", "xưa", "nhỏ", "xa", "cũ", "lạ", "cuối cùng", "ngắn ngủi", "dài lâu", "nhẹ tênh", "vội vàng"
+        };
+
+        private static readonly string[] Suffixes =
+        {
+            "– còn dang dở", "– chưa kể hết", "– trong tổ",
+            "– của ngày xưa", "– vừa tỉnh giấc", "– chưa đặt tên", "– như cơn mơ"
+        };
+
         public static string GenerateAnonymousName(int seed)
         {
             var rnd = new Random(seed);
@@ -73,6 +114,33 @@ namespace StoryNest.Shared.Common.Utils
             var suffix = new Random().Next(100000, 999999);
 
             return $"{baseName}{suffix}";
+        }
+
+        public static string GeneratePoeticAnonymousName(int userId)
+        {
+            var rnd = new Random(userId);
+
+            string prefix = Prefixes[rnd.Next(Prefixes.Length)];
+            string modifier = Modifiers[rnd.Next(Modifiers.Length)];
+            string action = Actions[rnd.Next(Actions.Length)];
+
+            string name = $"{prefix} {(string.IsNullOrEmpty(modifier) ? "" : modifier + " ")}{action}".Trim();
+
+            if (rnd.NextDouble() > 0.3)
+            {
+                string connector = Connectors[rnd.Next(Connectors.Length)];
+                string obj = Objects[rnd.Next(Objects.Length)];
+                string adj = Adjectives[rnd.Next(Adjectives.Length)];
+                name += $" {connector} {obj}{(string.IsNullOrEmpty(adj) ? "" : " " + adj)}";
+            }
+
+            if (rnd.NextDouble() > 0.7)
+                name += $" {Suffixes[rnd.Next(Suffixes.Length)]}";
+
+            int salt = Math.Abs(userId.GetHashCode()) % 1000;
+            name += $" #{salt}";
+
+            return name;
         }
     }
 }
