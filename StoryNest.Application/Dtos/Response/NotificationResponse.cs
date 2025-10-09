@@ -12,7 +12,7 @@ namespace StoryNest.Application.Dtos.Response
         public long Id { get; set; }
         public long UserId { get; set; }
         public UserBasicResponse User { get; set; } = new UserBasicResponse();
-        public long? ActorId { get; set; }
+        //public long? ActorId { get; set; }
         public UserBasicResponse? Actor { get; set; } = new UserBasicResponse();
         public int? ReferenceId { get; set; }
         public string? ReferenceType { get; set; }

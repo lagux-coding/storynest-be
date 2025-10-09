@@ -28,17 +28,11 @@ namespace StoryNest.Application.Mappings
                     Username = src.User.Username,
                     AvatarUrl = string.IsNullOrEmpty(src.User.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.User.AvatarUrl}"
                 } : null))
-                .ForMember(dest => dest.Actor, opt => opt.MapFrom(src => src.Actor != null ? new UserBasicResponse
-                {
-                    Id = src.Actor.Id,
-                    Username = src.Actor.Username,
-                    AvatarUrl = string.IsNullOrEmpty(src.Actor.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.Actor.AvatarUrl}"
-                } : null))
                 .ForMember(dest => dest.Actor, opt => opt.MapFrom((src, dest, _, context) =>
                 {
                     if (src.IsAnonymous)
                     {
-                        var username = UsernameGenerateHelperHelper.GeneratePoeticAnonymousName((int)src.UserId);
+                        var username = UsernameGenerateHelperHelper.GeneratePoeticAnonymousName((int)src.ActorId);
                         return new UserBasicResponse
                         {
                             Id = 0,
