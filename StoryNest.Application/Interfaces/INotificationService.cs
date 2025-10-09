@@ -10,6 +10,6 @@ namespace StoryNest.Application.Interfaces
 {
     public interface INotificationService
     {
-        Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null);
+        Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false);
     }
 }

@@ -30,7 +30,7 @@ namespace StoryNest.Application.Services
             _userService = userService;
         }
 
-        public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null)
+        public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)
         {
             try
             {
@@ -43,7 +43,8 @@ namespace StoryNest.Application.Services
                     Content = content,
                     Type = type,
                     IsRead = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsAnonymous = isAnonymous
                 };
 
                 await _notificationRepository.AddNotificationAsync(noti);

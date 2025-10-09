@@ -2,6 +2,7 @@
 using AutoMapper;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
+using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,10 +33,35 @@ namespace StoryNest.Application.Mappings
                     Id = src.Actor.Id,
                     Username = src.Actor.Username,
                     AvatarUrl = string.IsNullOrEmpty(src.Actor.AvatarUrl) ? null : $"https://cdn.storynest.io.vn/{src.Actor.AvatarUrl}"
-                } : null));
+                } : null))
+                .ForMember(dest => dest.Actor, opt => opt.MapFrom((src, dest, _, context) =>
+                {
+                    if (src.IsAnonymous)
+                    {
+                        var username = UsernameGenerateHelperHelper.GeneratePoeticAnonymousName((int)src.UserId);
+                        return new UserBasicResponse
+                        {
+                            Id = 0,
+                            Username = username,
+                            AvatarUrl = "https://cdn.storynest.io.vn/avatars/anonymous/avatar1.webp"
+                        };
+                    }
+
+                    if (src.Actor != null)
+                    {
+                        return new UserBasicResponse
+                        {
+                            Id = src.Actor.Id,
+                            Username = src.Actor.Username,
+                            AvatarUrl = string.IsNullOrEmpty(src.Actor.AvatarUrl)
+                                ? null
+                                : $"https://cdn.storynest.io.vn/{src.Actor.AvatarUrl}"
+                        };
+                    }
+
+                    return null;
+                }));
             CreateMap<UserMedia, UserMediaResponse>();
-
-
         }
     }
 }
