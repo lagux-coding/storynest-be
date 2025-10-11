@@ -186,6 +186,8 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                         CreatedAt = DateTime.UtcNow
                     };
                     await _subscriptionService.AddSubscriptionAsync(sub.UserId, sub.PlanId, startDate, endDate, sub.Status);
+
+                    sub = await _subscriptionService.GetPendingSubByUser(userId);
                 }
 
                 // Create payment record
