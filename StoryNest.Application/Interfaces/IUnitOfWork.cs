@@ -8,10 +8,16 @@ using System.Threading.Tasks;
 
 namespace StoryNest.Application.Interfaces
 {
+    public interface ITransaction : IAsyncDisposable
+    {
+        Task CommitAsync(CancellationToken cancellationToken = default);
+        Task RollbackAsync(CancellationToken cancellationToken = default);
+    }
+
     public interface IUnitOfWork
     {
         IUserRepository UserRepository { get; }
-
+        Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
         Task<int> SaveAsync();
     }
 }
