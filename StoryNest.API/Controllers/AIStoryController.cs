@@ -37,24 +37,38 @@ namespace StoryNest.API.Controllers
         [HttpPost("generate-image")]
         public async Task<ActionResult<ApiResponse<object>>> GenerateImage([FromBody] string content)
         {
-            var userId = _currentUserService.UserId;
-            if (userId == null)
-                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                    return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
 
-            var result = await _openAIService.GenerateImageAsync(content, userId.Value);
-            return Ok(ApiResponse<object>.Success(result, "Image generated"));
+                var result = await _openAIService.GenerateImageAsync(content, userId.Value);
+                return Ok(ApiResponse<object>.Success(result, "Image generated"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Image generation failed: {ex.Message}"));
+            }
         }
 
         [HttpPost("generate-audio")]
         public async Task<ActionResult<ApiResponse<object>>> GenerateAudio([FromBody] string content)
         {
-            var userId = _currentUserService.UserId;
-            if (userId == null)
-                return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                    return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
 
-            var result = await _openAIService.GenerateAudioAsync(content, userId.Value);
+                var result = await _openAIService.GenerateAudioAsync(content, userId.Value);
 
-            return Ok(ApiResponse<object>.Success(result, "Audio generated"));
+                return Ok(ApiResponse<object>.Success(result, "Audio generated"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Audio generation failed: {ex.Message}"));
+            }
         }
 
     //    [HttpPost("complete")]
