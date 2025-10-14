@@ -37,14 +37,17 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null);
         }
 
-        public async Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int cursor)
+        public async Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int? cursor)
         {
-            return await _context.Comments              
-                .Where(c => c.StoryId == storyId  
-                        && c.ParentCommentId == parentId)
+            var query = _context.Comments
+                .Where(c => c.StoryId == storyId && c.ParentCommentId == parentId);
+
+            if (cursor.HasValue && cursor.Value > 0)
+                query = query.Where(c => c.Id < cursor.Value);
+
+            return await query
                 .OrderByDescending(c => c.CreatedAt)
-                .Skip(cursor)
-                .Take(limit)
+                .Take(limit + 1) // +1 để check hasMore
                 .Include(c => c.User)
                 .ToListAsync();
         }
