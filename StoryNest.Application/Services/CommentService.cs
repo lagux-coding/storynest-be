@@ -95,7 +95,7 @@ namespace StoryNest.Application.Services
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
