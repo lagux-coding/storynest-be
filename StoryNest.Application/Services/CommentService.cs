@@ -39,16 +39,16 @@ namespace StoryNest.Application.Services
                     StoryId = storyId,
                     UserId = userId,
                     Content = request.Content,
-                    ParentCommentId = request.ParentCommentId.Value > 0
+                    ParentCommentId = request.ParentCommentId > 0
                                             ? request.ParentCommentId
                                             : null,
                     CommentStatus = CommentStatus.Active,
                     IsAnonymous = request.IsAnonymous
                 };
 
-                if (request.ParentCommentId.Value > 0)
+                if (request.ParentCommentId > 0)
                 {
-                    var parent = await _commentRepository.GetByIdAsync(request.ParentCommentId.Value);
+                    var parent = await _commentRepository.GetByIdAsync(request.ParentCommentId);
                     if (parent == null || parent.StoryId != storyId)
                         throw new ArgumentException("Invalid parent comment id");
                 }                             

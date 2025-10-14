@@ -10,6 +10,6 @@ namespace StoryNest.Application.Dtos.Request
     {
         public string Content { get; set; } = null!;
         public bool IsAnonymous { get; set; } = false;
-        public int? ParentCommentId { get; set; }
+        public int ParentCommentId { get; set; } = 0;
     }
 }
