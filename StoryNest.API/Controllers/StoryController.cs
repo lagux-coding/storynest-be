@@ -113,7 +113,13 @@ namespace StoryNest.API.Controllers
         [HttpGet("get-by-id-or-slug")]
         public async Task<ActionResult<ApiResponse<object>>> GetStoryByIdOrSlug(int? id, string? slug)
         {
-            var result = await _storyService.GetStoryByIdOrSlugAsync(id, slug);
+            var userId = _currentUserService.UserId;
+            GetStoryResponse result;
+            if (userId != null)
+                result = await _storyService.GetStoryByIdOrSlugAndStoryViewLogAsync(id, slug, userId.Value);
+            else
+                result = await _storyService.GetStoryByIdOrSlugAsync(id, slug);
+
             if (result == null)
                 return NotFound(ApiResponse<object>.Fail("Story not found"));
             return Ok(ApiResponse<object>.Success(result));

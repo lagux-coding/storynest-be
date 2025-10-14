@@ -23,6 +23,7 @@ namespace StoryNest.Application.Services
         private readonly IUserMediaService _userMediaService;
         private readonly HttpClient _httpClient;
         private readonly IStoryRepository _storyRepository;
+        private readonly IStoryViewService _storyViewService;
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
         private readonly IMediaService _mediaService;
@@ -30,7 +31,7 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service, IStoryViewService storyViewService)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -41,6 +42,7 @@ namespace StoryNest.Application.Services
             _userMediaService = userMediaService;
             _httpClient = httpClient;
             _s3Service = s3Service;
+            _storyViewService = storyViewService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -381,6 +383,27 @@ namespace StoryNest.Application.Services
             {
                 var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, slug);
                 return story == null ? null : _mapper.Map<GetStoryResponse>(story);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<GetStoryResponse?> GetStoryByIdOrSlugAndStoryViewLogAsync(int? storyId, string? slug, long userId)
+        {
+            try
+            {
+                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, slug);
+                if (story == null)
+                    return null;
+                else
+                {
+                    // Log view
+                    await _storyViewService.LogStoryViewAsync(story.Id, userId);
+                    await _unitOfWork.SaveAsync();
+                    return _mapper.Map<GetStoryResponse>(story);
+                }
             }
             catch (Exception ex)
             {
