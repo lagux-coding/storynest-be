@@ -120,19 +120,18 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<List<CommentResponse>> GetCommentsAsync(int story, int? parentId, int limit, int offset)
+        public async Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int story, int? parentId, int limit, int cursor)
         {
             try
             {
-                var comments = await _commentRepository.GetByStoryId(story, parentId, limit, offset);
+                var comments = await _commentRepository.GetByStoryId(story, parentId, limit, cursor);
                 var ids = comments.Select(c => c.Id).ToList();
                 var repliesCount = await _commentRepository.GetRepliesCount(ids);
-
 
                 var response = _mapper.Map<List<CommentResponse>>(comments);
 
                 if (response == null || response.Count == 0)
-                    return new List<CommentResponse>();
+                    return new PaginatedResponse<CommentResponse>();
 
                 foreach (var comment in response)
                 {
@@ -148,11 +147,16 @@ namespace StoryNest.Application.Services
                     }
                 }
 
-                return response;
+                return new PaginatedResponse<CommentResponse>()
+                {
+                    Items = response,
+                    HasMore = response.Count == limit,
+                    NextCursor = (cursor + limit).ToString()
+                };
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
