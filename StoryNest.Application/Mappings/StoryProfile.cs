@@ -29,7 +29,7 @@ namespace StoryNest.Application.Mappings
                         {
                             Id = 0,
                             Username = username,
-                            AvatarUrl = $"https://cdn.storynest.io.vn/avatars/anonymous/avatar1.webp",
+                            AvatarUrl = $"https://cdn.storynest.io.vn/avatars/anonymous/avatar3.jpg",
                         };
                     }
                     return context.Mapper.Map<UserBasicResponse>(src.User);
