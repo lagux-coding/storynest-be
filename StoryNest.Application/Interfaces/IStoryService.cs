@@ -15,7 +15,8 @@ namespace StoryNest.Application.Interfaces
         public Task<int> UpdateStoryAsync(CreateStoryRequest request, long userId, int storyId);
         public Task<int> UpdateWithEntityAsync(Story story);
         public Task<int> RemoveStoryAsync(int storyId, long userId);
-        public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null);
+        public Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, long cursor = 0, long? userId = null);
+        public Task<PaginatedResponse<StoryResponse>> GetSmartStoriesAsync(int limit, long cursor = 0, long? userId = null);
         public Task<GetStoryResponse?> GetStoryByIdOrSlugAsync(int? storyId, string? slug);
         public Task<GetStoryResponse?> GetStoryByIdOrSlugAndStoryViewLogAsync(int? storyId, string? slug, long userId);
         public Task<GetStoryResponse?> GetStoryByIdOrSlugOwnerAsync(int? storyId, string? slug, long userId);

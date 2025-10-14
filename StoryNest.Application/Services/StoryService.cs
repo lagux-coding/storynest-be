@@ -27,11 +27,12 @@ namespace StoryNest.Application.Services
         private readonly ITagService _tagService;
         private readonly IStoryTagService _storyTagService;
         private readonly IMediaService _mediaService;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IS3Service _s3Service;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
 
-        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service, IStoryViewService storyViewService)
+        public StoryService(IStoryRepository storyRepository, IUnitOfWork unitOfWork, ITagService tagService, IStoryTagService storyTagService, IMapper mapper, IMediaService mediaService, IUserMediaService userMediaService, HttpClient httpClient, IS3Service s3Service, IStoryViewService storyViewService, ICurrentUserService currentUserService)
         {
             _storyRepository = storyRepository;
             _unitOfWork = unitOfWork;
@@ -43,6 +44,7 @@ namespace StoryNest.Application.Services
             _httpClient = httpClient;
             _s3Service = s3Service;
             _storyViewService = storyViewService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<int> CreateStoryAsync(CreateStoryRequest request, long userId)
@@ -313,56 +315,83 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, DateTime? cursor, long? userId = null)
+        public async Task<PaginatedResponse<StoryResponse>> GetStoriesPreviewAsync(int limit, long cursor = 0, long? userId = null)
         {
             try
             {
                 var stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
 
                 var hasMore = stories.Count > limit;
-                var items = stories.Take(limit).Select(s =>
-                {
-                    var dto = _mapper.Map<StoryResponse>(s);
 
-                    // user chưa login => false
-                    dto.IsLiked = userId != null && s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
+                var items = stories
+                    .Take(limit)
+                    .Select(s =>
+                    {
+                        var dto = _mapper.Map<StoryResponse>(s);
 
-                    return dto;
-                }).ToList();
-                
-                    //var items = stories.Take(limit).Select(s => new StoryResponse
-                    //{
-                    //    Id = s.Id,
-                    //    Title = s.Title,
-                    //    Content = s.Content,
-                    //    CoverImageUrl = s.CoverImageUrl,
-                    //    CreatedAt = s.CreatedAt,
-                    //    LikeCount = s.LikeCount,
-                    //    CommentCount = s.CommentCount,
-                    //    User = new UserBasicResponse
-                    //    {
-                    //        Id = s.User.Id,
-                    //        Username = s.User.Username,
-                    //        AvatarUrl = s.User.AvatarUrl,
-                    //    },
-                    //    Media = _mapper.Map<List<MediaResponse>>(s.Media.ToList()),
-                    //    Tags = _mapper.Map<List<TagResponse>>(s.StoryTags.Select(st => st.Tag).ToList())
-                    //});
+                        // user chưa login => false
+                        dto.IsLiked = userId != null &&
+                                      s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
 
-                var nextCursor = hasMore ? items.Last().CreatedAt.ToString("o") : null;
+                        return dto;
+                    })
+                    .ToList();
+
+                // Cursor giờ dựa theo Story.Id, không còn CreatedAt
+                var nextCursor = hasMore ? items.Last().Id.ToString() : null;
 
                 return new PaginatedResponse<StoryResponse>
                 {
                     Items = items,
                     NextCursor = nextCursor,
-                    HasMore = hasMore,
+                    HasMore = hasMore
                 };
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
+
+
+        public async Task<PaginatedResponse<StoryResponse>> GetSmartStoriesAsync(int limit, long cursor = 0, long? userId = null)
+        {
+            try
+            {
+                List<Story> stories;
+
+                if (userId.HasValue)
+                    stories = await _storyRepository.GetSmartRecommendedStoriesAsync(userId.Value, limit, cursor);
+                else
+                    stories = await _storyRepository.GetStoriesPreviewAsync(limit, cursor);
+
+                var hasMore = stories.Count > limit;
+
+                var limitedStories = hasMore ? stories.Take(limit).ToList() : stories;
+
+                var items = limitedStories
+                    .Select(s =>
+                    {
+                        var dto = _mapper.Map<StoryResponse>(s);
+                        dto.IsLiked = userId != null &&
+                                      s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
+                        return dto;
+                    })
+                    .ToList();
+
+                return new PaginatedResponse<StoryResponse>
+                {
+                    Items = items,
+                    NextCursor = hasMore ? (cursor + items.Count).ToString() : null,
+                    HasMore = hasMore
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
 
         public Task<Story> GetStoryByIdAsync(int storyId)
         {
@@ -400,7 +429,7 @@ namespace StoryNest.Application.Services
                 else
                 {
                     // Log view
-                    await _storyViewService.LogStoryViewAsync(story.Id, userId);
+                    await _storyViewService.LogStoryViewAsync(story.Id, userId, _currentUserService.IpAddress);
                     await _unitOfWork.SaveAsync();
                     return _mapper.Map<GetStoryResponse>(story);
                 }
