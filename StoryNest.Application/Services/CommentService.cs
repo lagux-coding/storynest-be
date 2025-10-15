@@ -210,11 +210,11 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<Story?> GetStoryByCommentAsync(int commentId)
+        public async Task<Story?> GetStoryByCommentAsync(int commentId, long userId)
         {
             try
             {
-                var story = await _commentRepository.GetStoryByCommentAsync(commentId);
+                var story = await _commentRepository.GetStoryByCommentAsync(commentId, userId);
                 return story ?? null;
             }
             catch (Exception ex)

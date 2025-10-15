@@ -16,6 +16,6 @@ namespace StoryNest.Application.Interfaces
         public Task<bool> DeleteCommentAsync(int commentId, long userId);
         Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int storyId, long userId, int? parentId, int limit, int? cursor);
         Task<List<Comment>> GetCommentByUserAsync(long userId, int limit, int cursor = 0);
-        Task<Story?> GetStoryByCommentAsync(int commentId);
+        Task<Story?> GetStoryByCommentAsync(int commentId, long userId);
     }
 }

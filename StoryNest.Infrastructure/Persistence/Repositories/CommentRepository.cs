@@ -93,11 +93,16 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .ToDictionaryAsync(x => x.ParentId, x => x.Count);
         }
 
-        public async Task<Story?> GetStoryByCommentAsync(int commentId)
+        public async Task<Story?> GetStoryByCommentAsync(int commentId, long userId)
         {
             return await _context.Stories
-                .Include(s => s.Comments)
-                .FirstOrDefaultAsync(s => s.Comments.Where(c => c.CommentStatus != CommentStatus.Deleted).Any(c => c.Id == commentId) && s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
+                .Include(s => s.User)
+                .Include(m => m.Media)
+                .Include(st => st.StoryTags)
+                    .ThenInclude(t => t.Tag)
+                .Include(l => l.Likes)
+                .Include(c => c.Comments)
+                .FirstOrDefaultAsync(s => s.Comments.Where(c => c.CommentStatus != CommentStatus.Deleted && c.UserId == userId).Any(c => c.Id == commentId) && s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
         }
 
         public Task UpdateAsync(Comment comment)

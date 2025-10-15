@@ -15,13 +15,15 @@ namespace StoryNest.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ICommentService _commentService;
+        private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService)
+        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _commentService = commentService;
+            _currentUserService = currentUserService;
         }
 
         public async Task<List<User>> GetAllUser()
@@ -48,9 +50,21 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                var story = await _commentService.GetStoryByCommentAsync(commentId);
+                var userId = _currentUserService.UserId;
+                var story = await _commentService.GetStoryByCommentAsync(commentId, userId.Value);
                 if (story == null) return null;
-                var storyDto = _mapper.Map<StoryResponse>(story);
+                var storyDto = _mapper.Map<StoryResponse>(story);              
+
+                var isLike = story.Likes.FirstOrDefault(s => s.UserId == userId);
+                if (isLike != null)
+                {
+                    storyDto.IsLiked = true;
+                }
+                else
+                {
+                    storyDto.IsLiked = false;
+                }
+
                 return storyDto;
             }
             catch (Exception ex)
