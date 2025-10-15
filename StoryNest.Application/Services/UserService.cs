@@ -75,6 +75,11 @@ namespace StoryNest.Application.Services
                 if (hasMore)
                     comments = comments.Take(limit).ToList();
                 var response = _mapper.Map<List<CommentResponse>>(comments);
+                foreach (var c in response)
+                {
+                    c.IsOwner = true;
+                }
+
                 var nextCursor = response.LastOrDefault()?.Id.ToString();
                 return new PaginatedResponse<CommentResponse>()
                 {

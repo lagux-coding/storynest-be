@@ -81,7 +81,13 @@ namespace StoryNest.API.Controllers
         [HttpGet("all-comment/{storyId}")]
         public async Task<ActionResult<ApiResponse<object>>> GetAllComments(int storyId, int? parentId, int limit = 10, int cursor = 0)
         {
-            var comments = await _commentService.GetCommentsAsync(storyId, parentId, limit, cursor);
+            var userId = _currentUserService.UserId;
+            if (userId == null)
+            {
+                return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+            }
+
+            var comments = await _commentService.GetCommentsAsync(storyId, userId.Value, parentId, limit, cursor);
             return Ok(ApiResponse<object>.Success(comments, "Get comments successfully"));
         }
     }

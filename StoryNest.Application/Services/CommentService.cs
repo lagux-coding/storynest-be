@@ -67,6 +67,7 @@ namespace StoryNest.Application.Services
                 var newComment = await _commentRepository.GetByIdAsync(comment.Id);
                 var response = _mapper.Map<CommentResponse>(newComment);
 
+                response.IsOwner = true;
                 response.HasReplies = false;
 
                 if (story.UserId != userId)
@@ -120,7 +121,7 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int storyId, int? parentId, int limit, int? cursor)
+        public async Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int storyId, long userId, int? parentId, int limit, int? cursor)
         {
             try
             {
@@ -144,6 +145,11 @@ namespace StoryNest.Application.Services
 
                     if (comment.CommentStatus == CommentStatus.Deleted)
                         comment.Content = "[deleted]";
+
+                    if (comment.UserId == userId)
+                    {
+                        comment.IsOwner = true;
+                    }
                 }
 
                 var nextCursor = response.LastOrDefault()?.Id;

@@ -25,5 +25,6 @@ namespace StoryNest.Application.Dtos.Response
 
         public int RepliesCount { get; set; } = 0;
         public bool HasReplies { get; set; } = false;
+        public bool IsOwner { get; set; } = false;
     }
 }
