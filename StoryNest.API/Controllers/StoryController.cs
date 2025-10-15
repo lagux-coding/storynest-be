@@ -44,7 +44,9 @@ namespace StoryNest.API.Controllers
         [HttpGet("search")]
         public async Task<ActionResult<ApiResponse<object>>> SearchStories([FromQuery] string? keyword, [FromQuery] int limit = 20, [FromQuery] int? lastId = null)
         {
-            var result = await _storyService.SearchStoriesAsync(keyword, limit, lastId);
+            var userId = _currentUserService.UserId;
+
+            var result = await _storyService.SearchStoriesAsync(userId, keyword, limit, lastId);
             return Ok(ApiResponse<object>.Success(result, "Search completed"));
         }
 

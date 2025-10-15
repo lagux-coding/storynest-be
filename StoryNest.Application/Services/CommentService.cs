@@ -209,5 +209,18 @@ namespace StoryNest.Application.Services
                 throw new Exception(ex.Message);
             }
         }
+
+        public async Task<Story?> GetStoryByCommentAsync(int commentId)
+        {
+            try
+            {
+                var story = await _commentRepository.GetStoryByCommentAsync(commentId);
+                return story ?? null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

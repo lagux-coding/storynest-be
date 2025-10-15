@@ -25,6 +25,6 @@ namespace StoryNest.Application.Interfaces
         public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByOwnerAsync(long userId, DateTime? cursor, long userLikeId);
         public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByUserAIAsync(long userId, DateTime? cursor, long? userLikeId = null);
         public Task<PaginatedResponse<GetStoryResponse>> GetStoriesByOwnerAIAsync(long userId, DateTime? cursor, long userLikeId);
-        public Task<StorySearchResult> SearchStoriesAsync(string keyword, int limit = 20, int? lastId = null);
+        public Task<StorySearchResult> SearchStoriesAsync(long? userId, string keyword, int limit = 20, int? lastId = null);
     }
 }

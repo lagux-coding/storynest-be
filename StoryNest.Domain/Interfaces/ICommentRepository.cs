@@ -17,5 +17,6 @@ namespace StoryNest.Domain.Interfaces
         public Task<List<int>> GetCommentIdsWithReplies(List<int> ids);
         public Task<Dictionary<int, int>> GetRepliesCount(List<int> parentId);
         public Task<int> CountComments(int storyId);
+        public Task<Story?> GetStoryByCommentAsync(int commentId);
     }
 }

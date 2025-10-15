@@ -75,5 +75,28 @@ namespace StoryNest.API.Controllers
                 return BadRequest(ApiResponse<object>.Fail(ex.Message));
             }
         }
+
+        [HttpGet("comment/story")]
+        public async Task<ActionResult<ApiResponse<object>>> GetStoryByComment([FromQuery] int commentId)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                {
+                    return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+                }
+                var result = await _userService.GetStoryByCommentAsync(commentId);
+                if (result == null)
+                {
+                    return NotFound(ApiResponse<object>.Fail("Story not found"));
+                }
+                return Ok(ApiResponse<object>.Success(result, "Get story by comment successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
     }
 }

@@ -695,17 +695,30 @@ namespace StoryNest.Application.Services
             return outputStream;
         }
 
-        public async Task<StorySearchResult> SearchStoriesAsync(string keyword, int limit = 20, int? lastId = null)
+        public async Task<StorySearchResult> SearchStoriesAsync(long? userId, string keyword, int limit = 20, int? lastId = null)
         {
             try
             {
-                var stories = await _storyRepository.SearchAsync(keyword, limit, lastId);
+                var stories = await _storyRepository.SearchAsync(keyword, limit + 1, lastId);
+                var storyIds = stories.Select(s => s.Id).ToList();
+
+                var items = stories.Take(limit).Select(s =>
+                {
+                    var dto = _mapper.Map<StoryResponse>(s);
+
+                    // user chưa login => false
+                    dto.IsLiked = userId != null &&
+                                  s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null);
+
+                    return dto;
+                }).ToList();
+                var hasMore = stories.Count > limit;
 
                 return new StorySearchResult
                 {
-                    Stories = stories.Select(s => _mapper.Map<StoryResponse>(s)).ToList(),
-                    LastId = stories.LastOrDefault()?.Id,
-                    HasMore = stories.Count == limit
+                    Stories = items,
+                    LastId = hasMore ? items.LastOrDefault()?.Id : null,
+                    HasMore = hasMore
                 };
             }
             catch (Exception ex)

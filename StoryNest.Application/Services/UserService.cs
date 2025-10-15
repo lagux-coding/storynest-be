@@ -44,6 +44,21 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<StoryResponse> GetStoryByCommentAsync(int commentId)
+        {
+            try
+            {
+                var story = await _commentService.GetStoryByCommentAsync(commentId);
+                if (story == null) return null;
+                var storyDto = _mapper.Map<StoryResponse>(story);
+                return storyDto;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<User?> GetUserByEmailAsync(string email)
         {
             var user = await _userRepository.GetByEmailAsync(email);
