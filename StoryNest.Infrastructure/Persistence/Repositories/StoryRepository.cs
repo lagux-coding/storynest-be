@@ -90,7 +90,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
 
         public async Task<List<Story>> GetSmartRecommendedStoriesAsync(long userId, int limit, long offset = 0) // đổi cursor → offset
         {
-            // 1️⃣ Lấy user tags
+            // 1️ Lấy user tags
             var userTagIds = await _context.Stories
                 .Where(s =>
                     s.Likes.Any(l => l.UserId == userId && l.RevokedAt == null) ||
@@ -100,7 +100,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .Distinct()
                 .ToListAsync();
 
-            // 2️⃣ Lấy pool lớn hơn để score
+            // 2️ Lấy pool lớn hơn để score
             var candidateSize = Math.Max(200, (offset + limit) * 3);
             var candidates = await _context.Stories
                 .Where(s => s.PrivacyStatus == PrivacyStatus.Public &&
@@ -116,7 +116,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .Include(s => s.StoryViews)
                 .ToListAsync();
 
-            // 3️⃣ Score + rank
+            // 3️ Score + rank
             var ranked = candidates
                 .Select(s => new
                 {

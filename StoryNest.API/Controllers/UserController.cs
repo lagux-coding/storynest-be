@@ -9,6 +9,7 @@ using StoryNest.Domain.Enums;
 namespace StoryNest.API.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -25,7 +26,7 @@ namespace StoryNest.API.Controllers
             _userMediaService = userMediaService;
         }
 
-        [Authorize]
+        
         [HttpGet("me")]
         public async Task<ActionResult<ApiResponse<object>>> GetMe()
         {
@@ -39,7 +40,6 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<object>.Success(result, "Get profile successfully"));
         }
 
-        [Authorize]
         [HttpGet("media")]
         public async Task<ActionResult<ApiResponse<object>>> GetUserMedias([FromQuery] MediaType? type = null)
         {
@@ -52,5 +52,28 @@ namespace StoryNest.API.Controllers
             return Ok(ApiResponse<List<UserMediaResponse>>.Success(result, "Get user media successfully"));
         }
 
+        [HttpGet("comment")]
+        public async Task<ActionResult<ApiResponse<object>>> GetUserComments([FromQuery] int limit = 10, [FromQuery] int cursor = 0)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                {
+                    return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+                }
+                var result = await _userService.GetUserByIdAsync(userId.Value);
+                if (result == null)
+                {
+                    return NotFound(ApiResponse<object>.Fail("User not found"));
+                }
+                var comments = await _userService.GetUserCommentAsync(userId.Value, limit, cursor);
+                return Ok(ApiResponse<object>.Success(comments, "Get user comments successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
     }
 }

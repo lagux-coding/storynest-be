@@ -11,6 +11,7 @@ namespace StoryNest.Domain.Interfaces
     {
         public Task<Comment?> GetByIdAsync(int commentId);
         public Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int? cursor);
+        public Task<List<Comment>> GetByUserId(long userId, int limit, int cursor = 0);
         public Task AddAsync(Comment comment);
         public Task UpdateAsync(Comment comment);
         public Task<List<int>> GetCommentIdsWithReplies(List<int> ids);

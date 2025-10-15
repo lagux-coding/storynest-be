@@ -17,17 +17,15 @@ namespace StoryNest.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationRepository _notificationRepository;
-        private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly INotificationHubService _hubService;
 
-        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService, IUserService userService)
+        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService)
         {
             _unitOfWork = unitOfWork;
             _notificationRepository = notificationRepository;
             _mapper = mapper;
             _hubService = hubService;
-            _userService = userService;
         }
 
         public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)

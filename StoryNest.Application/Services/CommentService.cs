@@ -161,6 +161,19 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<List<Comment>> GetCommentByUserAsync(long userId, int limit, int cursor = 0)
+        {
+            try
+            {
+                var comments = await _commentRepository.GetByUserId(userId, limit, cursor);
+                return comments ?? new List<Comment>();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<bool> UpdateCommentAsync(CreateCommentRequest request, int commentId, long userId)
         {
             try

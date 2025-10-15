@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -50,6 +51,24 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .Take(limit + 1) // +1 để check hasMore
                 .Include(c => c.User)
                 .ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetByUserId(long userId, int limit, int cursor = 0)
+        {
+            var query = _context.Comments
+                .Where(c => c.UserId == userId && c.DeletedAt == null && c.CommentStatus != CommentStatus.Deleted)
+                .OrderByDescending(c => c.CreatedAt)
+                .AsQueryable();
+
+            if (cursor > 0)
+                query = query.Where(c => c.Id < cursor);
+
+            var comments = await query
+                .Include(c => c.Story)
+                .Take(limit + 1)
+                .ToListAsync();
+
+            return comments;
         }
 
         public async Task<List<int>> GetCommentIdsWithReplies(List<int> ids)
