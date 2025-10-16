@@ -28,6 +28,26 @@ namespace StoryNest.Application.Services
             _hubService = hubService;
         }
 
+        public async Task<PaginatedResponse<NotificationResponse>> GetAllNotificationsAsync(long userId, int limit, long cursor = 0)
+        {
+            try
+            {
+                var notis = await _notificationRepository.GetAllByUserId(userId, limit, cursor);
+                var notiDtos = _mapper.Map<List<NotificationResponse>>(notis);
+                var hasMore = notis.Count > limit;
+                return new PaginatedResponse<NotificationResponse>
+                {
+                    Items = notiDtos,
+                    HasMore = hasMore,
+                    NextCursor = hasMore ? notis.Last().Id.ToString() : null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)
         {
             try
