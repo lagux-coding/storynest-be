@@ -461,7 +461,7 @@ namespace StoryNest.Application.Services
         {
             try
             {
-                var story = await _storyRepository.GetStoryByIdOrSlugAsync(storyId, null);
+                var story = await _storyRepository.GetStoryByIdOrSlugDeleteAsync(storyId, null);
                 if (story == null)
                     throw new Exception("Story not found");
 
