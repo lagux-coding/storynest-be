@@ -33,6 +33,7 @@ using StoryNest.Infrastructure.Services.QuartzSchedule;
 using StoryNest.Infrastructure.Services.QuestPdfService;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
+using StoryNest.Infrastructure.Services.VnCoreNlp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -239,6 +240,7 @@ builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
 builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryViewService, StoryViewService>();
+builder.Services.AddScoped<IVnCoreNlpService, VnCoreNlpService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
