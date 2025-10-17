@@ -148,7 +148,7 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
             var clientId = _configuration["PAYOS_CLIENT_ID"];
             var apiKey = _configuration["PAYOS_API_KEY"];
             var checksum = _configuration["PAYOS_CHECKSUM"];
-            var domain = _configuration["FRONTEND_URL"] ?? "https://dev.storynest.io.vn";
+            var domain = _configuration["FRONTEND_URL"] ?? "https://storynest.io.vn";
             var payos = new PayOS(clientId, apiKey, checksum);
 
             // Generate order code
