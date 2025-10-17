@@ -12,6 +12,7 @@ namespace StoryNest.Application.Interfaces
     {
         Task<bool> RegisterAsync(RegisterUserRequest request);
         Task<LoginUserResponse> LoginAsync(LoginUserRequest request);
+        Task<LoginAdminResponse> LoginAdminAsync(LoginAdminRequest request);
         Task<bool> LogoutAsync(string refreshTokenPlain, string type);
         public Task<RefreshTokenResponse?> RefreshAsync(string access, string refreshToken);
         Task<bool> ResetPasswordAsync(ResetPasswordUserRequest request);
