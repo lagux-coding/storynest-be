@@ -1,4 +1,5 @@
 ﻿using StoryNest.Application.Dtos.Dto;
+using StoryNest.Application.Dtos.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,6 @@ namespace StoryNest.Application.Interfaces
     public interface IVnCoreNlpService
     {
         Task<List<List<TokenDto>>> AnalyzeTextAsync(string text);
-        Task<List<TokenDto>> CompareOffensiveAsync(List<List<TokenDto>> tokenList);
+        Task<List<TokenDto>> CompareOffensiveAsync(CheckOffensiveRequest request);
     }
 }

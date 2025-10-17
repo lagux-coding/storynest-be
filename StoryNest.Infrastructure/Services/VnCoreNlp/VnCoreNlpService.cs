@@ -1,6 +1,7 @@
 ﻿using Google.Cloud.Language.V1;
 using Microsoft.Extensions.Configuration;
 using StoryNest.Application.Dtos.Dto;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Interfaces;
 using StoryNest.Shared.Common.Utils;
 using System;
@@ -69,13 +70,24 @@ namespace StoryNest.Infrastructure.Services.VnCoreNlp
             }
         }
 
-        public async Task<List<TokenDto>> CompareOffensiveAsync(List<List<TokenDto>> tokenList)
+        public async Task<List<TokenDto>> CompareOffensiveAsync(CheckOffensiveRequest request)
         {
             try
             {
                 var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "vn_offensive_words.txt");
                 var offensiveWords = OffensiveWordLoader.LoadWords(filePath);
                 var found = new List<TokenDto>();
+
+                var tokenList = await this.AnalyzeTextAsync(request.Title);
+                tokenList.AddRange(await this.AnalyzeTextAsync(request.Content));
+
+                // Analyze tags if any
+                foreach (var tag in request.Tags)
+                {
+                    var tagTokens = await this.AnalyzeTextAsync(tag);
+                    tokenList.AddRange(tagTokens);
+                }
+
                 foreach (var sentence in tokenList)
                 {
                     foreach (var token in sentence)
