@@ -119,7 +119,7 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
 
             // 1 Story -> nhiều Reports
             builder.HasMany(s => s.Reports)
-                   .WithOne(r => r.Content)
+                   .WithOne(r => r.ReportedStory)
                    .HasForeignKey(r => r.ReportedStoryId)
                    .OnDelete(DeleteBehavior.Cascade);
 

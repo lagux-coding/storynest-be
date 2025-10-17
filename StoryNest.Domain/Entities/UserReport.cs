@@ -12,13 +12,19 @@ namespace StoryNest.Domain.Entities
         public int Id { get; set; }
 
         public long ReportedId { get; set; }
-        public User Reporter { get; set; } = default!;
+        public User? ReportedUser { get; set; }
 
-        public int ReportedStoryId { get; set; }
-        public Story Content { get; set; } = default!;
+        public long ReporterId { get; set; }
+        public User Reporter { get; set; }
+
+        public int? ReportedStoryId { get; set; }
+        public Story? ReportedStory { get; set; }
+
+        public int? ReportedCommentId { get; set; }
+        public Comment? ReportedComment { get; set; }
 
         public int? AdminId { get; set; }
-        public Admin? Admin { get; set; } = default!;
+        public Admin? Admin { get; set; }
 
         public string Reason { get; set; } = string.Empty;
         public ReportStatus Status{ get; set; } = ReportStatus.Pending;       

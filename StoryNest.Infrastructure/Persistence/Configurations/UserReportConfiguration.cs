@@ -27,8 +27,10 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .IsRequired();
 
             builder.Property(r => r.ReportedStoryId)
-                   .HasColumnName("reported_story_id")
-                   .IsRequired();
+                   .HasColumnName("reported_story_id");
+
+            builder.Property(r => r.ReportedCommentId)
+                   .HasColumnName("reported_comment_id");
 
             builder.Property(r => r.AdminId)
                    .HasColumnName("admin_id");
@@ -55,14 +57,24 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             // Reporter (User who created the report) -> nhưng đang dùng ReportedId field
             builder.HasOne(r => r.Reporter)
                    .WithMany(u => u.ReportsCreated)
+                   .HasForeignKey(r => r.ReporterId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(r => r.ReportedUser)
+                   .WithMany(u => u.ReportsReceived)
                    .HasForeignKey(r => r.ReportedId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
 
             // Reported story
-            builder.HasOne(r => r.Content)
+            builder.HasOne(r => r.ReportedStory)
                    .WithMany(s => s.Reports)
                    .HasForeignKey(r => r.ReportedStoryId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasOne(r => r.ReportedComment)
+                   .WithMany(c => c.Reports)
+                   .HasForeignKey(r => r.ReportedCommentId)
+                   .OnDelete(DeleteBehavior.SetNull);
 
             // Admin xử lý report
             builder.HasOne(r => r.Admin)

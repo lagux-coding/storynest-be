@@ -216,6 +216,7 @@ builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IStoryViewRepository, StoryViewRepository>();
+builder.Services.AddScoped<IUserReportRepository, UserReportRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -241,6 +242,7 @@ builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryViewService, StoryViewService>();
 builder.Services.AddScoped<IVnCoreNlpService, VnCoreNlpService>();
+builder.Services.AddScoped<IUserReportService, UserReportService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
