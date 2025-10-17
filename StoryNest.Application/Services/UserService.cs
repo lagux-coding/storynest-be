@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
@@ -17,13 +18,15 @@ namespace StoryNest.Application.Services
         private readonly ICommentService _commentService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService)
+        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _commentService = commentService;
             _currentUserService = currentUserService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<List<User>> GetAllUser()
@@ -126,6 +129,32 @@ namespace StoryNest.Application.Services
         public async Task UpdateUserAsync(User user)
         {
             await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task<int> UpdateUserProfille(long userId, UpdateUserProfileRequest request)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null) throw new Exception("User not found or not active anymore");
+
+                // check username
+                bool check = await _userRepository.CheckUsernameExist(request.UserName);
+                if (check)
+                {
+                    throw new Exception("Already this username");
+                }
+
+                user = _mapper.Map(request, user);
+                user.UpdatedAt = DateTime.UtcNow;
+
+                await _userRepository.UpdateAsync(user);
+                return await _unitOfWork.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

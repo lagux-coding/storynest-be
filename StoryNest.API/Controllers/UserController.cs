@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Enums;
@@ -38,6 +39,25 @@ namespace StoryNest.API.Controllers
 
             var result = await _userService.GetMe(userId.Value);
             return Ok(ApiResponse<object>.Success(result, "Get profile successfully"));
+        }
+
+        [HttpPut("update")]
+        public async Task<ActionResult<ApiResponse<object>>> UpdateProfile([FromBody] UpdateUserProfileRequest request)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                {
+                    return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+                }
+                var result = await _userService.UpdateUserProfille(userId.Value, request);
+                return Ok(ApiResponse<object>.Success(result, "Update profile successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Update failed: {ex.Message}"));
+            }
         }
 
         [HttpGet("media")]

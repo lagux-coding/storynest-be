@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Dtos.Response;
+﻿using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -17,5 +18,6 @@ namespace StoryNest.Application.Interfaces
         Task<StoryResponse> GetStoryByCommentAsync(int commentId);
         Task<List<User>> GetAllUser();
         Task UpdateUserAsync(User user);
+        Task<int> UpdateUserProfille(long userId, UpdateUserProfileRequest request);
     }
 }

@@ -26,6 +26,18 @@ namespace StoryNest.Application.Services
             await _context.Users.AddAsync(user);
         }
 
+        public async Task<bool> CheckUsernameExist(string userName)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == userName);
+
+            if (user == null)
+            {
+                return false;
+            }
+            return true;
+        }
+
         public async Task<List<User>> GetAllUserAsync()
         {
             return await _context.Users

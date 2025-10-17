@@ -1,5 +1,6 @@
 ﻿using AngleSharp;
 using AutoMapper;
+using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
 using StoryNest.Domain.Entities;
 using StoryNest.Shared.Common.Utils;
@@ -56,6 +57,7 @@ namespace StoryNest.Application.Mappings
                     return null;
                 }));
             CreateMap<UserMedia, UserMediaResponse>();
+            CreateMap<UpdateUserProfileRequest, User>();
         }
     }
 }
