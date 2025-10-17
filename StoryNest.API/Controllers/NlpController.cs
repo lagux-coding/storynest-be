@@ -1,4 +1,5 @@
 ﻿using AngleSharp.Io;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
@@ -10,6 +11,7 @@ using StoryNest.Shared.Common.Utils;
 namespace StoryNest.API.Controllers
 {
     [Route("api/[controller]")]
+    [Authorize]
     [ApiController]
     public class NlpController : ControllerBase
     {
