@@ -9,8 +9,10 @@ namespace StoryNest.Domain.Entities
     public class RefreshToken
     {
         public Guid Id { get; set; }
-        public long UserId { get; set; }
-        public User User { get; set; } = default!;
+        public long? UserId { get; set; }
+        public User? User { get; set; }
+        public int? AdminId { get; set; }
+        public Admin? Admin { get; set; }
         public string TokenHash { get; set; } = default!;
         public string JwtId { get; set; } = default!;
         public DateTime ExpiresAt { get; set; }        

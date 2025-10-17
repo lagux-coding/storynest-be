@@ -21,5 +21,6 @@ namespace StoryNest.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
         public ICollection<UserReport> ReportsHandled { get; set; } = new List<UserReport>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }
