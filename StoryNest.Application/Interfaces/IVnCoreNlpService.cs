@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StoryNest.Application.Dtos.Dto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace StoryNest.Application.Interfaces
 {
     public interface IVnCoreNlpService
     {
-        Task<object> AnalyzeTextAsync(string text);
+        Task<List<List<TokenDto>>> AnalyzeTextAsync(string text);
+        Task<List<TokenDto>> CompareOffensiveAsync(List<List<TokenDto>> tokenList);
     }
 }

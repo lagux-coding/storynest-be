@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Google.Cloud.Language.V1;
+using Microsoft.Extensions.Configuration;
+using StoryNest.Application.Dtos.Dto;
 using StoryNest.Application.Interfaces;
+using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace StoryNest.Infrastructure.Services.VnCoreNlp
@@ -22,7 +26,7 @@ namespace StoryNest.Infrastructure.Services.VnCoreNlp
             _apiKey = config["VNCORENLP_API_KEY"] ?? throw new Exception("VNCORENLP_API_KEY not found in config");
         }
 
-        public async Task<object> AnalyzeTextAsync(string text)
+        public async Task<List<List<TokenDto>>> AnalyzeTextAsync(string text)
         {
             try
             {
@@ -40,7 +44,72 @@ namespace StoryNest.Infrastructure.Services.VnCoreNlp
                     throw new HttpRequestException($"VnCoreNLP API error ({response.StatusCode}): {error}");
                 }
 
-                return await response.Content.ReadFromJsonAsync<object>();
+                var json = await response.Content.ReadAsStringAsync();
+                var parsed = JsonSerializer.Deserialize<Root>(json, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                var allSentences = new List<List<TokenDto>>();
+                if (parsed?.Data != null)
+                {
+                    foreach (var kv in parsed.Data)
+                    {
+                        allSentences.Add(kv.Value);
+                    }
+                }
+
+                Console.WriteLine($"[VNCoreNLP] Saved analyzed result. Total: {allSentences.Count}");
+
+                return allSentences;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<TokenDto>> CompareOffensiveAsync(List<List<TokenDto>> tokenList)
+        {
+            try
+            {
+                var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "data", "vn_offensive_words.txt");
+                var offensiveWords = OffensiveWordLoader.LoadWords(filePath);
+                var found = new List<TokenDto>();
+                foreach (var sentence in tokenList)
+                {
+                    foreach (var token in sentence)
+                    {
+                        var word = token.WordForm.Replace("_", " ").ToLowerInvariant();
+                        if (offensiveWords.Contains(word))
+                        {
+                            found.Add(token);
+                        }
+                    }
+
+                    var joinedSentence = string.Join(" ", sentence.Select(t => t.WordForm.Replace("_", " ").ToLowerInvariant()));
+                    foreach (var bad in offensiveWords)
+                    {
+                        if (joinedSentence.Contains(bad) && bad.Contains(" "))
+                        {
+                            // nếu cụm có chứa khoảng trắng, tìm token trùng 1 phần của cụm
+                            foreach (var token in sentence)
+                            {
+                                if (bad.Contains(token.WordForm.ToLowerInvariant()))
+                                {
+                                    found.Add(token);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var distinct = found
+                    .GroupBy(f => f.Index)
+                    .Select(g => g.First())
+                    .ToList();
+
+                return await Task.FromResult(distinct);
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using StoryNest.Application.Dtos.Dto;
 using StoryNest.Application.Interfaces;
 
 namespace StoryNest.API.Controllers
@@ -18,8 +19,9 @@ namespace StoryNest.API.Controllers
         [HttpPost("analyze")]
         public async Task<IActionResult> Analyze([FromBody] string text)
         {
-            var result = await _nlpService.AnalyzeTextAsync(text);
-            return Ok(result);
+            List<List<TokenDto>> result = await _nlpService.AnalyzeTextAsync(text);
+            var response = await _nlpService.CompareOffensiveAsync(result);
+            return Ok(response);
         }
     }
 }

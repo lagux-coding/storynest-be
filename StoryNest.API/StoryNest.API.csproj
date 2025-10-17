@@ -46,6 +46,13 @@
 	  <Content Update="wwwroot\assets\Roboto-Regular.ttf">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </Content>
+	  <Content Update="wwwroot\data\vn_offensive_words.txt">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\data\" />
 	</ItemGroup>
 
 </Project>
