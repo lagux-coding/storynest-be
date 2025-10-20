@@ -27,6 +27,7 @@ using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
+using StoryNest.Infrastructure.Services.Google.GoogleNLP;
 using StoryNest.Infrastructure.Services.LogoProvider;
 using StoryNest.Infrastructure.Services.OpenAI;
 using StoryNest.Infrastructure.Services.PayOSPayment;
@@ -220,6 +221,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IStoryViewRepository, StoryViewRepository>();
 builder.Services.AddScoped<IUserReportRepository, UserReportRepository>();
 builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IStorySentimentAnalysisRepository, StorySentimentAnalysisRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -246,6 +248,8 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStoryViewService, StoryViewService>();
 builder.Services.AddScoped<IVnCoreNlpService, VnCoreNlpService>();
 builder.Services.AddScoped<IUserReportService, UserReportService>();
+builder.Services.AddScoped<IGoogleNLPService, GoogleNLPService>();
+builder.Services.AddScoped<IStorySentimentAnalysisService, StorySentimentAnalysisService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -273,6 +277,14 @@ builder.Services.AddQuartz(q =>
         .ForJob(renewCreditJobKey)
         .WithIdentity($"{nameof(RenewCreditJob)}-trigger")
         .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+
+    var storySentimentAnalysisJobKey = new JobKey(nameof(CheckReportStoryJob));
+    q.AddJob<CheckReportStoryJob>(opts => opts.WithIdentity(storySentimentAnalysisJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(storySentimentAnalysisJobKey)
+        .WithIdentity($"{nameof(CheckReportStoryJob)}-trigger")
+        //.WithCronSchedule("0 0 7,13,20 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+    .WithCronSchedule("0 0/3 * * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
 });
 
 builder.Services.AddQuartzHostedService(opt =>

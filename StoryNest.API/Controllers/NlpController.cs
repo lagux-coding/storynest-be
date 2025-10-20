@@ -16,16 +16,18 @@ namespace StoryNest.API.Controllers
     public class NlpController : ControllerBase
     {
         private readonly IVnCoreNlpService _nlpService;
+        private readonly IGoogleNLPService _googleNlpService;
 
-        public NlpController(IVnCoreNlpService nlpService)
+        public NlpController(IVnCoreNlpService nlpService, IGoogleNLPService googleNlpService)
         {
             _nlpService = nlpService;
+            _googleNlpService = googleNlpService;
         }
 
         [HttpPost("analyze")]
         public async Task<IActionResult> Analyze([FromBody] string text)
         {
-            List<List<TokenDto>> result = await _nlpService.AnalyzeTextAsync(text);
+            var result = TextNormalizer.NormalizeStoryText(text);
             return Ok(result);
         }
 

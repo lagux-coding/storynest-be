@@ -10,5 +10,7 @@ namespace StoryNest.Domain.Interfaces
     public interface IUserReportRepository
     {
         Task CreateUserReportAsync(UserReport report);
+        Task UpdateUserReportAsync(UserReport report);
+        Task<List<UserReport>> GetAllPendingReportsAsync();
     }
 }

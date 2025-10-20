@@ -36,6 +36,8 @@ namespace StoryNest.Domain.Entities
         public ICollection<StoryTag> StoryTags { get; set; } = new List<StoryTag>();
         public ICollection<StoryView> StoryViews { get; set; } = new List<StoryView>();
         public ICollection<UserReport> Reports { get; set; } = new List<UserReport>();
+        public ICollection<StorySentimentAnalysis> SentimentAnalyses { get; set; } = new List<StorySentimentAnalysis>();
+
 
     }
 }

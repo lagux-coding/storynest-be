@@ -3,6 +3,7 @@ using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
+using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +17,14 @@ namespace StoryNest.Application.Services
         private readonly IUserReportRepository _userReportRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IStoryService _storyService;
+        private readonly IStorySentimentAnalysisService _storySentimentAnalysisService;
 
-        public UserReportService(IUserReportRepository userReportRepository, IUnitOfWork unitOfWork, IStoryService storyService)
+        public UserReportService(IUserReportRepository userReportRepository, IUnitOfWork unitOfWork, IStoryService storyService, IStorySentimentAnalysisService storySentimentAnalysisService)
         {
             _userReportRepository = userReportRepository;
             _unitOfWork = unitOfWork;
             _storyService = storyService;
+            _storySentimentAnalysisService = storySentimentAnalysisService;
         }
 
         public async Task<int> CreateReportAsync(UserReportRequest request, long reporterId, int storyId, int commentId = 0)
@@ -46,11 +49,38 @@ namespace StoryNest.Application.Services
                 }
 
                 await _userReportRepository.CreateUserReportAsync(report);
-                return await _unitOfWork.SaveAsync();
+                var result = await _unitOfWork.SaveAsync();
+
+                return result;
             }
             catch (Exception ex)
             {
                 throw new Exception(ex.InnerException.Message);
+            }
+        }
+
+        public async Task<List<UserReport>> GetAllPendingReportsAsync()
+        {
+            try
+            {
+                return await _userReportRepository.GetAllPendingReportsAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> UpdateUserReportAsync(UserReport report)
+        {
+            try
+            {
+                await _userReportRepository.UpdateUserReportAsync(report);
+                return await _unitOfWork.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }
