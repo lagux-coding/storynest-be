@@ -22,8 +22,10 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .IsRequired();
 
             builder.Property(rt => rt.UserId)
-                   .HasColumnName("user_id")
-                   .IsRequired();
+                   .HasColumnName("user_id");
+
+            builder.Property(rt => rt.AdminId)
+                   .HasColumnName("admin_id");
 
             builder.Property(rt => rt.TokenHash)
                    .HasColumnName("tokenHash")
@@ -65,6 +67,11 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
             builder.HasOne(rt => rt.User)
                    .WithMany(u => u.RefreshTokens)
                    .HasForeignKey(rt => rt.UserId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(rt => rt.Admin)
+                   .WithMany(u => u.RefreshTokens)
+                   .HasForeignKey(rt => rt.AdminId)
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(rt => rt.TokenHash).IsUnique();

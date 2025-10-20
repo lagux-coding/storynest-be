@@ -19,7 +19,21 @@ namespace StoryNest.Application.Mappings
             CreateMap<Media, MediaResponse>()
                 .ForMember(dest => dest.MediaUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.MediaUrl) ? null : $"https://cdn.storynest.io.vn/{src.MediaUrl}"));
             CreateMap<Tag, TagResponse>();
-            CreateMap<Comment, CommentResponse>();
+            CreateMap<Comment, CommentResponse>()
+                .ForMember(dest => dest.User, opt => opt.MapFrom((src, dest, _, context) =>
+                {
+                    if (src.IsAnonymous)
+                    {
+                        var username = UsernameGenerateHelperHelper.GeneratePoeticAnonymousName((int)src.UserId);
+                        return new UserBasicResponse
+                        {
+                            Id = 0,
+                            Username = username,
+                            AvatarUrl = $"https://cdn.storynest.io.vn/avatars/anonymous/avatar3.jpg",
+                        };
+                    }
+                    return context.Mapper.Map<UserBasicResponse>(src.User);
+                }));
             CreateMap<CreateStoryRequest, Story>();
             CreateMap<Story, StoryResponse>()
                 .ForMember(dest => dest.CoverImageUrl, opt => opt.MapFrom(src => string.IsNullOrEmpty(src.CoverImageUrl) ? null : $"https://cdn.storynest.io.vn/{src.CoverImageUrl}"))
@@ -36,7 +50,7 @@ namespace StoryNest.Application.Mappings
                         {
                             Id = 0,
                             Username = username,
-                            AvatarUrl = $"https://cdn.storynest.io.vn/system-assets/anonymous-avatarV2.webp",
+                            AvatarUrl = $"https://cdn.storynest.io.vn/avatars/anonymous/avatar2.webp",
                         };
                     }
                     return context.Mapper.Map<UserBasicResponse>(src.User);

@@ -15,5 +15,6 @@ namespace StoryNest.Domain.Interfaces
         Task UpdateAsync(User user);
         Task AddAsync(User user);
         Task<List<User>> GetAllUserAsync();
+        Task<bool> CheckUsernameExist(string userName);
     }
 }

@@ -51,7 +51,7 @@ namespace StoryNest.API.Controllers
                 return BadRequest(ApiResponse<object>.Fail("Authentication failed"));
             }
 
-            var result = await _payOSPaymenService.CheckoutAsync(userId.Value, plan);
+            var result = await _payOSPaymenService.CheckoutV2Async(userId.Value, plan);
             return Ok(ApiResponse<object>.Success(result, "Checkout link created successfully"));
         }
 

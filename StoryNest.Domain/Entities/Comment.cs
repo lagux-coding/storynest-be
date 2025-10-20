@@ -23,5 +23,8 @@ namespace StoryNest.Domain.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
+        public bool IsAnonymous { get; set; } = false;
+
+        public ICollection<UserReport> Reports { get; set; } = new List<UserReport>();
     }
 }

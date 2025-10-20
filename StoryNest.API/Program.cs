@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Writers;
 using OpenAI.Audio;
 using OpenAI.Images;
 using Quartz;
@@ -26,6 +27,7 @@ using StoryNest.Infrastructure.Persistence.Repositories;
 using StoryNest.Infrastructure.Services;
 using StoryNest.Infrastructure.Services.Email;
 using StoryNest.Infrastructure.Services.Google;
+using StoryNest.Infrastructure.Services.Google.GoogleNLP;
 using StoryNest.Infrastructure.Services.LogoProvider;
 using StoryNest.Infrastructure.Services.OpenAI;
 using StoryNest.Infrastructure.Services.PayOSPayment;
@@ -33,6 +35,7 @@ using StoryNest.Infrastructure.Services.QuartzSchedule;
 using StoryNest.Infrastructure.Services.QuestPdfService;
 using StoryNest.Infrastructure.Services.Redis;
 using StoryNest.Infrastructure.Services.S3;
+using StoryNest.Infrastructure.Services.VnCoreNlp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
@@ -186,6 +189,8 @@ builder.Services.AddSwaggerGen(c =>
             new string[] {}
         }
     });
+
+    c.UseInlineDefinitionsForEnums();
 });
 
 // Fluent Validation
@@ -193,6 +198,7 @@ builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestV
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
 builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
 builder.Services.AddScoped<IValidator<UploadMediaRequest>, UploadImageRequestValidator>();
+builder.Services.AddScoped<IValidator<LoginAdminRequest>, LoginAdminRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -212,6 +218,10 @@ builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IStoryViewRepository, StoryViewRepository>();
+builder.Services.AddScoped<IUserReportRepository, UserReportRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+builder.Services.AddScoped<IStorySentimentAnalysisRepository, StorySentimentAnalysisRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -235,6 +245,11 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IPayOSPaymentService, PayOSPaymentService>();
 builder.Services.AddScoped<INotificationHubService, NotificationHubService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IStoryViewService, StoryViewService>();
+builder.Services.AddScoped<IVnCoreNlpService, VnCoreNlpService>();
+builder.Services.AddScoped<IUserReportService, UserReportService>();
+builder.Services.AddScoped<IGoogleNLPService, GoogleNLPService>();
+builder.Services.AddScoped<IStorySentimentAnalysisService, StorySentimentAnalysisService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();
@@ -262,6 +277,14 @@ builder.Services.AddQuartz(q =>
         .ForJob(renewCreditJobKey)
         .WithIdentity($"{nameof(RenewCreditJob)}-trigger")
         .WithCronSchedule("0 0 0 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+
+    var storySentimentAnalysisJobKey = new JobKey(nameof(CheckReportStoryJob));
+    q.AddJob<CheckReportStoryJob>(opts => opts.WithIdentity(storySentimentAnalysisJobKey));
+    q.AddTrigger(opts => opts
+        .ForJob(storySentimentAnalysisJobKey)
+        .WithIdentity($"{nameof(CheckReportStoryJob)}-trigger")
+        .WithCronSchedule("0 0 7,13,20 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+    //.WithCronSchedule("0 0/3 * * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
 });
 
 builder.Services.AddQuartzHostedService(opt =>
@@ -303,5 +326,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notify");
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    db.Database.Migrate();
+    StoryNest.Infrastructure.Persistence.Seed.ApplicationDbContextSeed.SeedAdmins(db, builder.Configuration);
+}
 
 app.Run();

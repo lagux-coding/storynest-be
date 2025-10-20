@@ -453,6 +453,9 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("boolean");
+
                     b.Property<int?>("ParentCommentId")
                         .HasColumnType("integer")
                         .HasColumnName("parent_comment_id");
@@ -645,6 +648,9 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsRead")
                         .ValueGeneratedOnAdd()
@@ -839,6 +845,10 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int?>("AdminId")
+                        .HasColumnType("integer")
+                        .HasColumnName("admin_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -890,11 +900,13 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("character varying(512)")
                         .HasColumnName("user_agent");
 
-                    b.Property<long>("UserId")
+                    b.Property<long?>("UserId")
                         .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -1004,6 +1016,61 @@ namespace StoryNest.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Stories", (string)null);
+                });
+
+            modelBuilder.Entity("StoryNest.Domain.Entities.StorySentimentAnalysis", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AnalyzedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("analyzed_at")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<string>("AnalyzedText")
+                        .HasColumnType("text")
+                        .HasColumnName("analyzed_text");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text")
+                        .HasColumnName("error_message");
+
+                    b.Property<bool>("IsSuccessful")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("job_id");
+
+                    b.Property<float>("Magnitude")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("real")
+                        .HasColumnName("magnitude");
+
+                    b.Property<float>("Score")
+                        .HasPrecision(4, 3)
+                        .HasColumnType("real")
+                        .HasColumnName("score");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("source");
+
+                    b.Property<int>("StoryId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoryId");
+
+                    b.ToTable("StorySentimentAnalysis");
                 });
 
             modelBuilder.Entity("StoryNest.Domain.Entities.StoryTag", b =>
@@ -1346,13 +1413,20 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("reason");
 
+                    b.Property<int?>("ReportedCommentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("reported_comment_id");
+
                     b.Property<long>("ReportedId")
                         .HasColumnType("bigint")
                         .HasColumnName("reported_id");
 
-                    b.Property<int>("ReportedStoryId")
+                    b.Property<int?>("ReportedStoryId")
                         .HasColumnType("integer")
                         .HasColumnName("reported_story_id");
+
+                    b.Property<long>("ReporterId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1363,20 +1437,19 @@ namespace StoryNest.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<long?>("UserId")
-                        .HasColumnType("bigint");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AdminId");
 
                     b.HasIndex("AdminId1");
 
+                    b.HasIndex("ReportedCommentId");
+
                     b.HasIndex("ReportedId");
 
                     b.HasIndex("ReportedStoryId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ReporterId");
 
                     b.ToTable("UserReports", (string)null);
                 });
@@ -1602,11 +1675,17 @@ namespace StoryNest.Infrastructure.Migrations
 
             modelBuilder.Entity("StoryNest.Domain.Entities.RefreshToken", b =>
                 {
+                    b.HasOne("StoryNest.Domain.Entities.Admin", "Admin")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("AdminId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("StoryNest.Domain.Entities.User", "User")
                         .WithMany("RefreshTokens")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Admin");
 
                     b.Navigation("User");
                 });
@@ -1620,6 +1699,17 @@ namespace StoryNest.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("StoryNest.Domain.Entities.StorySentimentAnalysis", b =>
+                {
+                    b.HasOne("StoryNest.Domain.Entities.Story", "Story")
+                        .WithMany("SentimentAnalyses")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Story");
                 });
 
             modelBuilder.Entity("StoryNest.Domain.Entities.StoryTag", b =>
@@ -1700,25 +1790,35 @@ namespace StoryNest.Infrastructure.Migrations
                         .WithMany("ReportsHandled")
                         .HasForeignKey("AdminId1");
 
-                    b.HasOne("StoryNest.Domain.Entities.User", "Reporter")
-                        .WithMany("ReportsCreated")
+                    b.HasOne("StoryNest.Domain.Entities.Comment", "ReportedComment")
+                        .WithMany("Reports")
+                        .HasForeignKey("ReportedCommentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("StoryNest.Domain.Entities.User", "ReportedUser")
+                        .WithMany("ReportsReceived")
                         .HasForeignKey("ReportedId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StoryNest.Domain.Entities.Story", "Content")
+                    b.HasOne("StoryNest.Domain.Entities.Story", "ReportedStory")
                         .WithMany("Reports")
                         .HasForeignKey("ReportedStoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("StoryNest.Domain.Entities.User", null)
-                        .WithMany("ReportsReceived")
-                        .HasForeignKey("UserId");
+                    b.HasOne("StoryNest.Domain.Entities.User", "Reporter")
+                        .WithMany("ReportsCreated")
+                        .HasForeignKey("ReporterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Admin");
 
-                    b.Navigation("Content");
+                    b.Navigation("ReportedComment");
+
+                    b.Navigation("ReportedStory");
+
+                    b.Navigation("ReportedUser");
 
                     b.Navigation("Reporter");
                 });
@@ -1736,12 +1836,19 @@ namespace StoryNest.Infrastructure.Migrations
 
             modelBuilder.Entity("StoryNest.Domain.Entities.Admin", b =>
                 {
+                    b.Navigation("RefreshTokens");
+
                     b.Navigation("ReportsHandled");
                 });
 
             modelBuilder.Entity("StoryNest.Domain.Entities.Collection", b =>
                 {
                     b.Navigation("CollectionStories");
+                });
+
+            modelBuilder.Entity("StoryNest.Domain.Entities.Comment", b =>
+                {
+                    b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("StoryNest.Domain.Entities.Plan", b =>
@@ -1760,6 +1867,8 @@ namespace StoryNest.Infrastructure.Migrations
                     b.Navigation("Media");
 
                     b.Navigation("Reports");
+
+                    b.Navigation("SentimentAnalyses");
 
                     b.Navigation("StoryTags");
 

@@ -29,10 +29,11 @@ namespace StoryNest.API.Controllers
         private readonly ResetPasswordEmailSender _resetPasswordEmailSender;
         private readonly IValidator<RegisterUserRequest> _registerValidator;
         private readonly IValidator<LoginUserRequest> _loginValidator;
+        private readonly IValidator<LoginAdminRequest> _loginAdminValidator;
         private readonly ICurrentUserService _currentUserService;
         private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService, ILogger<AuthController> logger)
+        public AuthController(IAuthService authService, IValidator<RegisterUserRequest> registerValidator, IValidator<LoginUserRequest> loginValidator, IConfiguration configuration, IUserService userService, IJwtService jwtService, ResetPasswordEmailSender resetPasswordEmailSender, IGoogleService googleService, ICurrentUserService currentUserService, ILogger<AuthController> logger, IValidator<LoginAdminRequest> loginAdminValidator)
         {
             _authService = authService;
             _registerValidator = registerValidator;
@@ -44,6 +45,7 @@ namespace StoryNest.API.Controllers
             _googleService = googleService;
             _currentUserService = currentUserService;
             _logger = logger;
+            _loginAdminValidator = loginAdminValidator;
         }
 
         [HttpPost("register")]
@@ -88,6 +90,33 @@ namespace StoryNest.API.Controllers
             }
 
             var result = await _authService.LoginAsync(request);
+            if (result == null)
+            {
+                return BadRequest(ApiResponse<object>.Fail("Invalid username or password"));
+            }
+            else
+            {
+                SetRefreshTokenCookie(Response, result.RefreshToken, DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])));
+                return Ok(ApiResponse<object>.Success(result, "Login successful"));
+            }
+        }
+
+        [HttpPost("admin/login")]
+        public async Task<ActionResult<ApiResponse<object>>> LoginAdmin([FromBody] LoginAdminRequest request)
+        {
+            var validationResult = await _loginAdminValidator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                var errors = validationResult.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).Distinct().ToArray()
+                    );
+                return BadRequest(ApiResponse<object>.Fail(errors, "Validation errors"));
+            }
+
+            var result = await _authService.LoginAdminAsync(request);
             if (result == null)
             {
                 return BadRequest(ApiResponse<object>.Fail("Invalid username or password"));

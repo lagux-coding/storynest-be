@@ -17,20 +17,38 @@ namespace StoryNest.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationRepository _notificationRepository;
-        private readonly IUserService _userService;
         private readonly IMapper _mapper;
         private readonly INotificationHubService _hubService;
 
-        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService, IUserService userService)
+        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService)
         {
             _unitOfWork = unitOfWork;
             _notificationRepository = notificationRepository;
             _mapper = mapper;
             _hubService = hubService;
-            _userService = userService;
         }
 
-        public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null)
+        public async Task<PaginatedResponse<NotificationResponse>> GetAllNotificationsAsync(long userId, int limit, long cursor = 0)
+        {
+            try
+            {
+                var notis = await _notificationRepository.GetAllByUserId(userId, limit, cursor);
+                var notiDtos = _mapper.Map<List<NotificationResponse>>(notis);
+                var hasMore = notis.Count > limit;
+                return new PaginatedResponse<NotificationResponse>
+                {
+                    Items = notiDtos,
+                    HasMore = hasMore,
+                    NextCursor = hasMore ? notis.Last().Id.ToString() : null
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)
         {
             try
             {
@@ -43,7 +61,8 @@ namespace StoryNest.Application.Services
                     Content = content,
                     Type = type,
                     IsRead = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    IsAnonymous = isAnonymous
                 };
 
                 await _notificationRepository.AddNotificationAsync(noti);

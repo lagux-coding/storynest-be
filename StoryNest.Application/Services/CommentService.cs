@@ -39,15 +39,16 @@ namespace StoryNest.Application.Services
                     StoryId = storyId,
                     UserId = userId,
                     Content = request.Content,
-                    ParentCommentId = request.ParentCommentId.Value > 0
+                    ParentCommentId = request.ParentCommentId > 0
                                             ? request.ParentCommentId
                                             : null,
-                    CommentStatus = CommentStatus.Active
+                    CommentStatus = CommentStatus.Active,
+                    IsAnonymous = request.IsAnonymous
                 };
 
-                if (request.ParentCommentId.Value > 0)
+                if (request.ParentCommentId > 0)
                 {
-                    var parent = await _commentRepository.GetByIdAsync(request.ParentCommentId.Value);
+                    var parent = await _commentRepository.GetByIdAsync(request.ParentCommentId);
                     if (parent == null || parent.StoryId != storyId)
                         throw new ArgumentException("Invalid parent comment id");
                 }                             
@@ -66,11 +67,12 @@ namespace StoryNest.Application.Services
                 var newComment = await _commentRepository.GetByIdAsync(comment.Id);
                 var response = _mapper.Map<CommentResponse>(newComment);
 
+                response.IsOwner = true;
                 response.HasReplies = false;
 
                 if (story.UserId != userId)
                 {
-                    await _notificationService.SendNotificationAsync(story.UserId, userId, $"{comment.User.Username} vừa để lại vài dòng cảm xúc trong câu chuyện <strong>{story.Title}</strong> của bạn.", NotificationType.StoryCommented, story.Id, "Story");
+                    await _notificationService.SendNotificationAsync(story.UserId, userId, $"<strong>{response.User.Username}</strong> vừa để lại vài dòng cảm xúc trong câu chuyện <strong>{story.Title}</strong> của bạn.", NotificationType.StoryCommented, story.Id, "Story", newComment.IsAnonymous);
                 }
 
                 if (newComment.ParentCommentId.HasValue && newComment.ParentCommentId.Value > 0)
@@ -81,10 +83,11 @@ namespace StoryNest.Application.Services
                         await _notificationService.SendNotificationAsync(
                             parent.UserId,
                             userId,
-                            $"{newComment.User.Username} đã phản hồi cảm xúc của bạn trong câu chuyện <strong>{story.Title}</strong>.",
+                            $"<strong>{response.User.Username}</strong> đã phản hồi cảm xúc của bạn trong câu chuyện <strong>{story.Title}</strong>.",
                             NotificationType.StoryCommented,
                             parent.Id,
-                            "comment"
+                            "comment",
+                            newComment.IsAnonymous
                         );
                     }
                 }
@@ -93,7 +96,7 @@ namespace StoryNest.Application.Services
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 
@@ -118,19 +121,19 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<List<CommentResponse>> GetCommentsAsync(int story, int? parentId, int limit, int offset)
+        public async Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int storyId, long userId, int? parentId, int limit, int? cursor)
         {
             try
             {
-                var comments = await _commentRepository.GetByStoryId(story, parentId, limit, offset);
+                var comments = await _commentRepository.GetByStoryId(storyId, parentId, limit, cursor);
+                var hasMore = comments.Count > limit;
+
+                if (hasMore)
+                    comments = comments.Take(limit).ToList();
+
                 var ids = comments.Select(c => c.Id).ToList();
                 var repliesCount = await _commentRepository.GetRepliesCount(ids);
-
-
                 var response = _mapper.Map<List<CommentResponse>>(comments);
-
-                if (response == null || response.Count == 0)
-                    return new List<CommentResponse>();
 
                 foreach (var comment in response)
                 {
@@ -141,16 +144,39 @@ namespace StoryNest.Application.Services
                     }
 
                     if (comment.CommentStatus == CommentStatus.Deleted)
-                    {
                         comment.Content = "[deleted]";
+
+                    if (comment.UserId == userId)
+                    {
+                        comment.IsOwner = true;
                     }
                 }
 
-                return response;
+                var nextCursor = response.LastOrDefault()?.Id;
+
+                return new PaginatedResponse<CommentResponse>
+                {
+                    Items = response,
+                    HasMore = hasMore,
+                    NextCursor = hasMore ? nextCursor?.ToString() : null
+                };
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<List<Comment>> GetCommentByUserAsync(long userId, int limit, int cursor = 0)
+        {
+            try
+            {
+                var comments = await _commentRepository.GetByUserId(userId, limit, cursor);
+                return comments ?? new List<Comment>();
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
 
@@ -181,6 +207,19 @@ namespace StoryNest.Application.Services
             catch (Exception ex)
             {
                 throw new Exception(ex.Message);
+            }
+        }
+
+        public async Task<Story?> GetStoryByCommentAsync(int commentId, long userId)
+        {
+            try
+            {
+                var story = await _commentRepository.GetStoryByCommentAsync(commentId, userId);
+                return story ?? null;
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
     }

@@ -31,8 +31,9 @@ namespace StoryNest.Application.Services
         private readonly IUserMediaService _userMediaService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IAITransactionService _aiTransactionService;
+        private readonly IAdminRepository _adminRepository;
 
-        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService, IAITransactionService aiTransactionService)
+        public AuthService(IUserRepository userRepository, IUnitOfWork unitOfWork, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, WelcomeEmailSender welcomeEmailSender, IRedisService redisService, IAICreditService aiCreditService, IUserMediaService userMediaService, ICurrentUserService currentUserService, IAITransactionService aiTransactionService, IAdminRepository adminRepository)
         {
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
@@ -45,6 +46,7 @@ namespace StoryNest.Application.Services
             _userMediaService = userMediaService;
             _currentUserService = currentUserService;
             _aiTransactionService = aiTransactionService;
+            _adminRepository = adminRepository;
         }
 
         public async Task<LoginUserResponse> LoginAsync(LoginUserRequest request)
@@ -87,6 +89,46 @@ namespace StoryNest.Application.Services
                 AvatarUrl = user.AvatarUrl,
                 PlanName = activeSub?.Plan?.Name,
                 PlanId = activeSub?.Plan?.Id,
+                AccessToken = accessToken,
+                RefreshToken = refresTokenPlain,
+            };
+        }
+
+        public async Task<LoginAdminResponse> LoginAdminAsync(LoginAdminRequest request)
+        {
+            var userNameOrEmail = request.UsernameOrEmail.Trim();
+            var password = request.Password.Trim();
+
+            var admin = await _adminRepository.GetAdminByUsernameOrEmail(userNameOrEmail);
+            if (admin == null || !PasswordHelper.VerifyPassword(password, admin.PasswordHash))
+            {
+                return null;
+            }
+
+            // Generate token
+            var accessToken = _jwtService.GenerateAccessToken(admin.Id, admin.Username, admin.Email, "admin", out var jwtId);
+            var refresTokenPlain = _jwtService.GenerateRefreshToken();
+            var refreshTokenExpiryDays = _configuration["REFRESH_TOKEN_EXPIREDAYS"];
+            var rt = new RefreshToken
+            {
+                AdminId = admin.Id,
+                TokenHash = HashHelper.SHA256(refresTokenPlain),
+                JwtId = jwtId,
+                ExpiresAt = DateTime.UtcNow.AddDays(double.Parse(_configuration["REFRESH_TOKEN_EXPIREDAYS"])),
+                CreatedAt = DateTime.UtcNow,
+                DeviceId = request.DeviceId,
+                IpAddress = request.IpAddress,
+                UserAgent = request.UserAgent,
+            };
+
+            await _refreshTokenRepository.AddAsync(rt);
+            await _unitOfWork.SaveAsync();
+
+            return new LoginAdminResponse
+            {
+                Id = admin.Id,
+                Username = admin.Username,
+                AvatarUrl = admin.AvatarUrl,
                 AccessToken = accessToken,
                 RefreshToken = refresTokenPlain,
             };

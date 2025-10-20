@@ -38,5 +38,23 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(n => n.Id == id);
         }
 
+        public async Task<List<Notification>> GetAllByUserId(long userId, int limit, long cursor = 0)
+        {
+            var query = _context.Notifications
+                .Where(n => n.UserId == userId)
+                .Include(n => n.Actor)
+                .Include(n => n.User)
+                .OrderByDescending(n => n.Id)
+                .AsQueryable();
+
+            if (cursor > 0)
+            {
+                query = query.Where(n => n.Id < cursor);
+            }
+
+            return await query
+                .Take(limit + 1)
+                .ToListAsync();
+        }
     }
 }

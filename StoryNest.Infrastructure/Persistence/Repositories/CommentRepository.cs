@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -37,16 +38,37 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(c => c.Id == commentId && c.DeletedAt == null);
         }
 
-        public async Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int offset)
+        public async Task<List<Comment>> GetByStoryId(int storyId, int? parentId, int limit, int? cursor)
         {
-            return await _context.Comments              
-                .Where(c => c.StoryId == storyId  
-                        && c.ParentCommentId == parentId)
+            var query = _context.Comments
+                .Where(c => c.StoryId == storyId && c.ParentCommentId == parentId);
+
+            if (cursor.HasValue && cursor.Value > 0)
+                query = query.Where(c => c.Id < cursor.Value);
+
+            return await query
                 .OrderByDescending(c => c.CreatedAt)
-                .Skip(offset)
-                .Take(limit)
+                .Take(limit + 1) // +1 để check hasMore
                 .Include(c => c.User)
                 .ToListAsync();
+        }
+
+        public async Task<List<Comment>> GetByUserId(long userId, int limit, int cursor = 0)
+        {
+            var query = _context.Comments
+                .Where(c => c.UserId == userId && c.DeletedAt == null && c.CommentStatus != CommentStatus.Deleted)
+                .OrderByDescending(c => c.CreatedAt)
+                .AsQueryable();
+
+            if (cursor > 0)
+                query = query.Where(c => c.Id < cursor);
+
+            var comments = await query
+                .Include(c => c.Story)
+                .Take(limit + 1)
+                .ToListAsync();
+
+            return comments;
         }
 
         public async Task<List<int>> GetCommentIdsWithReplies(List<int> ids)
@@ -69,6 +91,18 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .GroupBy(c => c.ParentCommentId.Value)
                 .Select(g => new { ParentId = g.Key, Count = g.Count() })
                 .ToDictionaryAsync(x => x.ParentId, x => x.Count);
+        }
+
+        public async Task<Story?> GetStoryByCommentAsync(int commentId, long userId)
+        {
+            return await _context.Stories
+                .Include(s => s.User)
+                .Include(m => m.Media)
+                .Include(st => st.StoryTags)
+                    .ThenInclude(t => t.Tag)
+                .Include(l => l.Likes)
+                .Include(c => c.Comments)
+                .FirstOrDefaultAsync(s => s.Comments.Where(c => c.CommentStatus != CommentStatus.Deleted && c.UserId == userId).Any(c => c.Id == commentId) && s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
         }
 
         public Task UpdateAsync(Comment comment)

@@ -69,6 +69,11 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .WithOne(r => r.Admin)
                    .HasForeignKey(r => r.AdminId)
                    .OnDelete(DeleteBehavior.SetNull);
+
+            builder.HasMany(a => a.RefreshTokens)
+                   .WithOne(rt => rt.Admin)
+                   .HasForeignKey(rt => rt.AdminId)
+                   .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

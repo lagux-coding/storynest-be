@@ -12,5 +12,6 @@ namespace StoryNest.Domain.Interfaces
         Task AddNotificationAsync(Notification notification);
         Task MarkAllAsReadAsync(long userId);
         Task<Notification?> GetWithRelationsAsync(int id);
+        Task<List<Notification>> GetAllByUserId(long userId, int limit, long cursor = 0);
     }
 }

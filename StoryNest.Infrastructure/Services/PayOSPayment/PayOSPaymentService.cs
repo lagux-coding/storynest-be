@@ -5,6 +5,7 @@ using Net.payOS.Types;
 using StoryNest.Application.Dtos.Dto;
 using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using StoryNest.Infrastructure.Services.S3;
 
@@ -81,16 +82,33 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
                 // Get plan
                 var plan = await _planService.GetPlanByIdAsync(planId);
 
+                var startDate = DateTime.UtcNow;
+                var endDate = startDate.AddMonths(1);
+
                 // Check if activated payment and subscription
                 var existingSub = await _subscriptionService.GetActiveSubByUser(userId);
                 if (existingSub != null)
                 {
-                    throw new Exception("You already have an active subscription");
+                    existingSub.StartDate = startDate;
+                    existingSub.EndDate = endDate;
+                    existingSub.PlanId = planId;
+                    existingSub.UpdatedAt = DateTime.UtcNow;
+                    existingSub.Status = SubscriptionStatus.Pending;
+                    await _subscriptionService.UpdateSubscriptionAsync(existingSub);
+
+                    // Create payment
+                    await _paymentService.AddPaymentAsync(userId, existingSub.Id, plan.PriceMonthly, "VND", "PayOS", orderCode.ToString(), PaymentStatus.Pending);
+                    ItemData item = new ItemData(plan.Name, 1, (int)plan.PriceMonthly);
+                    List<ItemData> items = new List<ItemData>();
+                    items.Add(item);
+                    long expiredAt = new DateTimeOffset(DateTime.UtcNow.AddMinutes(10))
+                            .ToUnixTimeSeconds();
+                    PaymentData paymentData = new PaymentData(orderCode, (int)plan.PriceMonthly, "StoryNest", items, "https://dev.storynest.io.vn", "https://dev.storynest.io.vn", expiredAt: expiredAt);
+                    CreatePaymentResult createPayment = await payos.createPaymentLink(paymentData);
+                    return createPayment;
                 }
 
                 // Create subscription
-                var startDate = DateTime.UtcNow;
-                var endDate = startDate.AddMonths(1);
                 var check1 = await _subscriptionService.AddSubscriptionAsync(userId, planId, startDate, endDate, SubscriptionStatus.Pending);
 
                 var sub = await _subscriptionService.GetPendingSubByUser(userId);
@@ -122,6 +140,98 @@ namespace StoryNest.Infrastructure.Services.PayOSPayment
             {
                 throw;
             }
+        }
+
+        public async Task<CreatePaymentResult> CheckoutV2Async(long userId, int planId)
+        {
+            // Load PayOS config
+            var clientId = _configuration["PAYOS_CLIENT_ID"];
+            var apiKey = _configuration["PAYOS_API_KEY"];
+            var checksum = _configuration["PAYOS_CHECKSUM"];
+            var domain = _configuration["FRONTEND_URL"] ?? "https://storynest.io.vn";
+            var payos = new PayOS(clientId, apiKey, checksum);
+
+            // Generate order code
+            long orderCode = GenerateOrderCode();
+
+            // Get plan
+            var plan = await _planService.GetPlanByIdAsync(planId)
+                ?? throw new Exception($"Plan not found: {planId}");
+
+            var startDate = DateTime.UtcNow;
+            var endDate = startDate.AddMonths(1);
+            Subscription sub;
+            await using var tx = await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                sub = await _subscriptionService.GetActiveSubByUser(userId);
+                if (sub != null)
+                {
+                    sub.PlanId = planId;
+                    sub.StartDate = startDate;
+                    sub.EndDate = endDate;
+                    sub.Status = SubscriptionStatus.Pending;
+                    sub.UpdatedAt = DateTime.UtcNow;
+                    await _subscriptionService.UpdateSubscriptionAsync(sub);
+                }
+                else
+                {
+                    sub = new Subscription
+                    {
+                        UserId = userId,
+                        PlanId = planId,
+                        StartDate = startDate,
+                        EndDate = endDate,
+                        Status = SubscriptionStatus.Pending,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _subscriptionService.AddSubscriptionAsync(sub.UserId, sub.PlanId, startDate, endDate, sub.Status);
+
+                    sub = await _subscriptionService.GetPendingSubByUser(userId);
+                }
+
+                // Create payment record
+                await _paymentService.AddPaymentAsync(
+                    userId,
+                    sub.Id,
+                    plan.PriceMonthly,
+                    "VND",
+                    "PayOS",
+                    orderCode.ToString(),
+                    PaymentStatus.Pending
+                );
+
+                await _unitOfWork.SaveAsync();
+                await tx.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+
+            // Create PayOS payment link
+            ItemData item = new ItemData(plan.Name, 1, (int)plan.PriceMonthly);
+            List<ItemData> items = new List<ItemData> { item };
+            var expiredAt = DateTimeOffset.UtcNow.AddMinutes(10).ToUnixTimeSeconds();
+            var paymentData = new PaymentData(
+                orderCode,
+                (int)plan.PriceMonthly,
+                "StoryNest Subscription",
+                items,
+                cancelUrl: $"{domain}/cancel",
+                returnUrl: $"{domain}/success",
+                expiredAt: expiredAt
+            );
+
+            var result = await payos.createPaymentLink(paymentData);
+            return result;
+        }
+
+        private static long GenerateOrderCode()
+        {
+            string raw = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString() + Random.Shared.Next(100, 999);
+            return long.Parse(raw.Substring(raw.Length - 9));
         }
 
         public async Task<bool> WebhookAsync(WebhookType body)

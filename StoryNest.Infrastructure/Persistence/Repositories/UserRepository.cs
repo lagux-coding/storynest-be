@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
+using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
 using StoryNest.Infrastructure.Persistence;
 using System;
@@ -23,6 +24,18 @@ namespace StoryNest.Application.Services
         public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);
+        }
+
+        public async Task<bool> CheckUsernameExist(string userName)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.Username == userName);
+
+            if (user == null)
+            {
+                return false;
+            }
+            return true;
         }
 
         public async Task<List<User>> GetAllUserAsync()

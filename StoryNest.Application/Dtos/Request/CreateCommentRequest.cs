@@ -9,6 +9,7 @@ namespace StoryNest.Application.Dtos.Request
     public class CreateCommentRequest
     {
         public string Content { get; set; } = null!;
-        public int? ParentCommentId { get; set; }
+        public bool IsAnonymous { get; set; } = false;
+        public int ParentCommentId { get; set; } = 0;
     }
 }

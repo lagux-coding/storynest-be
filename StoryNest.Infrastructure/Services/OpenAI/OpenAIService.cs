@@ -78,7 +78,7 @@ namespace StoryNest.Infrastructure.Services.OpenAI
             }
             catch (Exception ex)
             {
-                throw new Exception(ex.Message);
+                throw;
             }
         }
 

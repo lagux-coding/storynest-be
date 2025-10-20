@@ -39,6 +39,7 @@ namespace StoryNest.Infrastructure.Persistence
         public DbSet<StoryTag> StoryTags { get; set; }
         public DbSet<StoryView> StoryViews { get; set; }
         public DbSet<UserReport> UserReports { get; set; }
+        public DbSet<StorySentimentAnalysis> StorySentimentAnalysis { get; set; }
         public DbSet<YearlyMemory> YearlyMemories { get; set; }
 
         // Notifications
