@@ -283,8 +283,8 @@ builder.Services.AddQuartz(q =>
     q.AddTrigger(opts => opts
         .ForJob(storySentimentAnalysisJobKey)
         .WithIdentity($"{nameof(CheckReportStoryJob)}-trigger")
-        //.WithCronSchedule("0 0 7,13,20 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
-    .WithCronSchedule("0 0/3 * * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+        .WithCronSchedule("0 0 7,13,20 * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
+    //.WithCronSchedule("0 0/3 * * * ?", x => x.InTimeZone(TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"))));
 });
 
 builder.Services.AddQuartzHostedService(opt =>
