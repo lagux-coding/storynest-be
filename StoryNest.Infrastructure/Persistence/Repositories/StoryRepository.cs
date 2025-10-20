@@ -27,7 +27,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public Task<List<Story>> GetStoriesByUserAsync(long userId, DateTime? cursor, bool isOwner, bool excludeAiMedia = false, bool onlyAiMedia = false)
         {
             var query = _context.Stories.AsQueryable();
-            query.Where(s => s.StoryStatus != StoryStatus.Deleted);
+            query = query.Where(s => s.StoryStatus != StoryStatus.Deleted);
             if (!isOwner)
             {
                 query = query.Where(s => s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
