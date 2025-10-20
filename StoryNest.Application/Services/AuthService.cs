@@ -130,6 +130,7 @@ namespace StoryNest.Application.Services
                 Username = admin.Username,
                 AvatarUrl = admin.AvatarUrl,
                 AccessToken = accessToken,
+                RefreshToken = refresTokenPlain,
             };
         }
 

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Writers;
 using OpenAI.Audio;
 using OpenAI.Images;
 using Quartz;
@@ -196,6 +197,7 @@ builder.Services.AddScoped<IValidator<RegisterUserRequest>, RegisterUserRequestV
 builder.Services.AddScoped<IValidator<LoginUserRequest>, LoginUserRequestValidator>();
 builder.Services.AddScoped<IValidator<CreateStoryRequest>, CreateStoryRequestValidator>();
 builder.Services.AddScoped<IValidator<UploadMediaRequest>, UploadImageRequestValidator>();
+builder.Services.AddScoped<IValidator<LoginAdminRequest>, LoginAdminRequestValidator>();
 
 // Repositories 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -217,6 +219,7 @@ builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IStoryViewRepository, StoryViewRepository>();
 builder.Services.AddScoped<IUserReportRepository, UserReportRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
 //Services
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -311,5 +314,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notify");
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    db.Database.Migrate();
+    StoryNest.Infrastructure.Persistence.Seed.ApplicationDbContextSeed.SeedAdmins(db, builder.Configuration);
+}
 
 app.Run();
