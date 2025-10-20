@@ -38,6 +38,7 @@ namespace StoryNest.Application.Services
                     ReportedId = story.UserId,
                     ReporterId = reporterId,
                     ReportedStoryId = storyId,
+                    AdminId = 1, // default admin
                     Reason = request.Reason,
                     Status = ReportStatus.Pending,
                     CreatedAt = DateTime.UtcNow,
