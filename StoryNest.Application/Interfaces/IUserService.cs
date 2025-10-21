@@ -19,5 +19,6 @@ namespace StoryNest.Application.Interfaces
         Task<List<User>> GetAllUser();
         Task UpdateUserAsync(User user);
         Task<int> UpdateUserProfille(long userId, UpdateUserProfileRequest request);
+        Task<int> ChangePasswordAsync(ChangePasswordRequest request, long userId);
     }
 }

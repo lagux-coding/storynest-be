@@ -257,6 +257,7 @@ builder.Services.AddScoped<WelcomeEmailSender>();
 builder.Services.AddScoped<WelcomeEmailGoogleSender>();
 builder.Services.AddScoped<ResetPasswordEmailSender>();
 builder.Services.AddScoped<InvoiceEmailSender>();
+builder.Services.AddScoped<ChangePasswordSuccessEmailSender>();
 
 // Others
 builder.Services.AddScoped<IRedisService, RedisService>();

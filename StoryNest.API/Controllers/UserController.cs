@@ -62,6 +62,30 @@ namespace StoryNest.API.Controllers
             }
         }
 
+        [HttpPut("change-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                {
+                    return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+                }
+
+                var result = await _userService.ChangePasswordAsync(request, userId.Value);
+                if (result <= 0)
+                {
+                    return BadRequest(ApiResponse<object>.Fail("Change password failed"));
+                }
+                return Ok(ApiResponse<object>.Success(result, "Change password successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Change password failed: {ex.Message}"));
+            }
+        }
+
         [HttpGet("media")]
         public async Task<ActionResult<ApiResponse<object>>> GetUserMedias([FromQuery] MediaType? type = null)
         {
