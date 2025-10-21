@@ -27,8 +27,9 @@ namespace StoryNest.Infrastructure.Services.Google
         private readonly IConfiguration _configuration;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly WelcomeEmailGoogleSender _welcomeEmailGoogleSender;
+        private readonly IAICreditService _aICreditService;
 
-        public GoogleService(IUserService userService, IAuthService authService, WelcomeEmailGoogleSender welcomeEmailGoogleSender, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork)
+        public GoogleService(IUserService userService, IAuthService authService, WelcomeEmailGoogleSender welcomeEmailGoogleSender, IJwtService jwtService, IConfiguration configuration, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork, IAICreditService aICreditService)
         {
             _userService = userService;
             _authService = authService;
@@ -37,6 +38,7 @@ namespace StoryNest.Infrastructure.Services.Google
             _configuration = configuration;
             _refreshTokenRepository = refreshTokenRepository;
             _unitOfWork = unitOfWork;
+            _aICreditService = aICreditService;
         }
 
         public async Task<LoginUserResponse> GoogleLoginAsync(GoogleTokenResponse googleToken)
@@ -94,6 +96,8 @@ namespace StoryNest.Infrastructure.Services.Google
                 var activeSub = user.Subscriptions?
                             .FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
 
+                var credits = await _aICreditService.GetUserCredit(user.Id);
+
                 return new LoginUserResponse
                 {
                     UserId = user.Id,
@@ -101,6 +105,7 @@ namespace StoryNest.Infrastructure.Services.Google
                     AvatarUrl = user.AvatarUrl,
                     PlanName = activeSub?.Plan?.Name,
                     PlanId = activeSub?.Plan?.Id,
+                    Credits = credits.TotalCredits,
                     AccessToken = accessToken,
                     RefreshToken = refresTokenPlain,
                 };

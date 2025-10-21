@@ -277,6 +277,7 @@ namespace StoryNest.API.Controllers
                 ["userId"] = result.UserId.ToString(),
                 ["planName"] = result.PlanName,
                 ["planId"] = result.PlanId?.ToString(),
+                ["credits"] = result.Credits.ToString()
             };
 
             _logger.LogInformation(
