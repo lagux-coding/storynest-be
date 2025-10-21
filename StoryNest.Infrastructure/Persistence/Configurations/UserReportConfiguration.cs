@@ -40,6 +40,11 @@ namespace StoryNest.Infrastructure.Persistence.Configurations
                    .HasMaxLength(1000)
                    .IsRequired();
 
+            builder.Property(r => r.Type)
+                   .HasColumnName("type")
+                   .HasConversion<string>()
+                   .IsRequired();
+
             builder.Property(r => r.Status)
                    .HasColumnName("status")
                    .HasConversion<string>()

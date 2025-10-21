@@ -1,4 +1,6 @@
-﻿using StoryNest.Application.Dtos.Request;
+﻿using AutoMapper;
+using StoryNest.Application.Dtos.Request;
+using StoryNest.Application.Dtos.Response;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
@@ -18,16 +20,18 @@ namespace StoryNest.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IStoryService _storyService;
         private readonly IStorySentimentAnalysisService _storySentimentAnalysisService;
+        private readonly IMapper _mapper;
 
-        public UserReportService(IUserReportRepository userReportRepository, IUnitOfWork unitOfWork, IStoryService storyService, IStorySentimentAnalysisService storySentimentAnalysisService)
+        public UserReportService(IUserReportRepository userReportRepository, IUnitOfWork unitOfWork, IStoryService storyService, IStorySentimentAnalysisService storySentimentAnalysisService, IMapper mapper)
         {
             _userReportRepository = userReportRepository;
             _unitOfWork = unitOfWork;
             _storyService = storyService;
             _storySentimentAnalysisService = storySentimentAnalysisService;
+            _mapper = mapper;
         }
 
-        public async Task<int> CreateReportAsync(UserReportRequest request, long reporterId, int storyId, int commentId = 0)
+        public async Task<int> CreateReportAsync(UserReportRequest request, long reporterId, int storyId, ReportType type = ReportType.Story, int commentId = 0)
         {
             try
             {
@@ -40,12 +44,14 @@ namespace StoryNest.Application.Services
                     ReportedStoryId = storyId,
                     AdminId = 1, // default admin
                     Reason = request.Reason,
+                    Type = type,
                     Status = ReportStatus.Pending,
                     CreatedAt = DateTime.UtcNow,
                 };
 
                 if (commentId > 0)
                 {
+                    report.Type = ReportType.Comment;
                     report.ReportedCommentId = commentId;
                 }
 
@@ -65,6 +71,29 @@ namespace StoryNest.Application.Services
             try
             {
                 return await _userReportRepository.GetAllPendingReportsAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<PaginatedDefault<UserReportResponse>> GetAllUserReport(ReportType type = ReportType.Story, int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var totalCount = await _userReportRepository.CountReportsAsync(type);
+                var items = await _userReportRepository.GetAllUserReports(type, page, pageSize);
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                var reportDto = _mapper.Map<List<UserReportResponse>>(items);
+                return new PaginatedDefault<UserReportResponse>
+                {
+                    Items = reportDto,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalItems = totalCount,
+                    TotalPages = totalPages
+                };
             }
             catch (Exception ex)
             {

@@ -122,7 +122,7 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpPost("report")]
-        public async Task<ActionResult<ApiResponse<object>>> ReportUser([FromBody] UserReportRequest request, [FromQuery] int storyId, [FromQuery] int commentId = 0)
+        public async Task<ActionResult<ApiResponse<object>>> ReportUser([FromBody] UserReportRequest request, [FromQuery] int storyId, [FromQuery] int commentId = 0, [FromQuery] ReportType type = ReportType.Story)
         {
             try
             {
@@ -137,7 +137,7 @@ namespace StoryNest.API.Controllers
                     return NotFound(ApiResponse<object>.Fail("Reported user not found"));
                 }
 
-                var result = await _reportService.CreateReportAsync(request, userId.Value, storyId, commentId);
+                var result = await _reportService.CreateReportAsync(request, userId.Value, storyId, type, commentId);
 
                 if (result < 0)
                 {

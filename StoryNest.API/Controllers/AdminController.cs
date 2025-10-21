@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using StoryNest.API.ApiWrapper;
 using StoryNest.Application.Interfaces;
+using StoryNest.Domain.Enums;
 
 namespace StoryNest.API.Controllers
 {
@@ -12,13 +13,15 @@ namespace StoryNest.API.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
+        private readonly IUserReportService _userReportService;
         private readonly IStorySentimentAnalysisService _storySentimentService;
         private readonly ICurrentUserService _currentUserService;
 
-        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService)
+        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService, IUserReportService userReportService)
         {
             _storySentimentService = storySentimentService;
             _currentUserService = currentUserService;
+            _userReportService = userReportService;
         }
 
         [HttpGet("report/analysis")]
@@ -32,6 +35,24 @@ namespace StoryNest.API.Controllers
 
                 var result = await _storySentimentService.GetAllAnalysisAsync();
                 return Ok(ApiResponse<object>.Success(result, "Get all analysis successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("report")]
+        public async Task<ActionResult<ApiResponse<object>>> GetReports([FromQuery] ReportType type = ReportType.Story, int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return Unauthorized(ApiResponse<object>.Fail("Access denied"));
+
+                var result = await _userReportService.GetAllUserReport(type, page, pageSize);
+                return Ok(ApiResponse<object>.Success(result, "Get all report base type successfully"));
             }
             catch (Exception ex)
             {

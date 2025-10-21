@@ -58,6 +58,7 @@ namespace StoryNest.Application.Mappings
                 }));
             CreateMap<UserMedia, UserMediaResponse>();
             CreateMap<UpdateUserProfileRequest, User>();
+            CreateMap<UserReport, UserReportResponse>();
         }
     }
 }

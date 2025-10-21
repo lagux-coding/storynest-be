@@ -27,6 +27,7 @@ namespace StoryNest.Domain.Entities
         public Admin? Admin { get; set; }
 
         public string Reason { get; set; } = string.Empty;
+        public ReportType Type { get; set; }
         public ReportStatus Status{ get; set; } = ReportStatus.Pending;       
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
