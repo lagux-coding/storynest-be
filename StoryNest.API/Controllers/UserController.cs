@@ -62,6 +62,30 @@ namespace StoryNest.API.Controllers
             }
         }
 
+        [HttpPut("change-password")]
+        public async Task<ActionResult<ApiResponse<object>>> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            try
+            {
+                var userId = _currentUserService.UserId;
+                if (userId == null)
+                {
+                    return Unauthorized(ApiResponse<object>.Fail("Unauthorized"));
+                }
+
+                var result = await _userService.ChangePasswordAsync(request, userId.Value);
+                if (result <= 0)
+                {
+                    return BadRequest(ApiResponse<object>.Fail("Change password failed"));
+                }
+                return Ok(ApiResponse<object>.Success(result, "Change password successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail($"Change password failed: {ex.Message}"));
+            }
+        }
+
         [HttpGet("media")]
         public async Task<ActionResult<ApiResponse<object>>> GetUserMedias([FromQuery] MediaType? type = null)
         {
@@ -122,7 +146,7 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpPost("report")]
-        public async Task<ActionResult<ApiResponse<object>>> ReportUser([FromBody] UserReportRequest request, [FromQuery] int storyId, [FromQuery] int commentId = 0)
+        public async Task<ActionResult<ApiResponse<object>>> ReportUser([FromBody] UserReportRequest request, [FromQuery] int storyId, [FromQuery] int commentId = 0, [FromQuery] ReportType type = ReportType.Story)
         {
             try
             {
@@ -137,7 +161,7 @@ namespace StoryNest.API.Controllers
                     return NotFound(ApiResponse<object>.Fail("Reported user not found"));
                 }
 
-                var result = await _reportService.CreateReportAsync(request, userId.Value, storyId, commentId);
+                var result = await _reportService.CreateReportAsync(request, userId.Value, storyId, type, commentId);
 
                 if (result < 0)
                 {

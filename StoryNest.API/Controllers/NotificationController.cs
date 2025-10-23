@@ -21,7 +21,7 @@ namespace StoryNest.API.Controllers
             _currentUserService = currentUserService;
         }
 
-        [HttpPost("all")]
+        [HttpGet("all")]
         public async Task<ActionResult<ApiResponse<object>>> GetAllNotifications([FromQuery] int limit = 10, [FromQuery] long cursor = 0)
         {
             try

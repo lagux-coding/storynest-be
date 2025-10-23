@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Interfaces;
+﻿using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Interfaces;
 using System;
@@ -45,6 +46,29 @@ namespace StoryNest.Application.Services
                 throw;
             }
 
+        }
+
+        public async Task<PaginatedDefault<StorySentimentAnalysis>> GetAllAnalysisAsync(int page = 1, int pageSize = 10)
+        {
+            try
+            {
+
+                var totalCount = await _storySentimentAnalysisRepository.GetTotalCountAsync();
+                var items = await _storySentimentAnalysisRepository.GetStorySentimentAnalysesAsync(page, pageSize);
+                var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+                return new PaginatedDefault<StorySentimentAnalysis>
+                {
+                    Items = items,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalItems = totalCount,
+                    TotalPages = totalPages
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
     }
 }

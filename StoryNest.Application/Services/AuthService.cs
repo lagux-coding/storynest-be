@@ -82,6 +82,8 @@ namespace StoryNest.Application.Services
             var activeSub = user.Subscriptions?
                         .FirstOrDefault(s => s.Status == SubscriptionStatus.Active);
 
+            var credits = await _aiCreditService.GetUserCredit(user.Id);
+
             return new LoginUserResponse
             {
                 UserId = user.Id,
@@ -89,6 +91,7 @@ namespace StoryNest.Application.Services
                 AvatarUrl = user.AvatarUrl,
                 PlanName = activeSub?.Plan?.Name,
                 PlanId = activeSub?.Plan?.Id,
+                Credits = credits.TotalCredits,
                 AccessToken = accessToken,
                 RefreshToken = refresTokenPlain,
             };

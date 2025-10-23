@@ -1,9 +1,12 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using StoryNest.Application.Dtos.Request;
 using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Features.Users;
 using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Interfaces;
+using StoryNest.Shared.Common.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +21,57 @@ namespace StoryNest.Application.Services
         private readonly ICommentService _commentService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
+        private readonly ChangePasswordSuccessEmailSender _email;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IConfiguration _config;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork)
+        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork, ChangePasswordSuccessEmailSender email, IConfiguration config)
         {
             _userRepository = userRepository;
             _mapper = mapper;
             _commentService = commentService;
             _currentUserService = currentUserService;
             _unitOfWork = unitOfWork;
+            _email = email;
+            _config = config;
+        }
+
+        public async Task<int> ChangePasswordAsync(ChangePasswordRequest request, long userId)
+        {
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(userId);
+                if (user == null)
+                    throw new Exception("User not found or not active anymore");
+
+                // Verify new password and confirm password
+                if (request.NewPassword != request.ConfirmPassword)
+                {
+                    throw new Exception("New password and confirm password do not match");
+                }
+
+                // Verify old password
+                if (PasswordHelper.VerifyPassword(request.OldPassword, user.PasswordHash))
+                {
+                    // Update to new password
+                    user.PasswordHash = PasswordHelper.HashPassword(request.NewPassword);
+                    user.UpdatedAt = DateTime.UtcNow;
+                    await _userRepository.UpdateAsync(user);
+
+                    // Send email
+                    await _email.SendAsync(user.Email, user.Username, user.Username, $"{_config["FRONTEND_URL"]}/forgot-password", CancellationToken.None);
+
+                    return await _unitOfWork.SaveAsync();
+                }
+                else
+                {
+                    throw new Exception("Old password is incorrect");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<List<User>> GetAllUser()

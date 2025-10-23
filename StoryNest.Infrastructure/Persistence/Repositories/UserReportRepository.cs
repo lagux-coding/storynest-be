@@ -19,6 +19,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             _context = context;
         }
 
+        public async Task<int> CountReportsAsync(ReportType type = ReportType.Story)
+        {
+            return await _context.UserReports
+                .Where(r => r.Type == type)
+                .CountAsync();
+        }
+
         public async Task CreateUserReportAsync(UserReport report)
         {
             await _context.UserReports.AddAsync(report);
@@ -41,6 +48,20 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .ToList();
 
             return distinctReports;
+        }
+
+        public async Task<List<UserReport>> GetAllUserReports(ReportType type, int page = 1, int pageSize = 10)
+        {
+            if (page <= 0) page = 1;
+            if (pageSize <= 0) pageSize = 10;
+            return await _context.UserReports
+                .Include(r => r.ReportedUser)
+                .Include(r => r.Reporter)
+                .Where(r => r.Type == type)
+                .OrderByDescending(r => r.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
         public async Task UpdateUserReportAsync(UserReport report)

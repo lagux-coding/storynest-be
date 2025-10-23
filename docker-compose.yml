@@ -13,6 +13,9 @@ services:
       - Redis__Host=redis
       - Redis__Port=6379
       - Redis__Password=${REDIS_PASSWORD:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/keys/google.json
+    volumes:
+      - /opt/keys/google.json:/app/keys/google.json
     ports:
       - "8080:8080"
     depends_on:

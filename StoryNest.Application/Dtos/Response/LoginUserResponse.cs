@@ -13,6 +13,7 @@ namespace StoryNest.Application.Dtos.Response
         public string? AvatarUrl { get; set; }
         public string? PlanName { get; set; }
         public int? PlanId { get; set; }
+        public int Credits { get; set; }
         public string? AccessToken { get; set; }
         public string? RefreshToken { get; set; }
     }
