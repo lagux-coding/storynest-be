@@ -19,13 +19,14 @@ namespace StoryNest.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ICommentService _commentService;
+        private readonly IAICreditService _aiCreditService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IMapper _mapper;
         private readonly ChangePasswordSuccessEmailSender _email;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
 
-        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork, ChangePasswordSuccessEmailSender email, IConfiguration config)
+        public UserService(IUserRepository userRepository, IMapper mapper, ICommentService commentService, ICurrentUserService currentUserService, IUnitOfWork unitOfWork, ChangePasswordSuccessEmailSender email, IConfiguration config, IAICreditService aiCreditService)
         {
             _userRepository = userRepository;
             _mapper = mapper;
@@ -34,6 +35,7 @@ namespace StoryNest.Application.Services
             _unitOfWork = unitOfWork;
             _email = email;
             _config = config;
+            _aiCreditService = aiCreditService;
         }
 
         public async Task<int> ChangePasswordAsync(ChangePasswordRequest request, long userId)
@@ -85,7 +87,11 @@ namespace StoryNest.Application.Services
             {
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null) throw new Exception("User not found or not active anymore");
+
+                var credits = await _aiCreditService.GetUserCredit(userId);
+
                 var userDto = _mapper.Map<UserFullResponse>(user);
+                userDto.Credits = credits.TotalCredits;
                 return userDto;
             }
             catch (Exception ex)
