@@ -36,8 +36,12 @@ namespace StoryNest.API.Controllers
         {
             try
             {
-                request.Title = TextNormalizer.Normalize(request.Title, true);
-                request.Content = TextNormalizer.Normalize(request.Content, true);
+                if (request.Title != null || request.Content != null)
+                {
+                    request.Title = TextNormalizer.Normalize(request.Title, true);
+                    request.Content = TextNormalizer.Normalize(request.Content, true);                 
+                }
+
                 for (int i = 0; i < request.Tags.Count; i++)
                 {
                     request.Tags[i] = TextNormalizer.Normalize(request.Tags[i], true);

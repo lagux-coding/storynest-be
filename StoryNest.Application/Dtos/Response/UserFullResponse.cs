@@ -16,5 +16,6 @@ namespace StoryNest.Application.Dtos.Response
         public string Gender { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public int FollowersCount { get; set; } = 0;
+        public int Credits { get; set; } = 0;
     }
 }
