@@ -12,6 +12,9 @@ using OpenAI.Audio;
 using OpenAI.Images;
 using Quartz;
 using Resend;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using StackExchange.Redis;
 using StoryNest.API.Hubs;
 using StoryNest.API.Services;
@@ -38,8 +41,20 @@ using StoryNest.Infrastructure.Services.S3;
 using StoryNest.Infrastructure.Services.VnCoreNlp;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Logging
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+        .WriteTo.Console()
+        .WriteTo.Seq(Environment.GetEnvironmentVariable("SEQ_SERVER_URL")); 
+});
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -65,7 +80,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 });
 
 // Load .env file
-Env.Load();
+
 foreach (System.Collections.DictionaryEntry de in Environment.GetEnvironmentVariables())
 {
     var key = de.Key?.ToString();
@@ -310,6 +325,14 @@ builder.Services.AddSingleton<AudioClient>(serviceProvider =>
 builder.Services.AddSignalR();
 
 var app = builder.Build();
+
+app.UseSerilogRequestLogging(options =>
+{
+    options.IncludeQueryInRequestPath = true;
+    options.MessageTemplate =
+        "{RequestMethod} {RequestPath} by {User} responded {StatusCode} in {Elapsed:0.0000} ms";
+});
+
 app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
