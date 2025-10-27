@@ -17,15 +17,17 @@ namespace StoryNest.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationRepository _notificationRepository;
+        private readonly IStoryService _storyService;
         private readonly IMapper _mapper;
         private readonly INotificationHubService _hubService;
 
-        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService)
+        public NotificationService(IUnitOfWork unitOfWork, INotificationRepository notificationRepository, IMapper mapper, INotificationHubService hubService, IStoryService storyService)
         {
             _unitOfWork = unitOfWork;
             _notificationRepository = notificationRepository;
             _mapper = mapper;
             _hubService = hubService;
+            _storyService = storyService;
         }
 
         public async Task<PaginatedResponse<NotificationResponse>> GetAllNotificationsAsync(long userId, int limit, long cursor = 0)
@@ -48,7 +50,7 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task SendNotificationAsync(long userId, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)
+        public async Task SendNotificationAsync(long userId, string slug, long? actorId, string content, NotificationType type, int? referenceId = null, string? referenceType = null, bool isAnonymous = false)
         {
             try
             {
@@ -71,6 +73,8 @@ namespace StoryNest.Application.Services
                 var fullNoti = await _notificationRepository.GetWithRelationsAsync(noti.Id);
 
                 var dto = _mapper.Map<NotificationResponse>(fullNoti);
+
+                dto.StorySlug = slug;
 
                 await _hubService.SendNotificationAsync(userId, dto);
             }
