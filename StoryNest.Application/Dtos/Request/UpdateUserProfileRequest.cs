@@ -8,7 +8,6 @@ namespace StoryNest.Application.Dtos.Request
 {
     public class UpdateUserProfileRequest
     {
-        public string? UserName { get; set; }
         public string? FullName { get; set; }
         public string? Bio { get; set; }
         public DateTime? DateOfBirth { get; set; }

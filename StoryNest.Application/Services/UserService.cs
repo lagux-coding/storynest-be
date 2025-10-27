@@ -189,13 +189,6 @@ namespace StoryNest.Application.Services
                 var user = await _userRepository.GetByIdAsync(userId);
                 if (user == null) throw new Exception("User not found or not active anymore");
 
-                // check username
-                bool check = await _userRepository.CheckUsernameExist(request.UserName);
-                if (check)
-                {
-                    throw new Exception("Already this username");
-                }
-
                 user = _mapper.Map(request, user);
                 user.UpdatedAt = DateTime.UtcNow;
 
