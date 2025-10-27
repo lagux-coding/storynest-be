@@ -330,7 +330,7 @@ app.UseSerilogRequestLogging(options =>
 {
     options.IncludeQueryInRequestPath = true;
     options.MessageTemplate =
-        "{RequestMethod} {RequestPath} by {User} responded {StatusCode} in {Elapsed:0.0000} ms";
+        "{RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
 });
 
 app.UseForwardedHeaders();
