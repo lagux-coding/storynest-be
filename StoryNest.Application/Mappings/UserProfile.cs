@@ -54,7 +54,12 @@ namespace StoryNest.Application.Mappings
                         };
                     }
 
-                    return null;
+                    return new UserBasicResponse
+                    {
+                        Id = 0,
+                        Username = "System",
+                        AvatarUrl = "https://cdn.storynest.io.vn/admin-avatar.jpg"
+                    };
                 }));
             CreateMap<UserMedia, UserMediaResponse>();
             CreateMap<UpdateUserProfileRequest, User>();
