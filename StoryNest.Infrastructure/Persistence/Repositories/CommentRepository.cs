@@ -105,6 +105,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
                 .FirstOrDefaultAsync(s => s.Comments.Where(c => c.CommentStatus != CommentStatus.Deleted && c.UserId == userId).Any(c => c.Id == commentId) && s.StoryStatus == StoryStatus.Published && s.PrivacyStatus == PrivacyStatus.Public);
         }
 
+        public async Task<int> TotalComments()
+        {
+            return await _context.Comments
+                .Where(c => c.DeletedAt == null && c.CommentStatus != CommentStatus.Deleted)
+                .CountAsync();
+        }
+
         public Task UpdateAsync(Comment comment)
         {
             _context.Comments.Update(comment);

@@ -44,6 +44,36 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return await _context.Subscriptions.FirstOrDefaultAsync(s => s.UserId == userId && s.Status == SubscriptionStatus.Pending);
         }
 
+        public Task<List<Subscription>> PlanCount(int planId)
+        {
+            return _context.Subscriptions
+                .Include(s => s.Plan)
+                .Where(s => s.PlanId == planId)
+                .ToListAsync();
+        }
+
+        public async Task<int> TotalActiveSubscriptions()
+        {
+            return await _context.Subscriptions
+                .Where(s => s.Status == SubscriptionStatus.Active)
+                .CountAsync();
+        }
+
+        public async Task<int> TotalPremiumUsers()
+        {
+            return await _context.Subscriptions
+                .Where(s => s.Status == SubscriptionStatus.Active)
+                .Select(s => s.UserId)
+                .Distinct()
+                .CountAsync();
+        }
+
+        public async Task<int> TotalSubscriptions()
+        {
+            return await _context.Subscriptions
+                .CountAsync();
+        }
+
         public async Task UpdateAsync(Subscription sub)
         {
             _context.Subscriptions.Update(sub);

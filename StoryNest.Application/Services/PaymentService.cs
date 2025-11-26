@@ -82,6 +82,18 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<decimal> TotalRevenueAsync()
+        {
+            try
+            {
+                return await _paymentRepository.TotalRevenue();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task UpdatePaymentAsync(Payment payment)
         {
             try

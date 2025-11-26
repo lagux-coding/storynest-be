@@ -80,6 +80,51 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public Task<List<Subscription>> PlanCountAsync(int planId)
+        {
+            try {
+                return _subscriptionRepository.PlanCount(planId);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public Task<int> TotalActiveSubscriptionsAsync()
+        {
+            try {
+                return _subscriptionRepository.TotalActiveSubscriptions();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public Task<int> TotalPremiumUsersAsync()
+        {
+            try {
+                return _subscriptionRepository.TotalPremiumUsers();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<int> TotalSubscriptionsAsync()
+        {
+            try
+            {
+                return await _subscriptionRepository.TotalSubscriptions();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task UpdateSubscriptionAsync(Subscription sub)
         {
             try

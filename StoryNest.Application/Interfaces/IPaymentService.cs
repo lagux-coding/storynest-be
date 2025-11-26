@@ -15,5 +15,6 @@ namespace StoryNest.Application.Interfaces
         public Task<Payment> GetPaymentByUserAndSubAsync(long userId, int subscriptionId);
         Task<Payment> GetSuccessPaymentByTXN(long userId, string code);
         public Task UpdatePaymentAsync(Payment payment);
+        public Task<decimal> TotalRevenueAsync();
     }
 }

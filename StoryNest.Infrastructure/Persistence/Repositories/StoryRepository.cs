@@ -387,5 +387,18 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             _context.Stories.Update(story);
         }
 
+        public async Task<int> TotalStories()
+        {
+            return await _context.Stories.CountAsync();
+        }
+
+        public async Task<List<Story>> GetAllStories(int page = 1, int pageSize = 10)
+        {
+            return await _context.Stories
+                .OrderByDescending(s => s.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
     }
 }

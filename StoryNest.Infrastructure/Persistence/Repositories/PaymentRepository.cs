@@ -39,6 +39,13 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             return await _context.Payments.FirstOrDefaultAsync(p => p.ProviderTXN == code && p.UserId == userId && p.Status == PaymentStatus.Success);
         }
 
+        public async Task<decimal> TotalRevenue()
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Success)
+                .SumAsync(p => p.Amount);
+        }
+
         public async Task UpdateAsync(Payment payment)
         {
             _context.Payments.Update(payment);

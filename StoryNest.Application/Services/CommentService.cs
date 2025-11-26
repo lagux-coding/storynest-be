@@ -223,5 +223,17 @@ namespace StoryNest.Application.Services
                 throw;
             }
         }
+
+        public async Task<int> TotalCommentsAsync()
+        {
+            try
+            {
+                return await _commentRepository.TotalComments();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

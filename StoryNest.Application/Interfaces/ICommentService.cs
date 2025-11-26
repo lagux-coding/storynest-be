@@ -17,5 +17,6 @@ namespace StoryNest.Application.Interfaces
         Task<PaginatedResponse<CommentResponse>> GetCommentsAsync(int storyId, long userId, int? parentId, int limit, int? cursor);
         Task<List<Comment>> GetCommentByUserAsync(long userId, int limit, int cursor = 0);
         Task<Story?> GetStoryByCommentAsync(int commentId, long userId);
+        public Task<int> TotalCommentsAsync();
     }
 }

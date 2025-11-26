@@ -265,6 +265,7 @@ builder.Services.AddScoped<IVnCoreNlpService, VnCoreNlpService>();
 builder.Services.AddScoped<IUserReportService, UserReportService>();
 builder.Services.AddScoped<IGoogleNLPService, GoogleNLPService>();
 builder.Services.AddScoped<IStorySentimentAnalysisService, StorySentimentAnalysisService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 // Email Services
 builder.Services.AddScoped<ITemplateRenderer, TemplateEmailRenderer>();

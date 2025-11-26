@@ -15,5 +15,10 @@ namespace StoryNest.Application.Interfaces
         public Task<Subscription> GetByIdAsync(int subscriptionId);
         public Task<Subscription> GetPendingSubByUser(long userId);
         public Task UpdateSubscriptionAsync(Subscription sub);
+        public Task<int> TotalSubscriptionsAsync();
+        public Task<int> TotalActiveSubscriptionsAsync();
+        public Task<int> TotalPremiumUsersAsync();
+
+        public Task<List<Subscription>> PlanCountAsync(int planId);
     }
 }

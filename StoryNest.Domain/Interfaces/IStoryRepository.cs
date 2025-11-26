@@ -20,5 +20,7 @@ namespace StoryNest.Domain.Interfaces
         public void RemoveStory(Story story); 
         public void UpdateStory(Story story);
         public Task<List<Story>> SearchAsync(string keyword, int limit = 20, int? lastId = null);
+        public Task<int> TotalStories();
+        public Task<List<Story>> GetAllStories(int page = 1, int pageSize = 10);
     }
 }
