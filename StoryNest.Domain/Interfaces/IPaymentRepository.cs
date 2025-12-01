@@ -15,7 +15,7 @@ namespace StoryNest.Domain.Interfaces
         Task<Payment?> GetSuccessByTXN(long userId, string code);
         Task UpdateAsync(Payment payment);
         public Task<decimal> TotalRevenue();
-        public Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10);
-        public Task<int> CountSuccessAsync();
+        public Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total");
+        public Task<int> CountSuccessAsync(string filter = "total");
     }
 }

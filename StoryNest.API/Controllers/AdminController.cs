@@ -117,14 +117,14 @@ namespace StoryNest.API.Controllers
         }
 
         [HttpGet("payment")]
-        public async Task<ActionResult<ApiResponse<object>>> PaymentStats([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<ApiResponse<object>>> PaymentStats([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string filter = "total")
         {
             try
             {
                 var typeUser = _currentUserService.Type;
                 if (typeUser != "admin")
                     return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
-                var result = await _paymentService.GetAllSuccessPaymentAsync(page, pageSize);
+                var result = await _paymentService.GetAllSuccessPaymentAsync(page, pageSize, filter);
                 return Ok(ApiResponse<object>.Success(result, "Get payment stats successfully"));
             }
             catch (Exception ex)

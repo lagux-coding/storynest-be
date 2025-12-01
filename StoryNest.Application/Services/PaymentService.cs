@@ -47,12 +47,12 @@ namespace StoryNest.Application.Services
             }
         }
 
-        public async Task<PaginatedDefault<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10)
+        public async Task<PaginatedDefault<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total")
         {
             try
             {
-                var items = await _paymentRepository.GetAllSuccessPaymentAsync(page, pageSize);
-                var totalCount = await _paymentRepository.CountSuccessAsync();
+                var items = await _paymentRepository.GetAllSuccessPaymentAsync(page, pageSize, filter);
+                var totalCount = await _paymentRepository.CountSuccessAsync(filter);
 
                 return new PaginatedDefault<Payment>
                 {

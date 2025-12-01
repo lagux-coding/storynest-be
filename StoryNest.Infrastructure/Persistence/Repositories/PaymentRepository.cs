@@ -24,18 +24,53 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Payments.AddAsync(payment);
         }
 
-        public async Task<int> CountSuccessAsync()
+        public async Task<int> CountSuccessAsync(string filter = "total")
         {
-            return await _context.Payments.CountAsync(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+            var query = _context.Payments
+                .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+
+            switch (filter.ToLower())
+            {
+                case "weekly":
+                    var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+                    query = query.Where(p => p.PaidAt >= sevenDaysAgo);
+                    break;
+
+                case "total":
+                    break;
+
+                default:
+                    throw new ArgumentException("Invalid filter. Use 'total' or 'weekly'.");
+            }
+
+            return await query.CountAsync();
         }
 
-        public async Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10)
+
+        public async Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total")
         {
-            return await _context.Payments
-                .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null)
+            var query = _context.Payments
+                    .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+
+            // Apply filter
+            switch (filter.ToLower())
+            {
+                case "weekly":
+                    var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
+                    query = query.Where(p => p.PaidAt >= sevenDaysAgo);
+                    break;
+
+                case "total":
+                    break;
+
+                default:
+                    throw new ArgumentException("Invalid filter type. Use 'total' or 'weekly'.");
+            }
+
+            return await query
+                .OrderByDescending(p => p.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .OrderByDescending(p => p.Id)
                 .ToListAsync();
         }
 
