@@ -17,13 +17,15 @@ namespace StoryNest.API.Controllers
         private readonly IStorySentimentAnalysisService _storySentimentService;
         private readonly ICurrentUserService _currentUserService;
         private readonly IDashboardService _dashboardService;
+        private readonly IPaymentService _paymentService;
 
-        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService, IUserReportService userReportService, IDashboardService dashboardService)
+        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService, IUserReportService userReportService, IDashboardService dashboardService, IPaymentService paymentService)
         {
             _storySentimentService = storySentimentService;
             _currentUserService = currentUserService;
             _userReportService = userReportService;
             _dashboardService = dashboardService;
+            _paymentService = paymentService;
         }
 
         [HttpGet("report/analysis")]
@@ -107,6 +109,23 @@ namespace StoryNest.API.Controllers
                     return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
                 var result = await _dashboardService.GetDashboardStoryAsync(page, pageSize);
                 return Ok(ApiResponse<object>.Success(result, "Get story stats successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("payment")]
+        public async Task<ActionResult<ApiResponse<object>>> PaymentStats([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
+                var result = await _paymentService.GetAllSuccessPaymentAsync(page, pageSize);
+                return Ok(ApiResponse<object>.Success(result, "Get payment stats successfully"));
             }
             catch (Exception ex)
             {

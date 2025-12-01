@@ -24,6 +24,21 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
             await _context.Payments.AddAsync(payment);
         }
 
+        public async Task<int> CountSuccessAsync()
+        {
+            return await _context.Payments.CountAsync(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+        }
+
+        public async Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10)
+        {
+            return await _context.Payments
+                .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .OrderByDescending(p => p.Id)
+                .ToListAsync();
+        }
+
         public async Task<Payment?> GetByTXN(string code)
         {
             return await _context.Payments.FirstOrDefaultAsync(p => p.ProviderTXN == code);

@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Interfaces;
+﻿using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
@@ -39,6 +40,28 @@ namespace StoryNest.Application.Services
 
                 await _paymentRepository.AddAsync(payment);
                 return await _unitOfWork.SaveAsync();               
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<PaginatedDefault<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var items = await _paymentRepository.GetAllSuccessPaymentAsync(page, pageSize);
+                var totalCount = await _paymentRepository.CountSuccessAsync();
+
+                return new PaginatedDefault<Payment>
+                {
+                    Items = items,
+                    TotalItems = totalCount,
+                    PageSize = pageSize,
+                    Page = page,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                };
             }
             catch (Exception ex)
             {

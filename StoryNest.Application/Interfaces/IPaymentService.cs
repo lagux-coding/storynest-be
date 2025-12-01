@@ -1,4 +1,5 @@
-﻿using StoryNest.Domain.Entities;
+﻿using StoryNest.Application.Dtos.Response;
+using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -16,5 +17,6 @@ namespace StoryNest.Application.Interfaces
         Task<Payment> GetSuccessPaymentByTXN(long userId, string code);
         public Task UpdatePaymentAsync(Payment payment);
         public Task<decimal> TotalRevenueAsync();
+        public Task<PaginatedDefault<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10);
     }
 }
