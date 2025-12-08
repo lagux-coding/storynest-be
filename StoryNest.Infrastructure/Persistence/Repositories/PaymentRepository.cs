@@ -92,7 +92,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task<decimal> TotalRevenue()
         {
             return await _context.Payments
-                .Where(p => p.Status == PaymentStatus.Success)
+                .Where(p => p.Status == PaymentStatus.Success && p.Amount >= 79000)
                 .SumAsync(p => p.Amount);
         }
 
