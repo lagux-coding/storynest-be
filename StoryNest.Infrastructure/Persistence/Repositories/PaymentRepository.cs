@@ -27,7 +27,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task<int> CountSuccessAsync(string filter = "total")
         {
             var query = _context.Payments
-                .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+                .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null && p.Amount >= 79000);
 
             switch (filter.ToLower())
             {
@@ -50,7 +50,7 @@ namespace StoryNest.Infrastructure.Persistence.Repositories
         public async Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total")
         {
             var query = _context.Payments
-                    .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null);
+                    .Where(p => p.Status == PaymentStatus.Success && p.PaidAt != null && p.Amount >= 79000);
 
             // Apply filter
             switch (filter.ToLower())
