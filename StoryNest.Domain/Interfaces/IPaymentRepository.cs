@@ -14,5 +14,8 @@ namespace StoryNest.Domain.Interfaces
         Task<Payment?> GetByUserAndSub(long userId, int subscriptionId);
         Task<Payment?> GetSuccessByTXN(long userId, string code);
         Task UpdateAsync(Payment payment);
+        public Task<decimal> TotalRevenue();
+        public Task<List<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total");
+        public Task<int> CountSuccessAsync(string filter = "total");
     }
 }

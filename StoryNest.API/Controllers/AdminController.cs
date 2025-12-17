@@ -16,12 +16,16 @@ namespace StoryNest.API.Controllers
         private readonly IUserReportService _userReportService;
         private readonly IStorySentimentAnalysisService _storySentimentService;
         private readonly ICurrentUserService _currentUserService;
+        private readonly IDashboardService _dashboardService;
+        private readonly IPaymentService _paymentService;
 
-        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService, IUserReportService userReportService)
+        public AdminController(IStorySentimentAnalysisService storySentimentService, ICurrentUserService currentUserService, IUserReportService userReportService, IDashboardService dashboardService, IPaymentService paymentService)
         {
             _storySentimentService = storySentimentService;
             _currentUserService = currentUserService;
             _userReportService = userReportService;
+            _dashboardService = dashboardService;
+            _paymentService = paymentService;
         }
 
         [HttpGet("report/analysis")]
@@ -31,7 +35,7 @@ namespace StoryNest.API.Controllers
             {
                 var type = _currentUserService.Type;
                 if (type != "admin")
-                    return Unauthorized(ApiResponse<object>.Fail("Access denied"));
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
 
                 var result = await _storySentimentService.GetAllAnalysisAsync();
                 return Ok(ApiResponse<object>.Success(result, "Get all analysis successfully"));
@@ -49,10 +53,79 @@ namespace StoryNest.API.Controllers
             {
                 var typeUser = _currentUserService.Type;
                 if (typeUser != "admin")
-                    return Unauthorized(ApiResponse<object>.Fail("Access denied"));
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
 
                 var result = await _userReportService.GetAllUserReport(type, page, pageSize);
                 return Ok(ApiResponse<object>.Success(result, "Get all report base type successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("dashboard")]
+        public async Task<ActionResult<ApiResponse<object>>> DashboardStats()
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
+
+                var result = await _dashboardService.GetDashboardStatsAsync();
+                return Ok(ApiResponse<object>.Success(result, "Get dashboard stats successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("subscription")]
+        public async Task<ActionResult<ApiResponse<object>>> SubscriptionStats()
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
+                var result = await _dashboardService.GetSubscriptionStatsAsync();
+                return Ok(ApiResponse<object>.Success(result, "Get subscription stats successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("story")]
+        public async Task<ActionResult<ApiResponse<object>>> StoryStats([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
+                var result = await _dashboardService.GetDashboardStoryAsync(page, pageSize);
+                return Ok(ApiResponse<object>.Success(result, "Get story stats successfully"));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponse<object>.Fail(ex.Message));
+            }
+        }
+
+        [HttpGet("payment")]
+        public async Task<ActionResult<ApiResponse<object>>> PaymentStats([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string filter = "total")
+        {
+            try
+            {
+                var typeUser = _currentUserService.Type;
+                if (typeUser != "admin")
+                    return StatusCode(StatusCodes.Status403Forbidden, ApiResponse<object>.Forbbiden("Access denied"));
+                var result = await _paymentService.GetAllSuccessPaymentAsync(page, pageSize, filter);
+                return Ok(ApiResponse<object>.Success(result, "Get payment stats successfully"));
             }
             catch (Exception ex)
             {

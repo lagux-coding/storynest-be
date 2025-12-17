@@ -78,7 +78,7 @@ namespace StoryNest.Infrastructure.Services.QuartzSchedule
                                     await _storyService.UpdateWithEntityAsync(story);
 
                                     // Notify user
-                                    await _notificationService.SendNotificationAsync(story.UserId, content: $"Story của bạn '{story.Title}' đã bị xóa do có nhiều báo cáo và phân tích cảm xúc tiêu cực. ", type: NotificationType.System, referenceId: story.Id, referenceType: "story", actorId: null);
+                                    await _notificationService.SendNotificationAsync(story.UserId, slug: story.Slug, content: $"Story của bạn '{story.Title}' đã bị xóa do có nhiều báo cáo và phân tích cảm xúc tiêu cực. ", type: NotificationType.System, referenceId: story.Id, referenceType: "story", actorId: null);
                                 }
                                 _logger.LogInformation($"[NLP Job] Report Id={report.ReportedStoryId} marked as Resolved due to negative sentiment.");
                             }

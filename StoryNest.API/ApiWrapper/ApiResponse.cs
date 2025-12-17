@@ -31,5 +31,7 @@ namespace StoryNest.API.ApiWrapper
 
         public static ApiResponse<T> Error(string message, int statusCode = StatusCodes.Status500InternalServerError) => new(default, message, statusCode);
 
+        public static ApiResponse<T> Forbbiden(string message = "forbbiden") => new(default, message, StatusCodes.Status403Forbidden);
+
     }
 }

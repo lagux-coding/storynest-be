@@ -726,5 +726,39 @@ namespace StoryNest.Application.Services
                 throw;
             }
         }
+
+        public async Task<int> TotalStoriesAsync()
+        {
+            try
+            {
+                return await _storyRepository.TotalStories();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<PaginatedDefault<Story>> GetAllStoriesAsync(int page = 1, int pageSize = 10)
+        {
+            try
+            {
+                var stories = await _storyRepository.GetAllStories(page, pageSize);
+                var totalStories = await _storyRepository.TotalStories();
+
+                return new PaginatedDefault<Story>
+                {
+                    Items = stories,
+                    TotalItems = totalStories,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalStories / pageSize)
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
     }
 }

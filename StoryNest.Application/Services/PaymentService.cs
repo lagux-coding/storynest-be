@@ -1,4 +1,5 @@
-﻿using StoryNest.Application.Interfaces;
+﻿using StoryNest.Application.Dtos.Response;
+using StoryNest.Application.Interfaces;
 using StoryNest.Domain.Entities;
 using StoryNest.Domain.Enums;
 using StoryNest.Domain.Interfaces;
@@ -46,6 +47,28 @@ namespace StoryNest.Application.Services
             }
         }
 
+        public async Task<PaginatedDefault<Payment>> GetAllSuccessPaymentAsync(int page = 1, int pageSize = 10, string filter = "total")
+        {
+            try
+            {
+                var items = await _paymentRepository.GetAllSuccessPaymentAsync(page, pageSize, filter);
+                var totalCount = await _paymentRepository.CountSuccessAsync(filter);
+
+                return new PaginatedDefault<Payment>
+                {
+                    Items = items,
+                    TotalItems = totalCount,
+                    PageSize = pageSize,
+                    Page = page,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                };
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public async Task<Payment?> GetPaymentByTXN(string code)
         {
             try
@@ -75,6 +98,18 @@ namespace StoryNest.Application.Services
             try
             {
                 return await _paymentRepository.GetSuccessByTXN(userId, code);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<decimal> TotalRevenueAsync()
+        {
+            try
+            {
+                return await _paymentRepository.TotalRevenue();
             }
             catch (Exception ex)
             {

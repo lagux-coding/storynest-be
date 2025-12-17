@@ -41,7 +41,7 @@ namespace StoryNest.Application.Services
         public async Task<List<User>> GetAllUserAsync()
         {
             return await _context.Users
-                .Where(u => u.AICredit != null)
+                .Where(u => u.AICredit != null && u.IsActive)
                 .ToListAsync();
         }
 

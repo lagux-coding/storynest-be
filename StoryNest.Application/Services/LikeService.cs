@@ -106,6 +106,7 @@ namespace StoryNest.Application.Services
                     var content = $"{actor.Username} vừa yêu thích câu chuyện <strong>{story.Title}</strong> của bạn.";
                     await _notificationService.SendNotificationAsync(
                         story.UserId,
+                        story.Slug,
                         userId,
                         content,
                         NotificationType.StoryLiked,

@@ -14,5 +14,9 @@ namespace StoryNest.Domain.Interfaces
         Task<Subscription?> GetByIdAsync(int subscriptionId);
         Task<Subscription?> GetByUserId(long userId);
         Task UpdateAsync(Subscription sub);
+        Task<int> TotalSubscriptions();
+        Task<int> TotalActiveSubscriptions();
+        Task<int> TotalPremiumUsers();
+        Task<List<Subscription>> PlanCount(int planId);
     }
 }
